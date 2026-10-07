@@ -1,0 +1,17 @@
+node_modules
+.pnpm-store
+.git
+.gitignore
+dist
+build
+.turbo
+coverage
+.expo
+android
+ios
+*.md
+.vscode
+.idea
+.env
+.env.*
+!.env.example

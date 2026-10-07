@@ -1,0 +1,28 @@
+{
+  "name": "@panasecreto/ui-tokens",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Design tokens, color palette and typography for PanaSecreto",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rimraf dist *.tsbuildinfo",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@panasecreto/tsconfig": "workspace:*",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.8.2"
+  }
+}

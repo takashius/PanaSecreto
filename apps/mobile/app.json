@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "PanaSecreto",
+    "slug": "panasecreto",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#1E1338"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.panasecreto.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#1E1338"
+      },
+      "package": "com.panasecreto.app"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}

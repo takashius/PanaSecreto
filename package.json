@@ -1,0 +1,24 @@
+{
+  "name": "panasecreto-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@11.4.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev:backend": "pnpm --filter @panasecreto/backend dev",
+    "dev:admin": "pnpm --filter @panasecreto/admin dev",
+    "dev:mobile": "pnpm --filter @panasecreto/mobile start",
+    "build": "pnpm --filter \"./packages/*\" build && pnpm --filter @panasecreto/backend build && pnpm --filter @panasecreto/admin build",
+    "build:packages": "pnpm --filter \"./packages/*\" build",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "clean": "pnpm -r exec rimraf dist .turbo node_modules"
+  },
+  "devDependencies": {
+    "rimraf": "^6.0.1",
+    "typescript": "^5.8.2"
+  }
+}

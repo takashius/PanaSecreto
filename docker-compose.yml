@@ -1,0 +1,46 @@
+services:
+  # Base de Datos MongoDB
+  mongodb:
+    image: mongo:7-jammy
+    container_name: panasecreto-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: panasecreto
+    volumes:
+      - mongo_data:/data/db
+
+  # Backend REST + WebSockets
+  backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    container_name: panasecreto-backend
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      PORT: 4000
+      NODE_ENV: production
+      MONGO_URI: mongodb://mongodb:27017/panasecreto
+      CORS_ORIGIN: "*"
+      JWT_SECRET: super_jwt_secret_devops_coolify_2026
+    depends_on:
+      - mongodb
+
+  # Dashboard Web Administrativo
+  admin:
+    build:
+      context: .
+      dockerfile: apps/admin/Dockerfile
+    container_name: panasecreto-admin
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:
+    driver: local
