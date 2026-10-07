@@ -45,22 +45,23 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 // Initialize WebSockets
 setupChatSockets(io);
 
-// Connect to Database & Start Server
-async function startServer() {
+// Conectar a MongoDB de forma asíncrona y no bloqueante
+async function connectDatabase() {
+  if (!config.mongoUri) return;
   try {
-    if (config.mongoUri) {
-      console.log('[Database] Conectando a MongoDB...');
-      await mongoose.connect(config.mongoUri);
-      console.log('[Database] MongoDB conectado exitosamente');
-    }
+    console.log('[Database] Conectando a MongoDB...');
+    await mongoose.connect(config.mongoUri, {
+      serverSelectionTimeoutMS: 5000,
+    });
+    console.log('[Database] MongoDB conectado exitosamente');
   } catch (error) {
     console.warn('[Database] Advertencia: No se pudo conectar a MongoDB. Continuando en modo degradado:', (error as Error).message);
   }
-
-  server.listen(config.port, () => {
-    console.log(`🚀 PanaSecreto Backend escuchando en http://localhost:${config.port}`);
-    console.log(`🔌 WebSockets activo en puerto ${config.port}`);
-  });
 }
 
-startServer();
+// Iniciar servidor HTTP & WebSockets
+server.listen(config.port, () => {
+  console.log(`🚀 PanaSecreto Backend escuchando en http://localhost:${config.port}`);
+  console.log(`🔌 WebSockets activo en puerto ${config.port}`);
+  connectDatabase();
+});
