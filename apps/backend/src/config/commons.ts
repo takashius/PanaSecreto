@@ -35,6 +35,12 @@ const config = {
   userAdminEmail: process.env.USER_ADMIN_EMAIL || 'admin@panasecreto.local',
   userAdminPassword: process.env.USER_ADMIN_PASSWORD || 'Admin123456!',
   userAdminName: process.env.USER_ADMIN_NAME || 'Administrador',
+  cloudinary: {
+    CLOUD_NAME: process.env.CLOUD_NAME || '',
+    CLOUDINARY_KEY: process.env.CLOUDINARY_KEY || '',
+    CLOUDINARY_SECRET: process.env.CLOUDINARY_SECRET || '',
+    FOLDER_NAME: process.env.FOLDER_NAME || 'PanaSecreto',
+  },
 };
 
 export default config;

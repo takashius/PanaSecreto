@@ -1,5 +1,5 @@
 import { Sparkles } from 'lucide-react';
-import { colors } from '@panasecreto/ui-tokens';
+import { useConfigContext } from '../context/ConfigContext';
 
 interface AppLogoProps {
   className?: string;
@@ -7,26 +7,36 @@ interface AppLogoProps {
 }
 
 export default function AppLogo({ className, variant = 'dark' }: AppLogoProps) {
+  const { config } = useConfigContext();
   const isDarkBg = variant === 'dark';
 
   return (
     <div className={`flex items-center gap-2.5 ${className || ''}`}>
-      <div
-        className="w-9 h-9 rounded-xl flex items-center justify-center shadow-xs shrink-0 border"
-        style={{
-          backgroundColor: isDarkBg ? 'rgba(255, 255, 255, 0.12)' : colors.primary,
-          borderColor: isDarkBg ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
-        }}
-      >
-        <Sparkles className="w-5 h-5 text-secondary" style={{ color: colors.secondary }} />
-      </div>
+      {config.logoUrl ? (
+        <img
+          src={config.logoUrl}
+          alt={config.appName}
+          className="h-9 w-auto max-w-[130px] object-contain rounded-md"
+        />
+      ) : (
+        <div
+          className="w-9 h-9 rounded-xl flex items-center justify-center shadow-xs shrink-0 border"
+          style={{
+            backgroundColor: isDarkBg ? 'rgba(255, 255, 255, 0.12)' : config.primaryColor,
+            borderColor: isDarkBg ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
+          }}
+        >
+          <Sparkles className="w-5 h-5" style={{ color: config.secondaryColor }} />
+        </div>
+      )}
       <div className="flex flex-col min-w-0">
         <span
           className={`font-heading text-lg font-bold tracking-tight truncate leading-tight ${
-            isDarkBg ? 'text-white' : 'text-primary'
+            isDarkBg ? 'text-white' : ''
           }`}
+          style={!isDarkBg ? { color: config.primaryColor } : undefined}
         >
-          Pana<span style={{ color: colors.secondary }}>Secreto</span>
+          {config.appName}
         </span>
         <span
           className={`text-[9px] font-semibold tracking-wider uppercase ${

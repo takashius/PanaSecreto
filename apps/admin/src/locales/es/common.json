@@ -81,5 +81,28 @@
     "role": "Rol",
     "status": "Estado",
     "created": "Fecha de registro"
+  },
+  "settings": {
+    "title": "Configuración del Sistema",
+    "description": "Personaliza los colores del sistema, nombre visible, logotipo y favicon del administrador.",
+    "appName": "Nombre de la Aplicación",
+    "appNameHelp": "Este nombre se mostrará en el encabezado, menú lateral y título del navegador.",
+    "colorsTitle": "Paleta de Colores",
+    "primaryColor": "Color Principal",
+    "primaryColorHelp": "Color del encabezado superior, barra lateral y elementos primarios.",
+    "secondaryColor": "Color Secundario",
+    "secondaryColorHelp": "Color de acento para contrastes, detalles dorados e insignias.",
+    "accentColor": "Color Terciario / Acento",
+    "accentColorHelp": "Color informativo para enlaces, iconos destacados y badges secundarios.",
+    "brandingTitle": "Imágenes de Marca (Cloudinary)",
+    "logo": "Logotipo Principal",
+    "logoHelp": "Imagen que se muestra encima del menú lateral (PNG, SVG, JPG).",
+    "favicon": "Favicon del Navegador",
+    "faviconHelp": "Ícono que se muestra en la pestaña del navegador (ICO, PNG, SVG).",
+    "saveChanges": "Guardar Configuración",
+    "previewTitle": "Vista Previa de la Interfaz",
+    "previewSubtitle": "Así lucirá la barra lateral y los botones con la paleta seleccionada:",
+    "uploadButton": "Seleccionar Imagen",
+    "currentImage": "Imagen actual en Cloudinary:"
   }
 }

@@ -81,5 +81,28 @@
     "role": "Role",
     "status": "Status",
     "created": "Registration date"
+  },
+  "settings": {
+    "title": "System Settings",
+    "description": "Customize system colors, visible name, logo, and favicon for the administrator.",
+    "appName": "Application Name",
+    "appNameHelp": "This name will appear on the top header, sidebar menu, and browser title.",
+    "colorsTitle": "Color Palette",
+    "primaryColor": "Primary Color",
+    "primaryColorHelp": "Color for top header, sidebar, and primary elements.",
+    "secondaryColor": "Secondary Color",
+    "secondaryColorHelp": "Accent color for contrasts, gold highlights, and badges.",
+    "accentColor": "Accent Color",
+    "accentColorHelp": "Informational color for links, highlight icons, and secondary tags.",
+    "brandingTitle": "Brand Images (Cloudinary)",
+    "logo": "Main Logo",
+    "logoHelp": "Image displayed above the sidebar navigation (PNG, SVG, JPG).",
+    "favicon": "Browser Favicon",
+    "faviconHelp": "Icon displayed in the browser tab (ICO, PNG, SVG).",
+    "saveChanges": "Save Settings",
+    "previewTitle": "UI Live Preview",
+    "previewSubtitle": "This is how the sidebar and buttons will look with the selected palette:",
+    "uploadButton": "Select Image",
+    "currentImage": "Current image on Cloudinary:"
   }
 }

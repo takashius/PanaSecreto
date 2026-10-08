@@ -1,5 +1,4 @@
-import { ReactNode } from 'react';
-import { DashboardOutlined, UserOutlined } from '@ant-design/icons';
+import { DashboardOutlined, UserOutlined, SettingOutlined } from '@ant-design/icons';
 import { ROLES, normalizeRole, type UserRole } from '../constants/roles';
 
 export interface MenuItem {
@@ -25,6 +24,14 @@ export const allMenuItems: MenuItem[] = [
     labelKey: 'menu.usersManagement',
     path: '/users-management',
     icon: UserOutlined,
+    allowedRoles: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
+    match: 'startsWith',
+  },
+  {
+    key: 'settings',
+    labelKey: 'menu.settings',
+    path: '/settings',
+    icon: SettingOutlined,
     allowedRoles: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
     match: 'startsWith',
   },

@@ -1,7 +1,8 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ThemeProvider } from '@context/ThemeContext';
+import { ThemeProvider } from './context/ThemeContext';
+import { ConfigProvider } from './context/ConfigContext';
 import AppRoot from './AppRoot';
 import './locales/i18n';
 import './index.css';
@@ -19,7 +20,9 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <AppRoot />
+        <ConfigProvider>
+          <AppRoot />
+        </ConfigProvider>
       </ThemeProvider>
     </QueryClientProvider>
   </StrictMode>

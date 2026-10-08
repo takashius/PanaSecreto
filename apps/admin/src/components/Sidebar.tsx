@@ -4,8 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 import { getMenuItemsForRole, type MenuItem } from './menuItems';
 import { useAuth } from '@context/useAuth';
+import { useConfigContext } from '@context/ConfigContext';
 import AppLogo from './AppLogo';
-import { colors } from '@panasecreto/ui-tokens';
 
 interface SidebarProps {
   collapsed: boolean;
@@ -18,6 +18,7 @@ export default function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
   const location = useLocation();
   const sidebarRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
+  const { config } = useConfigContext();
   const menuItems = getMenuItemsForRole(user?.role);
 
   useEffect(() => {
@@ -46,7 +47,7 @@ export default function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
       <button
         type="button"
         className="fixed left-4 top-3.5 z-40 rounded-xl p-2 text-white shadow-md sm:hidden"
-        style={{ backgroundColor: colors.primary }}
+        style={{ backgroundColor: config.primaryColor }}
         onClick={() => setIsMobileOpen((prev) => !prev)}
         aria-label="Toggle menu"
       >
@@ -56,7 +57,7 @@ export default function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
       {/* Sidebar Aside */}
       <aside
         ref={sidebarRef}
-        style={{ backgroundColor: colors.primary }}
+        style={{ backgroundColor: config.primaryColor }}
         className={`fixed inset-y-0 left-0 z-30 flex flex-col text-white transition-all duration-300 shadow-xl border-r border-white/10 ${
           isMobileOpen ? 'translate-x-0' : '-translate-x-full'
         } sm:translate-x-0 ${collapsed ? 'w-20' : 'w-64'}`}
@@ -96,9 +97,10 @@ export default function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
                 onClick={() => setIsMobileOpen(false)}
                 className={`flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium transition-all ${
                   active
-                    ? 'bg-white/20 text-white font-semibold shadow-xs border-l-4 border-amber-400'
+                    ? 'bg-white/20 text-white font-semibold shadow-xs border-l-4'
                     : 'text-white/80 hover:bg-white/10 hover:text-white'
                 } ${collapsed ? 'justify-center px-0' : ''}`}
+                style={active ? { borderLeftColor: config.secondaryColor } : undefined}
                 title={collapsed ? t(item.labelKey) : undefined}
               >
                 {Icon && (

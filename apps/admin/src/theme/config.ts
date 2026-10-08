@@ -1,14 +1,21 @@
 import { ThemeConfig, theme as antdTheme } from 'antd';
 import { colors } from '@panasecreto/ui-tokens';
 
-export function getThemeConfig(isDark: boolean): ThemeConfig {
+export function getThemeConfig(
+  isDark: boolean,
+  customColors?: { primary?: string; secondary?: string; accent?: string }
+): ThemeConfig {
+  const primary = customColors?.primary || colors.primary;
+  const secondary = customColors?.secondary || colors.secondary;
+  const accent = customColors?.accent || colors.accent;
+
   return {
     algorithm: isDark ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
     token: {
-      colorPrimary: isDark ? '#F7A800' : colors.primary,
-      colorInfo: colors.accent,
+      colorPrimary: isDark ? (customColors?.secondary || '#F7A800') : primary,
+      colorInfo: accent,
       colorSuccess: colors.success,
-      colorWarning: colors.secondary,
+      colorWarning: secondary,
       colorError: colors.danger,
       borderRadius: 10,
       fontFamily: 'Inter, system-ui, sans-serif',
@@ -31,7 +38,7 @@ export function getThemeConfig(isDark: boolean): ThemeConfig {
         borderRadiusLG: 14,
       },
       Switch: {
-        colorPrimary: colors.primary,
+        colorPrimary: primary,
       },
     },
   };

@@ -3,7 +3,7 @@ import { UserOutlined, MoonOutlined, SunFilled, MenuFoldOutlined, MenuUnfoldOutl
 import { useUserMenuItems } from './UserMenu';
 import LanguageSwitcher from './LanguageSwitcher';
 import { useAuth } from '@context/useAuth';
-import { colors } from '@panasecreto/ui-tokens';
+import { useConfigContext } from '@context/ConfigContext';
 
 const { Header: AntHeader } = Layout;
 
@@ -21,11 +21,12 @@ export default function Header({
   onToggleCollapse,
 }: HeaderProps) {
   const { user } = useAuth();
+  const { config } = useConfigContext();
   const userMenuItems = useUserMenuItems();
 
   return (
     <AntHeader
-      style={{ backgroundColor: darkMode ? '#140C26' : colors.primary }}
+      style={{ backgroundColor: darkMode ? '#140C26' : config.primaryColor }}
       className={`fixed left-0 right-0 top-0 z-20 flex h-16 items-center justify-between px-4 sm:px-6 shadow-md transition-all duration-300 ${
         sidebarCollapsed ? 'sm:ml-20' : 'sm:ml-64'
       }`}
@@ -46,7 +47,9 @@ export default function Header({
         <div className="hidden sm:inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white text-xs border border-white/15">
           <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
           <span>API Online:</span>
-          <span className="font-mono text-amber-300">port 4000</span>
+          <span className="font-mono" style={{ color: config.secondaryColor }}>
+            port 4000
+          </span>
         </div>
       </div>
 
@@ -70,7 +73,8 @@ export default function Header({
             <Avatar
               icon={!user?.photo && <UserOutlined />}
               src={user?.photo || undefined}
-              className="bg-amber-400 text-purple-950 font-bold border-2 border-white/30 shrink-0 cursor-pointer"
+              className="font-bold border-2 border-white/30 shrink-0 cursor-pointer text-purple-950"
+              style={{ backgroundColor: config.secondaryColor }}
             />
             <span className="hidden md:inline-block text-sm font-semibold text-white leading-none">
               {user?.name} {user?.lastName || ''}
