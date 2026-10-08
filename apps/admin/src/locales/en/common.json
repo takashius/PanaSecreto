@@ -36,6 +36,7 @@
     "usersManagement": "Users",
     "groups": "Gift Groups",
     "settings": "Settings",
+    "profile": "My Profile",
     "logout": "Log out"
   },
   "roles": {
@@ -104,5 +105,38 @@
     "previewSubtitle": "This is how the sidebar and buttons will look with the selected palette:",
     "uploadButton": "Select Image",
     "currentImage": "Current image on Cloudinary:"
+  },
+  "profile": {
+    "title": "My Profile",
+    "description": "Manage your personal details, profile picture, and account security credentials.",
+    "personalInfo": "Personal Information",
+    "personalInfoHelp": "Update your first name, last name, and contact details.",
+    "avatarTitle": "Profile Picture",
+    "avatarHelp": "Upload a square profile image (JPG, PNG or WebP, max 5MB). Stored on Cloudinary.",
+    "avatarUploadBtn": "Change Photo",
+    "avatarUploading": "Uploading...",
+    "avatarSuccess": "Profile picture updated successfully.",
+    "avatarError": "Error uploading image.",
+    "name": "First Name",
+    "nameRequired": "Please enter your first name.",
+    "lastName": "Last Name",
+    "email": "Email Address",
+    "emailReadOnly": "Email address cannot be changed.",
+    "phone": "Phone Number",
+    "phonePlaceholder": "+1 555 1234567",
+    "role": "System Role",
+    "saveProfile": "Save Changes",
+    "securityTitle": "Security & Password",
+    "securityHelp": "Change your password regularly to protect your account.",
+    "currentPassword": "Current Password",
+    "currentPasswordRequired": "Please enter your current password.",
+    "newPassword": "New Password",
+    "newPasswordRequired": "Please enter a new password.",
+    "newPasswordMin": "Password must be at least 6 characters long.",
+    "confirmPassword": "Confirm New Password",
+    "confirmPasswordRequired": "Please confirm your new password.",
+    "passwordsDoNotMatch": "Passwords do not match.",
+    "updatePassword": "Change Password",
+    "passwordSuccess": "Password updated successfully."
   }
 }

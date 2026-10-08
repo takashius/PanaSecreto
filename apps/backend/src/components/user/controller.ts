@@ -128,3 +128,18 @@ export function setUserPassword(id: string, password: string) {
 export function setUserForcePasswordChange(id: string, force: boolean) {
   return store.setUserForcePasswordChange(id, force);
 }
+
+export function updateProfile(userId: string, data: any) {
+  if (data.name !== undefined && !data.name.trim()) {
+    return Promise.resolve({
+      status: 400,
+      message: 'El nombre no puede estar vacío.',
+    });
+  }
+  return store.updateProfile(userId, data);
+}
+
+export function uploadUserPhoto(userId: string, file?: Express.Multer.File) {
+  return store.uploadUserPhoto(userId, file);
+}
+

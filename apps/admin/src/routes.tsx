@@ -12,6 +12,7 @@ import Dashboard from '@pages/dashboard/Dashboard';
 import UserList from '@pages/users/UserList';
 import UserDetail from '@pages/users/UserDetail';
 import Configuration from './pages/settings/Configuration';
+import Profile from './pages/profile/Profile';
 import { ROLES, type UserRole } from './constants/roles';
 
 type AppChildRoute = {
@@ -53,6 +54,7 @@ export const routes: AppRoute[] = [
         protected: true,
         allowedRoles: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
       },
+      { path: '/profile', element: <Profile />, protected: true },
       { path: '/force-password-change', element: <ForcePasswordChange />, protected: true },
     ],
   },

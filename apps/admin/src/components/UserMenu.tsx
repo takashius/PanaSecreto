@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import type { MenuProps } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import { LogoutOutlined } from '@ant-design/icons';
+import { LogoutOutlined, UserOutlined } from '@ant-design/icons';
 import { useAuth } from '@context/useAuth';
 import { useLogout } from '@api/auth';
 
@@ -35,6 +35,12 @@ export const useUserMenuItems = (): MenuProps['items'] => {
     },
     {
       type: 'divider',
+    },
+    {
+      key: 'profile',
+      icon: <UserOutlined />,
+      label: <span>{t('menu.profile', 'Mi Perfil')}</span>,
+      onClick: () => navigate('/profile'),
     },
     {
       key: 'logout',

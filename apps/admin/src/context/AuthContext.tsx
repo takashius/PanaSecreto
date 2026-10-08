@@ -44,6 +44,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     window.location.assign('/login');
   };
 
+  const updateUser = (updated: Partial<AuthUser>) => {
+    setUser((prev) => (prev ? { ...prev, ...updated } : null));
+  };
+
   const getUser = (): AuthUser | null => {
     return user;
   };
@@ -54,7 +58,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, getUser, hasWebAccess }}>
+    <AuthContext.Provider value={{ user, token, login, logout, updateUser, getUser, hasWebAccess }}>
       {children}
     </AuthContext.Provider>
   );

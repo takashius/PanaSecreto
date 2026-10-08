@@ -3,6 +3,7 @@ import { canAccessWeb, ROLES, UserRole } from '../../config/roles';
 import { sanitizeEmail } from '../../utils/sanitizeEmail';
 import { StoreResponse } from '../../types/general';
 import { compare } from 'bcryptjs';
+import { removeImage } from '../../middleware/saveFile';
 
 export async function login(
   emailRaw: string,
@@ -410,3 +411,68 @@ export async function setUserForcePasswordChange(
     return { status: 500, message: 'Error al modificar requerimiento de clave.', detail: error };
   }
 }
+
+export async function updateProfile(
+  userId: string,
+  data: {
+    name?: string;
+    lastName?: string;
+    phone?: string;
+    photo?: string;
+    password?: string;
+  }
+): Promise<StoreResponse> {
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return { status: 404, message: 'Usuario no encontrado.' };
+    }
+
+    if (data.name !== undefined) user.name = data.name.trim();
+    if (data.lastName !== undefined) user.lastName = data.lastName.trim();
+    if (data.phone !== undefined) user.phone = data.phone.trim();
+    if (data.photo !== undefined) user.photo = data.photo;
+
+    if (data.password) {
+      if (data.password.length < 6) {
+        return { status: 400, message: 'La contraseña debe tener al menos 6 caracteres.' };
+      }
+      user.password = data.password;
+      user.forcePasswordChangeOnNextLogin = false;
+    }
+
+    await user.save();
+    const updated = await User.findById(userId).select('-password -tokens -__v');
+    return { status: 200, message: updated };
+  } catch (error) {
+    return { status: 500, message: 'Error al actualizar el perfil.', detail: error };
+  }
+}
+
+export async function uploadUserPhoto(
+  userId: string,
+  file?: Express.Multer.File
+): Promise<StoreResponse> {
+  try {
+    if (!file?.path) {
+      return { status: 400, message: 'No se recibió ningún archivo de imagen.' };
+    }
+    const user = await User.findById(userId);
+    if (!user) {
+      return { status: 404, message: 'Usuario no encontrado.' };
+    }
+
+    if (user.photo) {
+      await removeImage(user.photo);
+    }
+
+    user.photo = file.path;
+    await user.save();
+
+    const updated = await User.findById(userId).select('-password -tokens -__v');
+    return { status: 200, message: updated };
+  } catch (error) {
+    return { status: 500, message: 'Error al subir la imagen de perfil.', detail: error };
+  }
+}
+

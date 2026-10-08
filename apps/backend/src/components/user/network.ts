@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import * as controller from './controller';
 import auth, { authAdminOnly, authSuperAdminOnly } from '../../middleware/auth';
 import controllerError from '../../middleware/controllerError';
+import { upload } from '../../middleware/saveFile';
 import { sendOrError, sendResult } from '../../utils/http';
 import { loginRateLimiter, recoveryRequestRateLimiter, recoverySubmitRateLimiter } from '../../middleware/rateLimit';
 import { ALL_ROLES, ROLE_DESCRIPTIONS } from '../../config/roles';
@@ -34,6 +35,44 @@ router.post('/register', async (req: Request, res: Response) => {
 router.get('/me', auth(), async (req: IGetUserAuthInfoRequest, res: Response) => {
   try {
     const result = await controller.getUserProfile(req.user!._id);
+    sendOrError(res, result, controllerError, req);
+  } catch (error) {
+    controllerError(error, req, res);
+  }
+});
+
+// Actualizar datos de perfil (nombre, apellido, teléfono, password)
+router.patch('/me', auth(), async (req: IGetUserAuthInfoRequest, res: Response) => {
+  try {
+    const result = await controller.updateProfile(req.user!._id, req.body);
+    sendOrError(res, result, controllerError, req);
+  } catch (error) {
+    controllerError(error, req, res);
+  }
+});
+
+router.patch('/', auth(), async (req: IGetUserAuthInfoRequest, res: Response) => {
+  try {
+    const result = await controller.updateProfile(req.user!._id, req.body);
+    sendOrError(res, result, controllerError, req);
+  } catch (error) {
+    controllerError(error, req, res);
+  }
+});
+
+// Subir foto de perfil a Cloudinary
+router.post('/upload', auth(), upload.single('photo'), async (req: IGetUserAuthInfoRequest, res: Response) => {
+  try {
+    const result = await controller.uploadUserPhoto(req.user!._id, req.file);
+    sendOrError(res, result, controllerError, req);
+  } catch (error) {
+    controllerError(error, req, res);
+  }
+});
+
+router.post('/me/photo', auth(), upload.single('photo'), async (req: IGetUserAuthInfoRequest, res: Response) => {
+  try {
+    const result = await controller.uploadUserPhoto(req.user!._id, req.file);
     sendOrError(res, result, controllerError, req);
   } catch (error) {
     controllerError(error, req, res);
@@ -73,6 +112,10 @@ router.post('/me/logoutall', auth(), async (req: IGetUserAuthInfoRequest, res: R
 router.post('/change-password', auth(), async (req: IGetUserAuthInfoRequest, res: Response) => {
   try {
     const { oldPassword, newPassword } = req.body;
+    if (!oldPassword) {
+      res.status(400).send('La contraseña actual es requerida.');
+      return;
+    }
     const result = await controller.changePassword(req.user!._id, oldPassword, newPassword);
     sendOrError(res, result, controllerError, req);
   } catch (error) {

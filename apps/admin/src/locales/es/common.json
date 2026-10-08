@@ -36,6 +36,7 @@
     "usersManagement": "Usuarios",
     "groups": "Grupos de Intercambio",
     "settings": "Configuración",
+    "profile": "Mi Perfil",
     "logout": "Cerrar sesión"
   },
   "roles": {
@@ -104,5 +105,38 @@
     "previewSubtitle": "Así lucirá la barra lateral y los botones con la paleta seleccionada:",
     "uploadButton": "Seleccionar Imagen",
     "currentImage": "Imagen actual en Cloudinary:"
+  },
+  "profile": {
+    "title": "Mi Perfil",
+    "description": "Gestiona tu información personal, foto de perfil y credenciales de acceso.",
+    "personalInfo": "Información Personal",
+    "personalInfoHelp": "Actualiza tu nombre, apellido y datos de contacto.",
+    "avatarTitle": "Foto de Perfil",
+    "avatarHelp": "Sube una imagen cuadrada de perfil (JPG, PNG o WebP, máx 5MB). Se almacenará en Cloudinary.",
+    "avatarUploadBtn": "Cambiar Foto",
+    "avatarUploading": "Subiendo...",
+    "avatarSuccess": "Foto de perfil actualizada con éxito.",
+    "avatarError": "Error al subir la imagen.",
+    "name": "Nombre",
+    "nameRequired": "Por favor ingresa tu nombre.",
+    "lastName": "Apellido",
+    "email": "Correo Electrónico",
+    "emailReadOnly": "El correo electrónico no puede ser modificado.",
+    "phone": "Teléfono",
+    "phonePlaceholder": "+58 412 1234567",
+    "role": "Rol en el Sistema",
+    "saveProfile": "Guardar Cambios",
+    "securityTitle": "Seguridad y Contraseña",
+    "securityHelp": "Modifica tu contraseña de acceso para mantener protegida tu cuenta.",
+    "currentPassword": "Contraseña Actual",
+    "currentPasswordRequired": "Por favor ingresa tu contraseña actual.",
+    "newPassword": "Nueva Contraseña",
+    "newPasswordRequired": "Por favor ingresa una nueva contraseña.",
+    "newPasswordMin": "La contraseña debe tener al menos 6 caracteres.",
+    "confirmPassword": "Confirmar Nueva Contraseña",
+    "confirmPasswordRequired": "Por favor confirma tu nueva contraseña.",
+    "passwordsDoNotMatch": "Las contraseñas no coinciden.",
+    "updatePassword": "Actualizar Contraseña",
+    "passwordSuccess": "Contraseña actualizada exitosamente."
   }
 }

@@ -4,6 +4,7 @@ export interface AuthUser {
   _id: string;
   name: string;
   lastName?: string;
+  phone?: string;
   email: string;
   photo?: string;
   date?: string;
@@ -21,6 +22,7 @@ export interface AuthContextType {
   token: string | null;
   login: (userData: LoginResponse) => void;
   logout: () => void;
+  updateUser: (updated: Partial<AuthUser>) => void;
   getUser: () => AuthUser | null;
   hasWebAccess: () => boolean;
 }
