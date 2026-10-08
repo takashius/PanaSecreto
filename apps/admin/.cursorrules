@@ -1,0 +1,37 @@
+# PanaSecreto Admin Web - Architecture & Team Rules (Replicated from UniSan)
+
+## Stack Tecnológico
+
+- React 18/19 + TypeScript + Vite
+- Ant Design (antd) para componentes UI
+- Ant Design Form para formularios (NO React Hook Form)
+- Tailwind CSS para estilos utility-first (integrado con @panasecreto/ui-tokens)
+- React Query (TanStack Query) para estado del servidor
+- React Router DOM para routing
+- i18next + react-i18next para internacionalización
+- Axios con interceptores (`src/api/ERDEAxios.ts`)
+
+## Path Aliases
+
+Usar siempre los aliases configurados:
+- `@api/*` → `src/api/*`
+- `@components/*` → `src/components/*`
+- `@hooks/*` → `src/hooks/*`
+- `@context/*` → `src/context/*`
+- `@utils/*` → `src/utils/*`
+- `@pages/*` → `src/pages/*`
+- `@app-types/*` → `src/types/*`
+
+## Convenciones de Nombres y Estructura
+
+- **Componentes**: PascalCase (`UserList.tsx`, `PageHeader.tsx`)
+- **API hooks**: camelCase (`auth.ts`, `users.ts`)
+- **Tipos**: camelCase (`auth.ts`, `users.ts`)
+- **Utils**: camelCase (`GetMessage.ts`, `apiAuthError.ts`)
+
+## Filtros en Tablas
+
+- Los filtros de listado (`q`, `role`, `active`, etc.) deben implementarse en `Table.columns` usando `filters` y/o `filterDropdown`.
+- Prohibido renderizar filtros de listado fuera de la tabla.
+- Excepción: acciones no-filtro (crear, exportar, refrescar).
+- Solo roles con acceso web (`SUPER_ADMIN`, `ADMIN`) pueden autenticarse en el panel; el rol `USER` es exclusivo de la app móvil.

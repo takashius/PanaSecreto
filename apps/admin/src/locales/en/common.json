@@ -1,0 +1,85 @@
+{
+  "global": {
+    "createSuccess": "Created successfully.",
+    "updateSuccess": "Updated successfully.",
+    "noData": "No data",
+    "title404": "Sorry, the page you visited does not exist",
+    "backHome": "Back to Home",
+    "actions": "Actions",
+    "edit": "Edit",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "clear": "Clear",
+    "close": "Close",
+    "save": "Save",
+    "search": "Search",
+    "active": "Active",
+    "inactive": "Inactive",
+    "name": "Name",
+    "description": "Description",
+    "showingResults": "Showing {{start}} to {{end}} of {{total}} results"
+  },
+  "form": {
+    "validationError": "Please correct the errors in the form."
+  },
+  "error": {
+    "defaultTitle": "An error occurred",
+    "defaultMessage": "Could not load information",
+    "retry": "Retry",
+    "general": "An unexpected error occurred. Please try again."
+  },
+  "pageHeader": {
+    "refresh": "Refresh"
+  },
+  "menu": {
+    "dashboard": "Dashboard",
+    "usersManagement": "Users",
+    "groups": "Gift Groups",
+    "settings": "Settings",
+    "logout": "Log out"
+  },
+  "roles": {
+    "USER": "Participant",
+    "ORGANIZER": "Organizer",
+    "ADMIN": "Administrator",
+    "SUPER_ADMIN": "Super administrator"
+  },
+  "login": {
+    "title": "Sign In",
+    "usernameRequired": "Please enter your email.",
+    "passwordRequired": "Please enter your password.",
+    "email_placeholder": "email@example.com",
+    "password": "Password",
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot your password?",
+    "login": "Sign In",
+    "invalidCredentials": "Invalid email or password.",
+    "invalidResponse": "Invalid server response.",
+    "webAccessDenied": "You do not have web access permissions."
+  },
+  "recovery": {
+    "title": "Reset Password",
+    "description": "Enter your email to receive a recovery code.",
+    "sendCode": "Send Code",
+    "step2Title": "Enter Code & New Password",
+    "code": "6-digit code",
+    "newPass": "New Password",
+    "submit": "Set New Password",
+    "backToLogin": "Back to Login"
+  },
+  "usersManagement": {
+    "title": "User Management",
+    "description": "Manage PanaSecreto participants and administrators.",
+    "searchPlaceholder": "First name, last name or email",
+    "user": "User",
+    "detail": "Detail",
+    "createUser": "New User",
+    "editUser": "Edit User",
+    "resetPassword": "Change Password",
+    "forcePasswordChange": "Require change on next login",
+    "phone": "Phone",
+    "role": "Role",
+    "status": "Status",
+    "created": "Registration date"
+  }
+}

@@ -2,7 +2,7 @@
   "name": "@panasecreto/admin",
   "version": "1.0.0",
   "private": true,
-  "description": "Admin Web Dashboard for PanaSecreto (React + Vite + Tailwind)",
+  "description": "Admin Web Dashboard for PanaSecreto (React + Vite + Ant Design + Tailwind)",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,16 +13,25 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
+    "@ant-design/icons": "^5.6.1",
     "@panasecreto/shared": "workspace:*",
     "@panasecreto/ui-tokens": "workspace:*",
+    "@tanstack/react-query": "^5.66.0",
+    "antd": "^5.24.2",
+    "axios": "^1.7.9",
+    "i18next": "^24.2.2",
     "lucide-react": "^0.475.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-i18next": "^15.4.0",
+    "react-router-dom": "^7.2.0",
+    "url-join": "^5.0.0"
   },
   "devDependencies": {
     "@panasecreto/tsconfig": "workspace:*",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
+    "@types/url-join": "^4.0.3",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.5.2",

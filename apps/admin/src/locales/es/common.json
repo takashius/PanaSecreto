@@ -1,0 +1,85 @@
+{
+  "global": {
+    "createSuccess": "Creado exitosamente.",
+    "updateSuccess": "Actualizado exitosamente.",
+    "noData": "No hay datos",
+    "title404": "Lo sentimos, la página que visitaste no existe",
+    "backHome": "Volver al Inicio",
+    "actions": "Acciones",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "cancel": "Cancelar",
+    "clear": "Limpiar",
+    "close": "Cerrar",
+    "save": "Guardar",
+    "search": "Buscar",
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "name": "Nombre",
+    "description": "Descripción",
+    "showingResults": "Mostrando {{start}} a {{end}} de {{total}} resultados"
+  },
+  "form": {
+    "validationError": "Por favor, corrige los errores en el formulario."
+  },
+  "error": {
+    "defaultTitle": "Ocurrió un error",
+    "defaultMessage": "No se pudo cargar la información",
+    "retry": "Reintentar",
+    "general": "Ocurrió un error inesperado. Por favor, inténtalo de nuevo."
+  },
+  "pageHeader": {
+    "refresh": "Actualizar"
+  },
+  "menu": {
+    "dashboard": "Dashboard",
+    "usersManagement": "Usuarios",
+    "groups": "Grupos de Intercambio",
+    "settings": "Configuración",
+    "logout": "Cerrar sesión"
+  },
+  "roles": {
+    "USER": "Participante",
+    "ORGANIZER": "Organizador",
+    "ADMIN": "Administrador",
+    "SUPER_ADMIN": "Super administrador"
+  },
+  "login": {
+    "title": "Iniciar Sesión",
+    "usernameRequired": "Por favor ingresa tu correo electrónico.",
+    "passwordRequired": "Por favor ingresa tu contraseña.",
+    "email_placeholder": "correo@ejemplo.com",
+    "password": "Contraseña",
+    "rememberMe": "Recordarme",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "login": "Ingresar al Panel",
+    "invalidCredentials": "El correo o la contraseña son incorrectos.",
+    "invalidResponse": "Respuesta inválida del servidor.",
+    "webAccessDenied": "No tienes permisos de acceso web a este panel."
+  },
+  "recovery": {
+    "title": "Recuperar Contraseña",
+    "description": "Ingresa tu correo para recibir un código de recuperación.",
+    "sendCode": "Enviar Código",
+    "step2Title": "Ingresar Código y Nueva Clave",
+    "code": "Código de 6 dígitos",
+    "newPass": "Nueva Contraseña",
+    "submit": "Restablecer Contraseña",
+    "backToLogin": "Volver a Iniciar Sesión"
+  },
+  "usersManagement": {
+    "title": "Gestión de Usuarios",
+    "description": "Administra participantes y administradores de PanaSecreto, sus roles y accesos.",
+    "searchPlaceholder": "Nombre, apellido o correo",
+    "user": "Usuario",
+    "detail": "Detalle",
+    "createUser": "Nuevo Usuario",
+    "editUser": "Editar Usuario",
+    "resetPassword": "Cambiar Clave",
+    "forcePasswordChange": "Exigir cambio en próximo inicio",
+    "phone": "Teléfono",
+    "role": "Rol",
+    "status": "Estado",
+    "created": "Fecha de registro"
+  }
+}

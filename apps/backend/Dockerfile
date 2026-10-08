@@ -43,6 +43,7 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=4000
+ENV JWT_KEY=panasecreto_default_production_key_change_in_coolify
 
 # Usuario no privilegiado para seguridad
 RUN addgroup --system --gid 1001 nodejs && \
