@@ -1,35 +1,60 @@
-import { useState } from 'react';
+import { Layout as AntLayout } from 'antd';
 import { Outlet } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
+import { useTheme } from '@context/useTheme';
+
+const { Content } = AntLayout;
 
 export default function Layout() {
-  const [collapsed, setCollapsed] = useState(() => {
+  const { isDarkMode, toggleDarkMode } = useTheme();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     const saved = localStorage.getItem('sidebarCollapsed');
     return saved ? JSON.parse(saved) : false;
   });
 
   const handleToggleCollapse = () => {
-    setCollapsed((prev: boolean) => {
+    setSidebarCollapsed((prev: boolean) => {
       const next = !prev;
       localStorage.setItem('sidebarCollapsed', JSON.stringify(next));
+      window.dispatchEvent(new Event('sidebarCollapseChange'));
       return next;
     });
   };
 
+  useEffect(() => {
+    const handleCollapseChange = () => {
+      const saved = localStorage.getItem('sidebarCollapsed');
+      setSidebarCollapsed(saved ? JSON.parse(saved) : false);
+    };
+    window.addEventListener('sidebarCollapseChange', handleCollapseChange);
+    return () => window.removeEventListener('sidebarCollapseChange', handleCollapseChange);
+  }, []);
+
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100 font-sans">
-      <Sidebar collapsed={collapsed} />
-      <div
-        className={`flex flex-col min-h-screen transition-all duration-300 ${
-          collapsed ? 'pl-20' : 'pl-64'
-        }`}
-      >
-        <Header collapsed={collapsed} onToggleCollapse={handleToggleCollapse} />
-        <main className="flex-1 p-4 sm:p-6 lg:p-8">
-          <Outlet />
-        </main>
-      </div>
+    <div className={isDarkMode ? 'dark' : ''}>
+      <AntLayout className="min-h-screen">
+        <Sidebar
+          collapsed={sidebarCollapsed}
+          onToggleCollapse={handleToggleCollapse}
+        />
+        <AntLayout>
+          <Header
+            darkMode={isDarkMode}
+            toggleDarkMode={toggleDarkMode}
+            sidebarCollapsed={sidebarCollapsed}
+            onToggleCollapse={handleToggleCollapse}
+          />
+          <Content
+            className={`px-4 pb-6 pt-20 transition-all duration-300 sm:px-6 lg:px-8 ${
+              sidebarCollapsed ? 'sm:ml-20' : 'sm:ml-64'
+            }`}
+          >
+            <Outlet />
+          </Content>
+        </AntLayout>
+      </AntLayout>
     </div>
   );
 }

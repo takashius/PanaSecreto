@@ -107,7 +107,7 @@ export default function UserList() {
             <Avatar
               src={record.photo}
               icon={!record.photo && <UserOutlined />}
-              className="bg-primary text-white"
+              className="bg-primary text-white shrink-0"
             />
             <div>
               <p className="font-semibold text-gray-900 dark:text-gray-100 leading-tight">
@@ -161,8 +161,6 @@ export default function UserList() {
                 }
               );
             }}
-            checkedChildren="Activo"
-            unCheckedChildren="Inactivo"
           />
         ),
       },
@@ -196,6 +194,10 @@ export default function UserList() {
     <div>
       {contextHolder}
       <PageHeader
+        breadcrumbItems={[
+          { title: <Link to="/">{t('menu.dashboard')}</Link> },
+          { title: t('usersManagement.title') },
+        ]}
         title={t('usersManagement.title')}
         description={t('usersManagement.description')}
         onRefresh={() => void refetch()}
@@ -214,31 +216,30 @@ export default function UserList() {
         }
       />
 
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xs border border-gray-200/80 dark:border-gray-800 overflow-hidden">
-        <Table
-          rowKey="_id"
-          columns={columns as any}
-          dataSource={rows}
-          loading={isPending}
-          onChange={(pagination, filters) => {
-            setFilteredInfo(filters);
-            if (pagination.current) setCurrentPage(pagination.current);
-            if (pagination.pageSize) setPageSize(pagination.pageSize);
-          }}
-          pagination={{
-            current: currentPage,
-            pageSize,
-            total,
-            showSizeChanger: true,
-            showTotal: (totalCount, range) =>
-              t('global.showingResults', {
-                start: range[0],
-                end: range[1],
-                total: totalCount,
-              }),
-          }}
-        />
-      </div>
+      <Table
+        rowKey="_id"
+        columns={columns as any}
+        dataSource={rows}
+        loading={isPending}
+        onChange={(pagination, filters) => {
+          setFilteredInfo(filters);
+          if (pagination.current) setCurrentPage(pagination.current);
+          if (pagination.pageSize) setPageSize(pagination.pageSize);
+        }}
+        pagination={{
+          current: currentPage,
+          pageSize,
+          total,
+          showSizeChanger: true,
+          pageSizeOptions: ['10', '20', '50', '100'],
+          showTotal: (totalCount, range) =>
+            t('global.showingResults', {
+              start: range[0],
+              end: range[1],
+              total: totalCount,
+            }),
+        }}
+      />
 
       <UserFormModal
         open={openModal}

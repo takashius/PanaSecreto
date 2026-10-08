@@ -47,7 +47,7 @@ export default function RecoveryStep2() {
       {contextHolder}
       <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl border border-gray-100 dark:border-gray-800 dark:bg-gray-800">
         <div className="mb-6 flex justify-center">
-          <AppLogo className="h-16 w-auto" />
+          <AppLogo className="h-16 w-auto" variant="light" />
         </div>
         <h2 className="mb-2 text-center text-2xl font-bold font-heading text-gray-800 dark:text-gray-100">
           {t('recovery.step2Title')}

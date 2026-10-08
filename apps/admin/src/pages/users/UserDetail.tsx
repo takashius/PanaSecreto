@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Card, Descriptions, Tag, Button, Modal, Input, message, Spin, Switch } from 'antd';
-import { ArrowLeftOutlined, KeyOutlined, UserOutlined } from '@ant-design/icons';
+import { KeyOutlined, UserOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useUser, useSetUserPassword, useSetUserForcePasswordChange } from '@api/users';
 import PageHeader from '@components/PageHeader';
@@ -51,7 +51,7 @@ export default function UserDetail() {
       <div className="p-8 text-center">
         <p className="text-gray-500 mb-4">Usuario no encontrado</p>
         <Link to="/users-management">
-          <Button icon={<ArrowLeftOutlined />}>Volver al Listado</Button>
+          <Button>Volver al Listado</Button>
         </Link>
       </div>
     );
@@ -62,13 +62,12 @@ export default function UserDetail() {
   return (
     <div>
       {contextHolder}
-      <div className="mb-4">
-        <Link to="/users-management" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-primary">
-          <ArrowLeftOutlined /> Volver a usuarios
-        </Link>
-      </div>
-
       <PageHeader
+        breadcrumbItems={[
+          { title: <Link to="/">{t('menu.dashboard')}</Link> },
+          { title: <Link to="/users-management">{t('usersManagement.title')}</Link> },
+          { title: `${user.name} ${user.lastName || ''}` },
+        ]}
         title={`${user.name} ${user.lastName || ''}`}
         description={`Detalle del perfil y opciones de cuenta (${user.email})`}
         onRefresh={() => void refetch()}
@@ -83,7 +82,7 @@ export default function UserDetail() {
       />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="rounded-2xl border border-gray-200/80 shadow-xs md:col-span-2">
+        <Card className="rounded-2xl shadow-xs md:col-span-2">
           <Descriptions title="Información General" bordered column={1}>
             <Descriptions.Item label="ID de Usuario">
               <span className="font-mono text-xs">{user._id}</span>
@@ -113,11 +112,11 @@ export default function UserDetail() {
           </Descriptions>
         </Card>
 
-        <Card className="rounded-2xl border border-gray-200/80 shadow-xs h-fit" title="Seguridad de Acceso">
+        <Card className="rounded-2xl shadow-xs h-fit" title="Seguridad de Acceso">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold text-gray-800">Forzar cambio de clave</p>
+                <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">Forzar cambio de clave</p>
                 <p className="text-xs text-gray-500">Exigir nueva contraseña en el próximo login</p>
               </div>
               <Switch

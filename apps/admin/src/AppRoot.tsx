@@ -8,10 +8,10 @@ import { protectedRoutes } from './routes';
 const router = createBrowserRouter(protectedRoutes);
 
 export default function AppRoot() {
-  const { theme } = useTheme();
+  const { isDarkMode } = useTheme();
 
   return (
-    <ConfigProvider theme={getThemeConfig(theme === 'dark')}>
+    <ConfigProvider theme={getThemeConfig(isDarkMode)}>
       <App>
         <AuthProvider>
           <RouterProvider router={router} />

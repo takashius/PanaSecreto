@@ -1,33 +1,42 @@
-import { Button, Dropdown } from 'antd';
+import { useEffect } from 'react';
+import { Select } from 'antd';
 import { GlobalOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 
-export default function LanguageSwitcher() {
+const languages = [
+  { code: 'es', name: 'Español' },
+  { code: 'en', name: 'English' },
+];
+
+interface LanguageSwitcherProps {
+  className?: string;
+}
+
+export default function LanguageSwitcher({ className = '' }: LanguageSwitcherProps) {
   const { i18n } = useTranslation();
 
-  const changeLanguage = (lng: string) => {
-    void i18n.changeLanguage(lng);
-    localStorage.setItem('preferred-language', lng);
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem('preferred-language');
+    if (savedLanguage && languages.some((lang) => lang.code === savedLanguage)) {
+      void i18n.changeLanguage(savedLanguage);
+    }
+  }, [i18n]);
+
+  const handleLanguageChange = (languageCode: string) => {
+    void i18n.changeLanguage(languageCode);
+    localStorage.setItem('preferred-language', languageCode);
   };
 
-  const items = [
-    {
-      key: 'es',
-      label: '🇪🇸 Español',
-      onClick: () => changeLanguage('es'),
-    },
-    {
-      key: 'en',
-      label: '🇺🇸 English',
-      onClick: () => changeLanguage('en'),
-    },
-  ];
-
   return (
-    <Dropdown menu={{ items }} placement="bottomRight">
-      <Button type="text" icon={<GlobalOutlined />} className="uppercase font-semibold">
-        {i18n.language?.substring(0, 2) || 'ES'}
-      </Button>
-    </Dropdown>
+    <Select
+      value={i18n.language?.startsWith('en') ? 'en' : 'es'}
+      onChange={handleLanguageChange}
+      className={`min-w-[110px] ${className}`}
+      suffixIcon={<GlobalOutlined />}
+      options={languages.map((language) => ({
+        value: language.code,
+        label: language.name,
+      }))}
+    />
   );
 }

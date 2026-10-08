@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: [
     './index.html',
     './src/**/*.{js,ts,jsx,tsx}',
@@ -27,7 +28,7 @@ export default {
           light: '#E64C4C',
           dark: '#B01E1E',
         },
-        background: '#F8F9FA', // Hueso Suave
+        background: '#F5F5F5', // Fondo Claro Estilo UniSan
         textDark: '#1C1B24',   // Carbón Lente
         surface: '#FFFFFF',    // Blanco Puro
       },

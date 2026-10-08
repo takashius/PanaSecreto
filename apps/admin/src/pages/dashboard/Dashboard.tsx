@@ -13,13 +13,14 @@ export default function Dashboard() {
   return (
     <div>
       <PageHeader
+        breadcrumbItems={[{ title: t('menu.dashboard') }]}
         title={t('menu.dashboard')}
         description={`Bienvenido de nuevo, ${user?.name || 'Administrador'}. Panel central de administración.`}
       />
 
       {/* Hero Welcome Card */}
       <div
-        className="rounded-2xl p-6 md:p-8 text-white mb-8 shadow-lg relative overflow-hidden"
+        className="rounded-2xl p-6 md:p-8 text-white mb-8 shadow-md relative overflow-hidden"
         style={{
           background: `linear-gradient(135deg, ${colors.primary} 0%, #301B5E 100%)`,
         }}
@@ -51,7 +52,7 @@ export default function Dashboard() {
 
       {/* Metrics Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <Card className="rounded-2xl border border-gray-200/80 shadow-xs dark:bg-gray-900 dark:border-gray-800">
+        <Card className="rounded-2xl shadow-xs">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs uppercase font-semibold text-gray-400">Sesión Actual</p>
@@ -66,7 +67,7 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        <Card className="rounded-2xl border border-gray-200/80 shadow-xs dark:bg-gray-900 dark:border-gray-800">
+        <Card className="rounded-2xl shadow-xs">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs uppercase font-semibold text-gray-400">Rol Activo</p>
@@ -81,7 +82,7 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        <Card className="rounded-2xl border border-gray-200/80 shadow-xs dark:bg-gray-900 dark:border-gray-800">
+        <Card className="rounded-2xl shadow-xs">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs uppercase font-semibold text-gray-400">Infraestructura</p>
@@ -100,7 +101,7 @@ export default function Dashboard() {
       </div>
 
       {/* Quick Action Links */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-200/80 dark:border-gray-800 shadow-xs">
+      <Card className="rounded-2xl shadow-xs">
         <h3 className="text-lg font-heading font-bold mb-4 text-gray-800 dark:text-gray-200">
           Módulos Base Configurados
         </h3>
@@ -124,7 +125,7 @@ export default function Dashboard() {
             <Tag color="default">Pendiente</Tag>
           </div>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
