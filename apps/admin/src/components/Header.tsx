@@ -63,21 +63,19 @@ export default function Header({
         />
 
         <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" trigger={['click']}>
-          <div className="flex items-center gap-2.5 cursor-pointer p-1 rounded-lg hover:bg-white/10 transition-colors">
+          <button
+            type="button"
+            className="flex items-center gap-2.5 cursor-pointer py-1.5 px-2 rounded-lg hover:bg-white/10 transition-colors focus:outline-none"
+          >
             <Avatar
               icon={!user?.photo && <UserOutlined />}
               src={user?.photo || undefined}
-              className="bg-amber-400 text-purple-950 font-bold border-2 border-white/30 cursor-pointer"
+              className="bg-amber-400 text-purple-950 font-bold border-2 border-white/30 shrink-0 cursor-pointer"
             />
-            <div className="hidden text-left md:block text-white">
-              <p className="text-xs font-semibold leading-tight text-white">
-                {user?.name} {user?.lastName || ''}
-              </p>
-              <p className="text-[10px] text-amber-300 font-bold uppercase tracking-wider">
-                {String(user?.role || '')}
-              </p>
-            </div>
-          </div>
+            <span className="hidden md:inline-block text-sm font-semibold text-white leading-none">
+              {user?.name} {user?.lastName || ''}
+            </span>
+          </button>
         </Dropdown>
       </div>
     </AntHeader>
