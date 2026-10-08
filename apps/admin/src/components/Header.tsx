@@ -26,7 +26,10 @@ export default function Header({
 
   return (
     <AntHeader
-      style={{ backgroundColor: darkMode ? '#140C26' : config.primaryColor }}
+      style={{
+        backgroundColor: darkMode ? '#140C26' : config.primaryColor,
+        borderBottom: darkMode ? '1px solid #262436' : '1px solid rgba(255, 255, 255, 0.08)',
+      }}
       className={`fixed left-0 right-0 top-0 z-20 flex h-16 items-center justify-between px-4 sm:px-6 shadow-md transition-all duration-300 ${
         sidebarCollapsed ? 'sm:ml-20' : 'sm:ml-64'
       }`}
@@ -60,9 +63,12 @@ export default function Header({
         <Switch
           checked={darkMode}
           onChange={toggleDarkMode}
-          checkedChildren={<SunFilled className="text-amber-300" />}
-          unCheckedChildren={<MoonOutlined className="text-gray-200" />}
-          style={{ transform: 'scale(1.15)' }}
+          checkedChildren={<MoonOutlined className="text-amber-300" />}
+          unCheckedChildren={<SunFilled className="text-amber-400" />}
+          style={{
+            transform: 'scale(1.15)',
+            backgroundColor: darkMode ? '#301B5E' : 'rgba(255, 255, 255, 0.25)',
+          }}
         />
 
         <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" trigger={['click']}>

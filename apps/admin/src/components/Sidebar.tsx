@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 import { getMenuItemsForRole, type MenuItem } from './menuItems';
 import { useAuth } from '@context/useAuth';
+import { useTheme } from '@context/useTheme';
 import { useConfigContext } from '@context/ConfigContext';
 import AppLogo from './AppLogo';
 
@@ -18,6 +19,7 @@ export default function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
   const location = useLocation();
   const sidebarRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
+  const { isDarkMode } = useTheme();
   const { config } = useConfigContext();
   const menuItems = getMenuItemsForRole(user?.role);
 
@@ -41,13 +43,16 @@ export default function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
     [location.pathname]
   );
 
+  const sidebarBg = isDarkMode ? '#140C26' : config.primaryColor;
+  const sidebarBorder = isDarkMode ? '#262436' : 'rgba(255, 255, 255, 0.1)';
+
   return (
     <>
       {/* Mobile Toggle Button */}
       <button
         type="button"
         className="fixed left-4 top-3.5 z-40 rounded-xl p-2 text-white shadow-md sm:hidden"
-        style={{ backgroundColor: config.primaryColor }}
+        style={{ backgroundColor: sidebarBg }}
         onClick={() => setIsMobileOpen((prev) => !prev)}
         aria-label="Toggle menu"
       >
@@ -57,13 +62,19 @@ export default function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
       {/* Sidebar Aside */}
       <aside
         ref={sidebarRef}
-        style={{ backgroundColor: config.primaryColor }}
-        className={`fixed inset-y-0 left-0 z-30 flex flex-col text-white transition-all duration-300 shadow-xl border-r border-white/10 ${
+        style={{
+          backgroundColor: sidebarBg,
+          borderColor: sidebarBorder,
+        }}
+        className={`fixed inset-y-0 left-0 z-30 flex flex-col text-white transition-all duration-300 shadow-xl border-r ${
           isMobileOpen ? 'translate-x-0' : '-translate-x-full'
         } sm:translate-x-0 ${collapsed ? 'w-20' : 'w-64'}`}
       >
         {/* Brand Logo & Collapse Header */}
-        <div className="flex h-16 items-center justify-between border-b border-white/10 px-4">
+        <div
+          className="flex h-16 items-center justify-between border-b px-4 transition-colors duration-300"
+          style={{ borderColor: sidebarBorder }}
+        >
           <Link
             to="/"
             onClick={() => setIsMobileOpen(false)}
@@ -97,10 +108,17 @@ export default function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
                 onClick={() => setIsMobileOpen(false)}
                 className={`flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium transition-all ${
                   active
-                    ? 'bg-white/20 text-white font-semibold shadow-xs border-l-4'
+                    ? 'text-white font-semibold shadow-xs border-l-4'
                     : 'text-white/80 hover:bg-white/10 hover:text-white'
                 } ${collapsed ? 'justify-center px-0' : ''}`}
-                style={active ? { borderLeftColor: config.secondaryColor } : undefined}
+                style={
+                  active
+                    ? {
+                        borderLeftColor: config.secondaryColor,
+                        backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.2)',
+                      }
+                    : undefined
+                }
                 title={collapsed ? t(item.labelKey) : undefined}
               >
                 {Icon && (

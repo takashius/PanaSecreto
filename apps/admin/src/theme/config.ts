@@ -38,7 +38,7 @@ export function getThemeConfig(
         borderRadiusLG: 14,
       },
       Switch: {
-        colorPrimary: primary,
+        colorPrimary: isDark ? '#4C1D95' : primary,
       },
     },
   };
