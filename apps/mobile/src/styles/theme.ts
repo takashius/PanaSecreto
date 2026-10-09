@@ -35,7 +35,9 @@ export const theme = {
     surfaceContainerLow: '#F6F1FF',
     surfaceContainer: '#F0ECF9',
     surfaceContainerHigh: '#EAE6F3',
+    surfaceContainerHighest: '#E5E0ED',
     surfaceVariant: '#E5E0ED',
+    secondaryFixed: '#FFDDB1',
 
     // Textos y Contraste
     textDark: '#1C1B24',            // On-surface (Carbón Lente)

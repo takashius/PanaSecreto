@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, StatusBar } from 'react-nativ
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NavigationBar } from 'expo-navigation-bar';
 import LoginScreen from './src/screens/auth/LoginScreen';
+import RegisterScreen from './src/screens/auth/RegisterScreen';
 import { theme } from './src/styles/theme';
 
 export default function App() {
@@ -22,6 +23,18 @@ export default function App() {
     );
   }
 
+  if (currentScreen === 'register') {
+    return (
+      <RegisterScreen
+        onNavigateToLogin={() => setCurrentScreen('login')}
+        onRegisterSuccess={(user) => {
+          setSessionUser(user);
+          setCurrentScreen('dashboard');
+        }}
+      />
+    );
+  }
+
   // Pantallas de marcador temporal para Registro, Recuperar Contraseña o Dashboard post-login
   return (
     <SafeAreaView style={styles.container}>
@@ -29,12 +42,10 @@ export default function App() {
       <NavigationBar style="dark" />
       <View style={styles.card}>
         <Text style={styles.emoji}>
-          {currentScreen === 'register' && '📝'}
           {currentScreen === 'recover' && '🔑'}
           {currentScreen === 'dashboard' && '🎁'}
         </Text>
         <Text style={styles.title}>
-          {currentScreen === 'register' && 'Registro de Pana'}
           {currentScreen === 'recover' && 'Recuperar Contraseña'}
           {currentScreen === 'dashboard' && '¡Sesión Iniciada!'}
         </Text>
