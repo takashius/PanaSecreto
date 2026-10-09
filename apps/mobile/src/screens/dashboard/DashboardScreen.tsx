@@ -34,11 +34,13 @@ import { FloatingTabBar, DashboardTab } from '../../components/common/FloatingTa
 interface DashboardScreenProps {
   user?: any;
   onLogout?: () => void;
+  onNavigateToCreateGroup?: () => void;
 }
 
 export default function DashboardScreen({
   user,
   onLogout,
+  onNavigateToCreateGroup,
 }: DashboardScreenProps) {
   const insets = useSafeAreaInsets();
   const [selectedSegment, setSelectedSegment] = useState<'creados' | 'participo'>('creados');
@@ -55,10 +57,14 @@ export default function DashboardScreen({
   };
 
   const handleCreateGroup = () => {
-    Alert.alert(
-      'Nuevo Grupo',
-      '¡Pronto podrás configurar tu grupo, fijar reglas de exclusión y armar el sorteo!'
-    );
+    if (onNavigateToCreateGroup) {
+      onNavigateToCreateGroup();
+    } else {
+      Alert.alert(
+        'Nuevo Grupo',
+        '¡Pronto podrás configurar tu grupo, fijar reglas de exclusión y armar el sorteo!'
+      );
+    }
   };
 
   const handleEnterCode = () => {

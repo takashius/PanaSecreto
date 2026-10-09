@@ -6,16 +6,17 @@ import LoginScreen from './src/screens/auth/LoginScreen';
 import RegisterScreen from './src/screens/auth/RegisterScreen';
 import RecoverPasswordScreen from './src/screens/auth/RecoverPasswordScreen';
 import DashboardScreen from './src/screens/dashboard/DashboardScreen';
+import CreateGroupScreen from './src/screens/group/CreateGroupScreen';
 import { theme } from './src/styles/theme';
 
 export default function App() {
   // Pila de navegación para soportar el botón de atrás nativo de Android
-  const [screenHistory, setScreenHistory] = useState<Array<'login' | 'register' | 'recover' | 'dashboard'>>(['login']);
+  const [screenHistory, setScreenHistory] = useState<Array<'login' | 'register' | 'recover' | 'dashboard' | 'createGroup'>>(['login']);
   const [sessionUser, setSessionUser] = useState<any>(null);
 
   const currentScreen = screenHistory[screenHistory.length - 1];
 
-  const navigateTo = (screen: 'login' | 'register' | 'recover' | 'dashboard') => {
+  const navigateTo = (screen: 'login' | 'register' | 'recover' | 'dashboard' | 'createGroup') => {
     setScreenHistory((prev) => [...prev, screen]);
   };
 
@@ -73,10 +74,17 @@ export default function App() {
         onRecoverySuccess={() => setScreenHistory(['login'])}
       />
     );
+  } else if (currentScreen === 'createGroup') {
+    content = (
+      <CreateGroupScreen
+        onNavigateBack={goBack}
+      />
+    );
   } else {
     content = (
       <DashboardScreen
         user={sessionUser}
+        onNavigateToCreateGroup={() => navigateTo('createGroup')}
         onLogout={() => {
           setSessionUser(null);
           setScreenHistory(['login']);

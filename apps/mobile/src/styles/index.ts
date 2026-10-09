@@ -4,3 +4,4 @@ export { formStyles } from './form.styles';
 export { buttonStyles } from './button.styles';
 export { authStyles } from './auth.styles';
 export { dashboardStyles } from './dashboard.styles';
+export { createGroupStyles } from './createGroup.styles';
