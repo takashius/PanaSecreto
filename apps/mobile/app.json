@@ -45,6 +45,14 @@
     ],
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "expo-navigation-bar": {
+        "enforceContrast": false
+      },
+      "eas": {
+        "projectId": "c2c44d31-45f4-476c-82c9-aba855c3f5b0"
+      }
     }
   }
 }
