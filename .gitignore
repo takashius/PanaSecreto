@@ -16,6 +16,7 @@ out/
 .env.*
 !.env.example
 *.local
+.agents/mcp_config.json
 
 # Mobile & Expo
 .expo/
