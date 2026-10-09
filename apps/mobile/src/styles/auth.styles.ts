@@ -151,6 +151,184 @@ export const authStyles = StyleSheet.create({
     alignSelf: 'center',
     lineHeight: 20,
   },
+
+  // Stepper / Barra de Progreso de Recuperación
+  stepperRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  stepperTextStep: {
+    fontSize: theme.typography.fontSize.xs,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.brandOrange,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  stepperTextTitle: {
+    fontSize: theme.typography.fontSize.xs,
+    color: theme.colors.textMuted,
+  },
+  stepperBarContainer: {
+    height: 6,
+    width: '100%',
+    backgroundColor: theme.colors.surfaceContainer,
+    borderRadius: 3,
+    overflow: 'hidden',
+    marginBottom: theme.spacing.md,
+  },
+  stepperBarFill: {
+    height: '100%',
+    backgroundColor: theme.colors.secondaryContainer,
+    borderRadius: 3,
+  },
+
+  // Tarjeta de Tranquilidad con Mascota ("Cero estrés")
+  reassuranceCard: {
+    backgroundColor: theme.colors.surfaceContainerLow,
+    borderRadius: theme.radii.xl,
+    padding: theme.spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+    ...theme.shadows.subtle,
+  },
+  reassuranceMascotWrapper: {
+    width: 68,
+    height: 68,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  reassuranceMascotImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'contain',
+  },
+  reassuranceContent: {
+    flex: 1,
+  },
+  reassuranceBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 2,
+  },
+  reassuranceBadgeText: {
+    fontSize: theme.typography.fontSize.xs,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.secondaryDark,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+  reassuranceTitle: {
+    fontSize: theme.typography.fontSize.md,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.textDark,
+    lineHeight: 20,
+  },
+
+  // Banner Informativo / Consejo
+  tipBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    marginTop: 8,
+    paddingHorizontal: 2,
+  },
+  tipText: {
+    flex: 1,
+    fontSize: theme.typography.fontSize.xs,
+    color: theme.colors.textSecondary,
+    lineHeight: 18,
+  },
+
+  // Micro-tarjeta de Garantía / Seguridad
+  guaranteeCard: {
+    backgroundColor: theme.colors.surfaceContainerHigh,
+    borderRadius: theme.radii.xl,
+    padding: theme.spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    marginTop: theme.spacing.md,
+  },
+  guaranteeBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: theme.colors.secondaryFixed,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  guaranteeTitle: {
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.textDark,
+  },
+  guaranteeSubtitle: {
+    fontSize: theme.typography.fontSize.xs,
+    color: theme.colors.textSecondary,
+    marginTop: 1,
+  },
+
+  // Reenviar Código y Temporizador
+  resendRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 12,
+  },
+  timerText: {
+    fontSize: theme.typography.fontSize.xs,
+    color: theme.colors.textSecondary,
+  },
+  timerHighlight: {
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.textDark,
+  },
+  resendButton: {
+    fontSize: theme.typography.fontSize.xs,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.brandOrange,
+  },
+
+  // Requisitos de Seguridad (Badges)
+  rulesContainer: {
+    backgroundColor: theme.colors.surfaceContainerLow,
+    borderRadius: theme.radii.lg,
+    padding: 10,
+    marginTop: 6,
+  },
+  rulesHeader: {
+    fontSize: theme.typography.fontSize.xs,
+    color: theme.colors.textMuted,
+    marginBottom: 6,
+  },
+  rulesRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  ruleBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: theme.radii.full,
+    backgroundColor: theme.colors.surfaceContainer,
+  },
+  ruleBadgeActive: {
+    backgroundColor: theme.colors.surfaceCard,
+    borderColor: theme.colors.success,
+    borderWidth: 1,
+  },
+  ruleBadgeText: {
+    fontSize: theme.typography.fontSize.xs,
+    color: theme.colors.textSecondary,
+  },
 });
 
 export default authStyles;

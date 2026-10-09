@@ -37,7 +37,6 @@ export const formStyles = StyleSheet.create({
   inputWrapperFocused: {
     borderColor: theme.colors.primary,
     backgroundColor: theme.colors.surfaceCard,
-    ...theme.shadows.subtle,
   },
   inputWrapperError: {
     borderColor: theme.colors.danger,

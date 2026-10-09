@@ -10,10 +10,8 @@ import {
   ActivityIndicator,
   Alert,
   Image,
-  StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { NavigationBar } from 'expo-navigation-bar';
 import { Mail, Lock, Eye, EyeOff, ShieldCheck } from 'lucide-react-native';
 import { GoogleIcon } from '../../components/common/GoogleIcon';
 import {
@@ -72,15 +70,10 @@ export default function LoginScreen({
   };
 
   return (
-    <SafeAreaView style={commonStyles.safeArea} edges={['top', 'bottom']}>
-      <StatusBar
-        translucent
-        backgroundColor="transparent"
-        barStyle="dark-content"
-      />
-      <NavigationBar style="dark" />
+    <SafeAreaView style={commonStyles.safeArea} edges={['top']}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        enabled={Platform.OS === 'ios'}
         style={{ flex: 1 }}
       >
         <ScrollView
@@ -118,6 +111,7 @@ export default function LoginScreen({
               </View>
 
               <View
+                collapsable={false}
                 style={[
                   formStyles.inputWrapper,
                   isFocusedIdentifier && formStyles.inputWrapperFocused,
@@ -166,6 +160,7 @@ export default function LoginScreen({
               </View>
 
               <View
+                collapsable={false}
                 style={[
                   formStyles.inputWrapper,
                   isFocusedPassword && formStyles.inputWrapperFocused,

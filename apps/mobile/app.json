@@ -20,7 +20,8 @@
         "backgroundColor": "#1E1338"
       },
       "package": "com.panasecreto.app",
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "softwareKeyboardLayoutMode": "resize"
     },
     "androidStatusBar": {
       "translucent": true,

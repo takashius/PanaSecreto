@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,10 +10,9 @@ import {
   ActivityIndicator,
   Alert,
   Image,
-  StatusBar,
+  BackHandler,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { NavigationBar } from 'expo-navigation-bar';
 import {
   ArrowLeft,
   User,
@@ -62,6 +61,19 @@ export default function RegisterScreen({
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Manejo del botón de atrás nativo de Android
+  useEffect(() => {
+    const onBackPress = () => {
+      if (onNavigateToLogin) {
+        onNavigateToLogin();
+        return true;
+      }
+      return false;
+    };
+    const sub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => sub.remove();
+  }, [onNavigateToLogin]);
 
   // Cálculo de fortaleza de contraseña
   const getPasswordStrength = () => {
@@ -134,14 +146,7 @@ export default function RegisterScreen({
   };
 
   return (
-    <SafeAreaView style={commonStyles.safeArea} edges={['top', 'bottom']}>
-      <StatusBar
-        translucent
-        backgroundColor="transparent"
-        barStyle="dark-content"
-      />
-      <NavigationBar style="dark" />
-
+    <SafeAreaView style={commonStyles.safeArea} edges={['top']}>
       {/* 1. Header con Botón de Retroceso y Marca */}
       <View style={authStyles.headerNav}>
         <View style={authStyles.headerNavLeft}>
@@ -165,6 +170,7 @@ export default function RegisterScreen({
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        enabled={Platform.OS === 'ios'}
         style={{ flex: 1 }}
       >
         <ScrollView
@@ -203,6 +209,7 @@ export default function RegisterScreen({
                 <Text style={formStyles.label}>Nombre y Apellido</Text>
               </View>
               <View
+                collapsable={false}
                 style={[
                   formStyles.inputWrapper,
                   focusedField === 'fullname' && formStyles.inputWrapperFocused,
@@ -244,6 +251,7 @@ export default function RegisterScreen({
                 <Text style={formStyles.labelHint}>Para menciones</Text>
               </View>
               <View
+                collapsable={false}
                 style={[
                   formStyles.inputWrapper,
                   focusedField === 'username' && formStyles.inputWrapperFocused,
@@ -285,6 +293,7 @@ export default function RegisterScreen({
                 <Text style={formStyles.label}>Correo Electrónico</Text>
               </View>
               <View
+                collapsable={false}
                 style={[
                   formStyles.inputWrapper,
                   focusedField === 'email' && formStyles.inputWrapperFocused,
@@ -342,6 +351,7 @@ export default function RegisterScreen({
                 </TouchableOpacity>
 
                 <View
+                  collapsable={false}
                   style={[
                     formStyles.inputWrapper,
                     formStyles.phoneInputWrapper,
@@ -377,6 +387,7 @@ export default function RegisterScreen({
                 <Text style={formStyles.label}>Contraseña secreta</Text>
               </View>
               <View
+                collapsable={false}
                 style={[
                   formStyles.inputWrapper,
                   focusedField === 'password' && formStyles.inputWrapperFocused,
@@ -427,10 +438,10 @@ export default function RegisterScreen({
                       formStyles.strengthBar,
                       strength.level >= 1 &&
                         (strength.level === 1
-                          ? formStyles.strengthBarWeak
-                          : strength.level === 2
-                          ? formStyles.strengthBarMedium
-                          : formStyles.strengthBarStrong),
+                           ? formStyles.strengthBarWeak
+                           : strength.level === 2
+                           ? formStyles.strengthBarMedium
+                           : formStyles.strengthBarStrong),
                     ]}
                   />
                   <View
@@ -438,8 +449,8 @@ export default function RegisterScreen({
                       formStyles.strengthBar,
                       strength.level >= 2 &&
                         (strength.level === 2
-                          ? formStyles.strengthBarMedium
-                          : formStyles.strengthBarStrong),
+                           ? formStyles.strengthBarMedium
+                           : formStyles.strengthBarStrong),
                     ]}
                   />
                   <View
@@ -465,6 +476,7 @@ export default function RegisterScreen({
                 <Text style={formStyles.label}>Confirmar Contraseña</Text>
               </View>
               <View
+                collapsable={false}
                 style={[
                   formStyles.inputWrapper,
                   focusedField === 'confirmPassword' && formStyles.inputWrapperFocused,
