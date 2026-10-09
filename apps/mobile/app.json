@@ -2,6 +2,7 @@
   "expo": {
     "name": "PanaSecreto",
     "slug": "panasecreto",
+    "owner": "erdesarrollo",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -13,13 +14,13 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.panasecreto.app"
+      "bundleIdentifier": "com.erdesarrollo.panasecreto"
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#1E1338"
       },
-      "package": "com.panasecreto.app",
+      "package": "com.erdesarrollo.panasecreto",
       "edgeToEdgeEnabled": true,
       "softwareKeyboardLayoutMode": "resize"
     },
