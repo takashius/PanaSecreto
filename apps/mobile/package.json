@@ -21,6 +21,7 @@
     "expo-modules-core": "~57.0.21",
     "expo-navigation-bar": "^57.0.3",
     "expo-status-bar": "~57.0.1",
+    "expo-updates": "~57.0.25",
     "lucide-react-native": "^0.511.0",
     "react": "19.2.3",
     "react-native": "0.86.3",
