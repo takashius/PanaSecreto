@@ -12,7 +12,8 @@ export const theme = {
     primaryContainer: '#20153A',
     onPrimaryContainer: '#8A7DA9',
 
-    secondary: '#F7A800',           // Amarillo Araguaney
+    secondary: '#F7A800',           // Amarillo Araguaney / Naranja oficial del manual
+    brandOrange: '#F7A800',         // Naranja Marca PanaSecreto ("Secreto")
     secondaryLight: '#FFBF33',
     secondaryDark: '#815600',
     secondaryContainer: '#FEAE10',

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { NavigationBar } from 'expo-navigation-bar';
 import LoginScreen from './src/screens/auth/LoginScreen';
 import { theme } from './src/styles/theme';
 
@@ -24,6 +25,8 @@ export default function App() {
   // Pantallas de marcador temporal para Registro, Recuperar Contraseña o Dashboard post-login
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
+      <NavigationBar style="dark" />
       <View style={styles.card}>
         <Text style={styles.emoji}>
           {currentScreen === 'register' && '📝'}

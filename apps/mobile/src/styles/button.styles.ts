@@ -45,20 +45,6 @@ export const buttonStyles = StyleSheet.create({
     color: theme.colors.textDark,
     marginLeft: 10,
   },
-  btnApple: {
-    height: 48,
-    backgroundColor: theme.colors.textDark,
-    borderRadius: theme.radii.lg,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  btnAppleText: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.white,
-    marginLeft: 10,
-  },
 
   // Enlace del pie ("¿Aún no eres parte? Regístrate aquí")
   footerRow: {

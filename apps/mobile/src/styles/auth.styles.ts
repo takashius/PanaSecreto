@@ -44,11 +44,8 @@ export const authStyles = StyleSheet.create({
     letterSpacing: -0.5,
   },
   brandTitleAccent: {
-    color: theme.colors.secondaryDark,
+    color: theme.colors.brandOrange,
     fontWeight: theme.typography.fontWeight.black,
-  },
-  brandEmoji: {
-    fontSize: 22,
   },
   tagline: {
     fontSize: theme.typography.fontSize.base,

@@ -21,6 +21,16 @@
       },
       "package": "com.panasecreto.app"
     },
+    "androidStatusBar": {
+      "translucent": true,
+      "backgroundColor": "#00000000",
+      "barStyle": "dark-content"
+    },
+    "androidNavigationBar": {
+      "visible": "always",
+      "backgroundColor": "#FCF8FF",
+      "barStyle": "dark-content"
+    },
     "web": {
       "favicon": "./assets/favicon.png"
     }

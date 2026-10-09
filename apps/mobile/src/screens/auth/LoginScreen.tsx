@@ -10,10 +10,12 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
+import { NavigationBar } from 'expo-navigation-bar';
 import { Mail, Lock, Eye, EyeOff, ShieldCheck } from 'lucide-react-native';
+import { GoogleIcon } from '../../components/common/GoogleIcon';
 import {
   theme,
   commonStyles,
@@ -71,7 +73,12 @@ export default function LoginScreen({
 
   return (
     <SafeAreaView style={commonStyles.safeArea} edges={['top', 'bottom']}>
-      <StatusBar style="dark" />
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle="dark-content"
+      />
+      <NavigationBar style="dark" />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
@@ -95,7 +102,6 @@ export default function LoginScreen({
               <Text style={authStyles.brandTitle}>
                 Pana<Text style={authStyles.brandTitleAccent}>Secreto</Text>
               </Text>
-              <Text style={authStyles.brandEmoji}>🎭</Text>
             </View>
 
             <Text style={authStyles.tagline}>
@@ -235,17 +241,8 @@ export default function LoginScreen({
                 onPress={() => Alert.alert('Google Auth', 'Próximamente disponible')}
                 activeOpacity={0.8}
               >
-                <Text style={{ fontSize: 18 }}>🌐</Text>
+                <GoogleIcon size={20} />
                 <Text style={buttonStyles.btnGoogleText}>Continuar con Google</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={buttonStyles.btnApple}
-                onPress={() => Alert.alert('Apple Auth', 'Próximamente disponible')}
-                activeOpacity={0.85}
-              >
-                <Text style={{ fontSize: 18 }}>🍏</Text>
-                <Text style={buttonStyles.btnAppleText}>Continuar con Apple</Text>
               </TouchableOpacity>
             </View>
           </View>
