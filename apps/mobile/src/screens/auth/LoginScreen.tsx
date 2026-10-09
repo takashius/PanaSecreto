@@ -70,7 +70,7 @@ export default function LoginScreen({
   };
 
   return (
-    <SafeAreaView style={commonStyles.safeArea} edges={['top']}>
+    <SafeAreaView style={commonStyles.safeArea} edges={['top', 'bottom']}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         enabled={Platform.OS === 'ios'}

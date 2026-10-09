@@ -146,7 +146,7 @@ export default function RegisterScreen({
   };
 
   return (
-    <SafeAreaView style={commonStyles.safeArea} edges={['top']}>
+    <SafeAreaView style={commonStyles.safeArea} edges={['top', 'bottom']}>
       {/* 1. Header con Botón de Retroceso y Marca */}
       <View style={authStyles.headerNav}>
         <View style={authStyles.headerNavLeft}>

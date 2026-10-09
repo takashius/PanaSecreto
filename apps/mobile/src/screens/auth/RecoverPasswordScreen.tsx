@@ -184,7 +184,7 @@ export default function RecoverPasswordScreen({
   };
 
   return (
-    <SafeAreaView style={commonStyles.safeArea} edges={['top']}>
+    <SafeAreaView style={commonStyles.safeArea} edges={['top', 'bottom']}>
       {/* 1. Header Idéntico al Registro */}
       <View style={authStyles.headerNav}>
         <View style={authStyles.headerNavLeft}>

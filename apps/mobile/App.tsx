@@ -74,7 +74,7 @@ export default function App() {
     );
   } else {
     content = (
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         <View style={styles.card}>
           <Text style={styles.emoji}>🎁</Text>
           <Text style={styles.title}>¡Sesión Iniciada!</Text>
