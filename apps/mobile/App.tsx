@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, StatusBar, Platform, BackHandler } from 'react-native';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar, Platform, BackHandler } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as NavigationBar from 'expo-navigation-bar';
 import LoginScreen from './src/screens/auth/LoginScreen';
 import RegisterScreen from './src/screens/auth/RegisterScreen';
 import RecoverPasswordScreen from './src/screens/auth/RecoverPasswordScreen';
+import DashboardScreen from './src/screens/dashboard/DashboardScreen';
 import { theme } from './src/styles/theme';
 
 export default function App() {
@@ -74,23 +75,13 @@ export default function App() {
     );
   } else {
     content = (
-      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-        <View style={styles.card}>
-          <Text style={styles.emoji}>🎁</Text>
-          <Text style={styles.title}>¡Sesión Iniciada!</Text>
-          <Text style={styles.subtitle}>
-            {sessionUser?.fullname || sessionUser?.identifier || 'Pana'}, estás listo para armar la parranda y el sorteo.
-          </Text>
-
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => setScreenHistory(['login'])}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.backButtonText}>Cerrar Sesión</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
+      <DashboardScreen
+        user={sessionUser}
+        onLogout={() => {
+          setSessionUser(null);
+          setScreenHistory(['login']);
+        }}
+      />
     );
   }
 
@@ -101,52 +92,3 @@ export default function App() {
     </SafeAreaProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.surface,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-  card: {
-    backgroundColor: theme.colors.surfaceCard,
-    borderRadius: theme.radii['3xl'],
-    padding: 24,
-    width: '100%',
-    alignItems: 'center',
-    ...theme.shadows.card,
-  },
-  emoji: {
-    fontSize: 36,
-    marginBottom: 8,
-  },
-  title: {
-    fontSize: theme.typography.fontSize['2xl'],
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.textDark,
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: theme.typography.fontSize.base,
-    color: theme.colors.textMuted,
-    textAlign: 'center',
-    marginBottom: 24,
-    lineHeight: 20,
-  },
-  backButton: {
-    backgroundColor: theme.colors.primary,
-    height: 48,
-    borderRadius: theme.radii.lg,
-    width: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  backButtonText: {
-    color: theme.colors.white,
-    fontWeight: theme.typography.fontWeight.bold,
-    fontSize: theme.typography.fontSize.md,
-  },
-});
