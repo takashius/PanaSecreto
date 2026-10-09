@@ -9,12 +9,18 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react-native';
-import { LoginSchema } from '@panasecreto/shared';
-import { cssClasses, theme } from '../../styles/theme';
+import { Mail, Lock, Eye, EyeOff, ShieldCheck } from 'lucide-react-native';
+import {
+  theme,
+  commonStyles,
+  formStyles,
+  buttonStyles,
+  authStyles,
+} from '../../styles';
 
 interface LoginScreenProps {
   onNavigateToRegister?: () => void;
@@ -27,187 +33,241 @@ export default function LoginScreen({
   onNavigateToRecoverPassword,
   onLoginSuccess,
 }: LoginScreenProps) {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isFocusedIdentifier, setIsFocusedIdentifier] = useState(false);
+  const [isFocusedPassword, setIsFocusedPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ identifier?: string; password?: string }>({});
 
-  const handleLogin = async () => {
-    // 1. Validar campos con Zod schema compartido de @panasecreto/shared
-    const validation = LoginSchema.safeParse({ email: email.trim(), password });
-    if (!validation.success) {
-      const fieldErrors: { email?: string; password?: string } = {};
-      validation.error.issues.forEach((err) => {
-        if (err.path[0] === 'email') fieldErrors.email = err.message;
-        if (err.path[0] === 'password') fieldErrors.password = err.message;
-      });
-      setErrors(fieldErrors);
+  const handleLogin = () => {
+    const newErrors: { identifier?: string; password?: string } = {};
+
+    if (!identifier.trim()) {
+      newErrors.identifier = 'Por favor ingresa tu correo o usuario.';
+    }
+    if (!password) {
+      newErrors.password = 'Por favor ingresa tu contraseña.';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
     setErrors({});
     setLoading(true);
 
-    try {
-      // Simulación de login / llamada a API backend
-      // TODO: Conectar con apiClient / ERDEAxios móvil
-      setTimeout(() => {
-        setLoading(false);
-        Alert.alert('¡Bienvenido!', `Sesión iniciada con éxito para ${email}`);
-        if (onLoginSuccess) {
-          onLoginSuccess('mock-jwt-token', { email });
-        }
-      }, 800);
-    } catch (err: any) {
+    // Simulación de autenticación exitosa
+    setTimeout(() => {
       setLoading(false);
-      Alert.alert('Error', err?.message || 'No se pudo iniciar sesión');
-    }
+      Alert.alert('¡Bienvenido, Pana!', `Sesión iniciada correctamente.`);
+      if (onLoginSuccess) {
+        onLoginSuccess('mock-jwt-token', { identifier });
+      }
+    }, 1200);
   };
 
   return (
-    <SafeAreaView className={cssClasses.layout.safeArea} edges={['top', 'bottom']}>
-      <StatusBar style="light" />
+    <SafeAreaView style={commonStyles.safeArea} edges={['top', 'bottom']}>
+      <StatusBar style="dark" />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        className="flex-1"
+        style={{ flex: 1 }}
       >
         <ScrollView
-          contentContainerClassName={cssClasses.layout.scroll}
+          contentContainerStyle={commonStyles.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* 1. Header con Branding oficial de PanaSecreto */}
-          <View className={cssClasses.layout.header}>
-            <View className={cssClasses.brand.logoBox}>
-              <Text className={cssClasses.brand.logoEmoji}>🎁</Text>
+          {/* 1. Header con Mascota (Guacamaya), Logo y Eslogan */}
+          <View style={authStyles.headerSection}>
+            <View style={authStyles.mascotWrapper}>
+              <View style={authStyles.mascotGlow} />
+              <Image
+                source={require('../../../assets/icon.png')}
+                style={authStyles.mascotImage}
+              />
             </View>
-            <Text className={cssClasses.brand.title}>
-              Pana<Text className={cssClasses.brand.accent}>Secreto</Text>
-            </Text>
-            <Text className={cssClasses.brand.tagline}>
-              Tu intercambio de amigos sin enredos
+
+            <View style={authStyles.titleRow}>
+              <Text style={authStyles.brandTitle}>
+                Pana<Text style={authStyles.brandTitleAccent}>Secreto</Text>
+              </Text>
+              <Text style={authStyles.brandEmoji}>🎭</Text>
+            </View>
+
+            <Text style={authStyles.tagline}>
+              ¡Epa! Inicia sesión para descubrir a tu amigo secreto y armar la parranda.
             </Text>
           </View>
 
-          {/* 2. Tarjeta de Contenido / Formulario */}
-          <View className={cssClasses.layout.card}>
-            <Text className={cssClasses.typography.title}>Iniciar Sesión</Text>
-            <Text className={cssClasses.typography.subtitle}>
-              Ingresa tus credenciales para ver tus grupos y sorteos
-            </Text>
+          {/* 2. Tarjeta Blanca del Formulario */}
+          <View style={authStyles.card}>
+            {/* Campo: Correo o Usuario */}
+            <View style={formStyles.formGroup}>
+              <View style={formStyles.labelRow}>
+                <Text style={formStyles.label}>Correo o Usuario</Text>
+              </View>
 
-            {/* Campo: Correo Electrónico */}
-            <View className={cssClasses.form.group}>
-              <Text className={cssClasses.form.label}>Correo Electrónico</Text>
               <View
-                className={`${cssClasses.form.wrapper} ${
-                  errors.email ? cssClasses.form.wrapperError : ''
-                }`}
+                style={[
+                  formStyles.inputWrapper,
+                  isFocusedIdentifier && formStyles.inputWrapperFocused,
+                  !!errors.identifier && formStyles.inputWrapperError,
+                ]}
               >
-                <Mail size={20} color={theme.colors.muted} />
+                <Mail
+                  size={19}
+                  color={isFocusedIdentifier ? theme.colors.primary : theme.colors.outline}
+                  style={formStyles.inputIcon}
+                />
                 <TextInput
-                  className={cssClasses.form.field}
-                  placeholder="ejemplo@panasecreto.com"
-                  placeholderTextColor={theme.colors.muted}
-                  value={email}
+                  style={formStyles.inputField}
+                  placeholder="ej. pana@correo.com o @carlos"
+                  placeholderTextColor={theme.colors.outline}
+                  value={identifier}
                   onChangeText={(val) => {
-                    setEmail(val);
-                    if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
+                    setIdentifier(val);
+                    if (errors.identifier) setErrors((prev) => ({ ...prev, identifier: undefined }));
                   }}
+                  onFocus={() => setIsFocusedIdentifier(true)}
+                  onBlur={() => setIsFocusedIdentifier(false)}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoCorrect={false}
                 />
               </View>
-              {errors.email && (
-                <Text className={cssClasses.form.error}>{errors.email}</Text>
+              {errors.identifier && (
+                <Text style={formStyles.errorText}>{errors.identifier}</Text>
               )}
             </View>
 
             {/* Campo: Contraseña */}
-            <View className={cssClasses.form.group}>
-              <Text className={cssClasses.form.label}>Contraseña</Text>
+            <View style={formStyles.formGroup}>
+              <View style={formStyles.labelRow}>
+                <Text style={formStyles.label}>Contraseña</Text>
+                <TouchableOpacity
+                  onPress={onNavigateToRecoverPassword}
+                  activeOpacity={0.7}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Text style={formStyles.forgotPasswordLink}>
+                    ¿Olvidaste tu contraseña?
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
               <View
-                className={`${cssClasses.form.wrapper} ${
-                  errors.password ? cssClasses.form.wrapperError : ''
-                }`}
+                style={[
+                  formStyles.inputWrapper,
+                  isFocusedPassword && formStyles.inputWrapperFocused,
+                  !!errors.password && formStyles.inputWrapperError,
+                ]}
               >
-                <Lock size={20} color={theme.colors.muted} />
+                <Lock
+                  size={19}
+                  color={isFocusedPassword ? theme.colors.primary : theme.colors.outline}
+                  style={formStyles.inputIcon}
+                />
                 <TextInput
-                  className={cssClasses.form.field}
-                  placeholder="••••••••"
-                  placeholderTextColor={theme.colors.muted}
+                  style={formStyles.inputField}
+                  placeholder="••••••••••••"
+                  placeholderTextColor={theme.colors.outline}
                   value={password}
                   onChangeText={(val) => {
                     setPassword(val);
                     if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }));
                   }}
+                  onFocus={() => setIsFocusedPassword(true)}
+                  onBlur={() => setIsFocusedPassword(false)}
                   secureTextEntry={!showPassword}
                   autoCapitalize="none"
                 />
                 <TouchableOpacity
+                  style={formStyles.toggleEyeButton}
                   onPress={() => setShowPassword(!showPassword)}
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
                   {showPassword ? (
-                    <EyeOff size={20} color={theme.colors.muted} />
+                    <EyeOff size={19} color={theme.colors.outline} />
                   ) : (
-                    <Eye size={20} color={theme.colors.muted} />
+                    <Eye size={19} color={theme.colors.outline} />
                   )}
                 </TouchableOpacity>
               </View>
               {errors.password && (
-                <Text className={cssClasses.form.error}>{errors.password}</Text>
+                <Text style={formStyles.errorText}>{errors.password}</Text>
               )}
             </View>
 
-            {/* Enlace: ¿Olvidaste tu contraseña? */}
+            {/* Botón Principal: Entrar al Intercambio */}
             <TouchableOpacity
-              className={cssClasses.form.forgotPassword}
-              onPress={onNavigateToRecoverPassword}
-              activeOpacity={0.7}
-            >
-              <Text className={cssClasses.form.forgotPasswordText}>
-                ¿Olvidaste tu contraseña?
-              </Text>
-            </TouchableOpacity>
-
-            {/* Botón Principal: Iniciar Sesión */}
-            <TouchableOpacity
-              className={cssClasses.buttons.primary}
+              style={buttonStyles.btnPrimary}
               onPress={handleLogin}
               disabled={loading}
               activeOpacity={0.85}
             >
               {loading ? (
-                <ActivityIndicator color="#FFFFFF" size="small" />
+                <ActivityIndicator color={theme.colors.onSecondaryContainer} size="small" />
               ) : (
-                <View className="flex-row items-center justify-center">
-                  <Text className={cssClasses.buttons.primaryText}>
+                <View style={commonStyles.rowCenter}>
+                  <Text style={buttonStyles.btnPrimaryText}>
                     Entrar al Intercambio
                   </Text>
-                  <View className="ml-2">
-                    <ArrowRight size={18} color="#FFFFFF" />
-                  </View>
+                  <Text style={buttonStyles.btnPrimaryEmoji}>🎁</Text>
                 </View>
               )}
             </TouchableOpacity>
 
             {/* Separador */}
-            <View className={cssClasses.divider.row}>
-              <View className={cssClasses.divider.line} />
-              <Text className={cssClasses.divider.label}>o</Text>
-              <View className={cssClasses.divider.line} />
+            <View style={commonStyles.dividerRow}>
+              <View style={commonStyles.dividerLine} />
+              <Text style={commonStyles.dividerText}>O ingresa con</Text>
+              <View style={commonStyles.dividerLine} />
             </View>
 
-            {/* Enlace de Registro en Footer */}
-            <View className={cssClasses.footer.row}>
-              <Text className={cssClasses.footer.prompt}>¿Aún no tienes cuenta?</Text>
-              <TouchableOpacity onPress={onNavigateToRegister} activeOpacity={0.7}>
-                <Text className={cssClasses.footer.action}>Crea tu cuenta de Pana</Text>
+            {/* Botones de Inicio de Sesión Social */}
+            <View style={buttonStyles.socialButtonContainer}>
+              <TouchableOpacity
+                style={buttonStyles.btnGoogle}
+                onPress={() => Alert.alert('Google Auth', 'Próximamente disponible')}
+                activeOpacity={0.8}
+              >
+                <Text style={{ fontSize: 18 }}>🌐</Text>
+                <Text style={buttonStyles.btnGoogleText}>Continuar con Google</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={buttonStyles.btnApple}
+                onPress={() => Alert.alert('Apple Auth', 'Próximamente disponible')}
+                activeOpacity={0.85}
+              >
+                <Text style={{ fontSize: 18 }}>🍏</Text>
+                <Text style={buttonStyles.btnAppleText}>Continuar con Apple</Text>
               </TouchableOpacity>
             </View>
+          </View>
+
+          {/* 3. Enlace de Registro */}
+          <View style={buttonStyles.footerRow}>
+            <Text style={buttonStyles.footerPrompt}>¿Aún no eres parte?</Text>
+            <TouchableOpacity
+              onPress={onNavigateToRegister}
+              activeOpacity={0.7}
+              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+            >
+              <Text style={buttonStyles.footerLink}>Regístrate aquí</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* 4. Insignia de Confidencialidad y Anonimato */}
+          <View style={commonStyles.badgeContainer}>
+            <ShieldCheck size={16} color={theme.colors.secondaryDark} />
+            <Text style={commonStyles.badgeText}>
+              Anonimato 100% garantizado en cada sorteo
+            </Text>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

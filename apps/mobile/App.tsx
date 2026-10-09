@@ -1,7 +1,8 @@
-import './global.css';
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import LoginScreen from './src/screens/auth/LoginScreen';
+import { theme } from './src/styles/theme';
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<'login' | 'register' | 'recover' | 'dashboard'>('login');
@@ -22,32 +23,81 @@ export default function App() {
 
   // Pantallas de marcador temporal para Registro, Recuperar Contraseña o Dashboard post-login
   return (
-    <SafeAreaView className="flex-1 bg-[#1E1338] justify-center items-center px-6">
-      <View className="bg-white rounded-3xl p-6 w-full items-center shadow-lg">
-        <Text className="text-3xl mb-2">
+    <SafeAreaView style={styles.container}>
+      <View style={styles.card}>
+        <Text style={styles.emoji}>
           {currentScreen === 'register' && '📝'}
           {currentScreen === 'recover' && '🔑'}
           {currentScreen === 'dashboard' && '🎁'}
         </Text>
-        <Text className="text-xl font-bold text-[#1C1B24] mb-2 text-center">
+        <Text style={styles.title}>
           {currentScreen === 'register' && 'Registro de Pana'}
           {currentScreen === 'recover' && 'Recuperar Contraseña'}
           {currentScreen === 'dashboard' && '¡Sesión Iniciada!'}
         </Text>
-        <Text className="text-sm text-[#6C757D] text-center mb-6">
+        <Text style={styles.subtitle}>
           {currentScreen === 'dashboard'
-            ? `Bienvenido ${sessionUser?.email || 'Pana'}. Pantalla lista para conectar con tus grupos.`
+            ? `Bienvenido ${sessionUser?.identifier || 'Pana'}. Pantalla lista para conectar con tus grupos.`
             : 'Próxima pantalla a adaptar desde Stitch.'}
         </Text>
 
         <TouchableOpacity
-          className="bg-[#1E1338] py-3.5 px-6 rounded-2xl w-full items-center"
+          style={styles.backButton}
           onPress={() => setCurrentScreen('login')}
           activeOpacity={0.8}
         >
-          <Text className="text-white font-bold text-base">Volver a Iniciar Sesión</Text>
+          <Text style={styles.backButtonText}>Volver a Iniciar Sesión</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  card: {
+    backgroundColor: theme.colors.surfaceCard,
+    borderRadius: theme.radii['3xl'],
+    padding: 24,
+    width: '100%',
+    alignItems: 'center',
+    ...theme.shadows.card,
+  },
+  emoji: {
+    fontSize: 36,
+    marginBottom: 8,
+  },
+  title: {
+    fontSize: theme.typography.fontSize['2xl'],
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.textDark,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: theme.typography.fontSize.base,
+    color: theme.colors.textMuted,
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  backButton: {
+    backgroundColor: theme.colors.primary,
+    height: 48,
+    borderRadius: theme.radii.lg,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backButtonText: {
+    color: theme.colors.white,
+    fontWeight: theme.typography.fontWeight.bold,
+    fontSize: theme.typography.fontSize.md,
+  },
+});

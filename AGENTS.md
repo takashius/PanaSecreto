@@ -11,3 +11,9 @@
 
 3. **Estabilidad y Recursos**:
    - Evitar comandos pesados en segundo plano que puedan saturar memoria o bloquear el entorno/IDE.
+
+4. **Estilos en Mobile (`@panasecreto/mobile`)**:
+   - **PROHIBIDO EL USO DE TAILWIND / NATIVEWIND**: No utilizar Tailwind CSS ni NativeWind en el proyecto móvil bajo ninguna circunstancia.
+   - **Uso Exclusivo de StyleSheet Nativo**: Utilizar `StyleSheet.create` de React Native con tokens de diseño (`@panasecreto/ui-tokens`).
+   - **Estilos Centralizados y Globales**: Organizar los estilos en archivos centralizados dentro de `src/styles/` (ej. `theme.ts`, `auth.styles.ts`, `common.styles.ts`), evitando crear un archivo de estilos o CSS separado por cada pantalla.
+
