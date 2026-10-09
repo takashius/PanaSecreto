@@ -95,6 +95,12 @@ export const dashboardStyles = StyleSheet.create({
     paddingHorizontal: theme.spacing.margin,
     paddingTop: theme.spacing.md,
     paddingBottom: theme.spacing.xs,
+    gap: 12,
+  },
+  greetingTextContainer: {
+    flex: 1,
+    minWidth: 0,
+    marginRight: 8,
   },
   greetingSub: {
     fontSize: theme.typography.fontSize.xs,
@@ -117,6 +123,7 @@ export const dashboardStyles = StyleSheet.create({
     paddingHorizontal: 14,
     height: 44,
     borderRadius: theme.radii.xl,
+    flexShrink: 0,
     shadowColor: theme.colors.secondaryContainer,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.35,
@@ -147,12 +154,10 @@ export const dashboardStyles = StyleSheet.create({
   },
   mascotBannerGlow: {
     position: 'absolute',
-    right: -20,
-    bottom: -20,
-    width: 130,
-    height: 130,
-    borderRadius: 65,
-    backgroundColor: 'rgba(254, 174, 16, 0.15)',
+    right: -30,
+    bottom: -30,
+    width: 200,
+    height: 200,
   },
   mascotBannerContent: {
     flexDirection: 'row',
@@ -562,6 +567,11 @@ export const dashboardStyles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 2,
+    flexShrink: 0,
+  },
+  envelopeTextContainer: {
+    flex: 1,
+    minWidth: 0,
   },
   envelopeTitle: {
     fontSize: theme.typography.fontSize.sm,
@@ -581,6 +591,7 @@ export const dashboardStyles = StyleSheet.create({
     paddingHorizontal: 12,
     height: 34,
     borderRadius: theme.radii.md,
+    flexShrink: 0,
   },
   btnOpenEnvelopeText: {
     fontSize: theme.typography.fontSize.xs,
@@ -598,12 +609,14 @@ export const dashboardStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: 12,
   },
   inviteLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
     flex: 1,
+    minWidth: 0,
   },
   inviteIconBox: {
     width: 40,
@@ -612,6 +625,11 @@ export const dashboardStyles = StyleSheet.create({
     backgroundColor: 'rgba(254, 174, 16, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
+  },
+  inviteTextContainer: {
+    flex: 1,
+    minWidth: 0,
   },
   inviteTitle: {
     fontSize: theme.typography.fontSize.sm,
@@ -621,15 +639,17 @@ export const dashboardStyles = StyleSheet.create({
   inviteSub: {
     fontSize: theme.typography.fontSize.xs,
     color: theme.colors.textMuted,
-    marginTop: 1,
+    marginTop: 2,
+    lineHeight: 16,
   },
   btnInviteEnter: {
     backgroundColor: theme.colors.surfaceCard,
-    paddingHorizontal: 14,
-    height: 36,
+    paddingHorizontal: 16,
+    height: 38,
     borderRadius: theme.radii.lg,
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
     shadowColor: '#1E1338',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,

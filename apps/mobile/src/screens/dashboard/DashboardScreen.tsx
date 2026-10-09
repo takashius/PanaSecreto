@@ -8,6 +8,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Defs, RadialGradient, Stop, Rect } from 'react-native-svg';
 import {
   PartyPopper,
   Bell,
@@ -139,9 +140,15 @@ export default function DashboardScreen({
       >
         {/* Saludo & Quick CTA */}
         <View style={dashboardStyles.greetingRow}>
-          <View>
-            <Text style={dashboardStyles.greetingSub}>¡Activo pal' intercambio!</Text>
-            <Text style={dashboardStyles.greetingTitle}>
+          <View style={dashboardStyles.greetingTextContainer}>
+            <Text style={dashboardStyles.greetingSub} numberOfLines={1}>
+              ¡Activo pal' intercambio!
+            </Text>
+            <Text
+              style={dashboardStyles.greetingTitle}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
               ¡Epa, {firstName}! 👋
             </Text>
           </View>
@@ -158,7 +165,26 @@ export default function DashboardScreen({
 
         {/* Banner Mascota ("Tip del Guaca") */}
         <View style={dashboardStyles.mascotBanner}>
-          <View style={dashboardStyles.mascotBannerGlow} />
+          <View style={dashboardStyles.mascotBannerGlow} pointerEvents="none">
+            <Svg width="200" height="200" viewBox="0 0 200 200">
+              <Defs>
+                <RadialGradient
+                  id="guacaGlowGrad"
+                  cx="65%"
+                  cy="65%"
+                  r="60%"
+                  fx="65%"
+                  fy="65%"
+                >
+                  <Stop offset="0%" stopColor="#FEAE10" stopOpacity="0.45" />
+                  <Stop offset="35%" stopColor="#FEAE10" stopOpacity="0.22" />
+                  <Stop offset="70%" stopColor="#20153A" stopOpacity="0.08" />
+                  <Stop offset="100%" stopColor="#20153A" stopOpacity="0" />
+                </RadialGradient>
+              </Defs>
+              <Rect x="0" y="0" width="200" height="200" fill="url(#guacaGlowGrad)" />
+            </Svg>
+          </View>
           <View style={dashboardStyles.mascotBannerContent}>
             <View style={dashboardStyles.mascotAvatarWrapper}>
               <Image
@@ -407,7 +433,7 @@ export default function DashboardScreen({
                   <View style={dashboardStyles.envelopeIconPill}>
                     <Mail size={20} color={theme.colors.primary} />
                   </View>
-                  <View>
+                  <View style={dashboardStyles.envelopeTextContainer}>
                     <Text style={dashboardStyles.envelopeTitle}>Tienes tu sobre sellado</Text>
                     <Text style={dashboardStyles.envelopeSub}>El intercambio es en 4 días</Text>
                   </View>
@@ -520,7 +546,7 @@ export default function DashboardScreen({
                   <View style={dashboardStyles.envelopeIconPill}>
                     <Mail size={20} color={theme.colors.primary} />
                   </View>
-                  <View>
+                  <View style={dashboardStyles.envelopeTextContainer}>
                     <Text style={dashboardStyles.envelopeTitle}>Sobre asignado</Text>
                     <Text style={dashboardStyles.envelopeSub}>Entrega el 21 de Diciembre</Text>
                   </View>
@@ -545,9 +571,11 @@ export default function DashboardScreen({
             <View style={dashboardStyles.inviteIconBox}>
               <Smartphone size={20} color={theme.colors.secondaryDark} />
             </View>
-            <View>
+            <View style={dashboardStyles.inviteTextContainer}>
               <Text style={dashboardStyles.inviteTitle}>¿Te llegó un código?</Text>
-              <Text style={dashboardStyles.inviteSub}>Únete al grupo de tus panas con tu enlace</Text>
+              <Text style={dashboardStyles.inviteSub}>
+                Únete al grupo de tus panas con tu enlace
+              </Text>
             </View>
           </View>
 
