@@ -19,7 +19,8 @@
       "adaptiveIcon": {
         "backgroundColor": "#1E1338"
       },
-      "package": "com.panasecreto.app"
+      "package": "com.panasecreto.app",
+      "edgeToEdgeEnabled": true
     },
     "androidStatusBar": {
       "translucent": true,
@@ -28,9 +29,18 @@
     },
     "androidNavigationBar": {
       "visible": "always",
-      "backgroundColor": "#FCF8FF",
-      "barStyle": "dark-content"
+      "backgroundColor": "#00000000",
+      "barStyle": "dark-content",
+      "enforceContrast": false
     },
+    "plugins": [
+      [
+        "expo-navigation-bar",
+        {
+          "enforceContrast": false
+        }
+      ]
+    ],
     "web": {
       "favicon": "./assets/favicon.png"
     }

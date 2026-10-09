@@ -16,4 +16,12 @@ config.resolver.nodeModulesPaths = [
   path.resolve(monorepoRoot, 'node_modules'),
 ];
 
+// 3. Forzar resolución única para paquetes nativos y singletons
+config.resolver.extraNodeModules = {
+  'react-native-svg': path.resolve(projectRoot, 'node_modules/react-native-svg'),
+  'lucide-react-native': path.resolve(projectRoot, 'node_modules/lucide-react-native'),
+  react: path.resolve(projectRoot, 'node_modules/react'),
+  'react-native': path.resolve(projectRoot, 'node_modules/react-native'),
+};
+
 module.exports = config;
