@@ -1,12 +1,14 @@
 {
   "extends": "@panasecreto/tsconfig/base.json",
   "compilerOptions": {
-    "outDir": "./dist",
+    "outDir": "./dist/esm",
     "rootDir": "./src",
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
     "isolatedModules": false
   },
-  "include": ["src/**/*"]
+  "include": [
+    "src/**/*"
+  ]
 }

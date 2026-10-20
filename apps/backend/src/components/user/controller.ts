@@ -39,14 +39,28 @@ export function getUserProfile(userId: string) {
   return store.getProfile(userId);
 }
 
-export function changePassword(userId: string, oldPass: string, newPass: string) {
-  if (!newPass || newPass.length < 6) {
+function invalidNewPassword(newPass: unknown) {
+  return typeof newPass !== 'string' || newPass.length < 6;
+}
+
+export function changePassword(userId: string, oldPass: string, newPass: string, currentToken?: string) {
+  if (invalidNewPassword(newPass)) {
     return Promise.resolve({
       status: 400,
       message: 'La nueva contraseña debe tener al menos 6 caracteres.',
     });
   }
-  return store.changePassword(userId, oldPass, newPass);
+  return store.changePassword(userId, oldPass, newPass, currentToken);
+}
+
+export function changeRequiredPassword(userId: string, newPass: string, currentToken?: string) {
+  if (invalidNewPassword(newPass)) {
+    return Promise.resolve({
+      status: 400,
+      message: 'La nueva contraseña debe tener al menos 6 caracteres.',
+    });
+  }
+  return store.changeRequiredPassword(userId, newPass, currentToken);
 }
 
 export function recoveryStepOne(email: string) {
@@ -84,7 +98,7 @@ export function getUserAdminDetail(id: string) {
   return store.getUserAdminDetail(id);
 }
 
-export function createUserAdmin(data: {
+export function createUserAdmin(actorRole: string | string[], data: {
   name: string;
   lastName?: string;
   middleName?: string;
@@ -100,37 +114,44 @@ export function createUserAdmin(data: {
       message: 'Nombre, correo y contraseña son obligatorios.',
     });
   }
-  return store.createUserAdmin(data);
+  return store.createUserAdmin(actorRole, data);
 }
 
-export function updateUserAdmin(id: string, payload: any) {
-  return store.updateUserAdmin(id, payload);
+export function updateUserAdmin(actorRole: string | string[], id: string, payload: any) {
+  return store.updateUserAdmin(actorRole, id, payload);
 }
 
 export function setUserRole(id: string, role: string) {
   return store.setUserRole(id, role);
 }
 
-export function setUserActive(id: string, active: boolean) {
-  return store.setUserActive(id, active);
+export function setUserActive(
+  actor: { _id: string; role: string | string[] },
+  id: string,
+  active: boolean
+) {
+  return store.setUserActive(actor, id, active);
 }
 
-export function setUserPassword(id: string, password: string) {
-  if (!password || password.length < 6) {
+export function setUserPassword(actorRole: string | string[], id: string, password: string) {
+  if (invalidNewPassword(password)) {
     return Promise.resolve({
       status: 400,
       message: 'La nueva contraseña debe tener al menos 6 caracteres.',
     });
   }
-  return store.setUserPassword(id, password);
+  return store.setUserPassword(actorRole, id, password);
 }
 
-export function setUserForcePasswordChange(id: string, force: boolean) {
-  return store.setUserForcePasswordChange(id, force);
+export function setUserForcePasswordChange(actorRole: string | string[], id: string, force: boolean) {
+  return store.setUserForcePasswordChange(actorRole, id, force);
 }
 
 export function updateProfile(userId: string, data: any) {
-  if (data.name !== undefined && !data.name.trim()) {
+  if (!data || typeof data !== 'object') {
+    return Promise.resolve({ status: 400, message: 'Cuerpo de la petición inválido.' });
+  }
+  if (data.name !== undefined && (typeof data.name !== 'string' || !data.name.trim())) {
     return Promise.resolve({
       status: 400,
       message: 'El nombre no puede estar vacío.',

@@ -58,3 +58,18 @@ export function assignableRolesFor(actorRole: string | string[]): UserRole[] {
   }
   return [];
 }
+
+/**
+ * Determina si un actor puede gestionar (editar, desactivar, resetear clave) a un usuario objetivo.
+ * - SUPER_ADMIN puede gestionar a cualquiera.
+ * - ADMIN puede gestionar a cualquiera que NO sea SUPER_ADMIN.
+ * - Otros roles no gestionan usuarios.
+ */
+export function canManageTarget(
+  actorRole: string | string[] | undefined,
+  targetRole: string | string[] | undefined
+): boolean {
+  if (isSuperAdminRole(actorRole)) return true;
+  if (!isAdminRole(actorRole)) return false;
+  return !isSuperAdminRole(targetRole);
+}

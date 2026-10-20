@@ -21,6 +21,7 @@ export interface IUser {
   tokens: IUserToken[];
   recoveryCode?: number;
   recoveryCodeExpires?: Date;
+  recoveryAttempts?: number;
 }
 
 export interface IUserDocument extends IUser, Document {

@@ -4,7 +4,12 @@ import auth, { authAdminOnly, authSuperAdminOnly } from '../../middleware/auth';
 import controllerError from '../../middleware/controllerError';
 import { upload } from '../../middleware/saveFile';
 import { sendOrError, sendResult } from '../../utils/http';
-import { loginRateLimiter, recoveryRequestRateLimiter, recoverySubmitRateLimiter } from '../../middleware/rateLimit';
+import {
+  loginRateLimiter,
+  recoveryRequestRateLimiter,
+  recoverySubmitRateLimiter,
+  registerRateLimiter,
+} from '../../middleware/rateLimit';
 import { ALL_ROLES, ROLE_DESCRIPTIONS } from '../../config/roles';
 import { IGetUserAuthInfoRequest } from '../../types/general';
 
@@ -22,7 +27,7 @@ router.post('/login', loginRateLimiter, async (req: Request, res: Response) => {
 });
 
 // Registro público (ej. desde mobile app)
-router.post('/register', async (req: Request, res: Response) => {
+router.post('/register', registerRateLimiter, async (req: Request, res: Response) => {
   try {
     const result = await controller.registerUser(req.body);
     sendOrError(res, result, controllerError, req);
@@ -116,7 +121,7 @@ router.post('/change-password', auth(), async (req: IGetUserAuthInfoRequest, res
       res.status(400).send('La contraseña actual es requerida.');
       return;
     }
-    const result = await controller.changePassword(req.user!._id, oldPassword, newPassword);
+    const result = await controller.changePassword(req.user!._id, oldPassword, newPassword, req.token);
     sendOrError(res, result, controllerError, req);
   } catch (error) {
     controllerError(error, req, res);
@@ -127,7 +132,7 @@ router.post('/change-password', auth(), async (req: IGetUserAuthInfoRequest, res
 router.post('/change_password_required', auth(), async (req: IGetUserAuthInfoRequest, res: Response) => {
   try {
     const { password } = req.body;
-    const result = await controller.changePassword(req.user!._id, '', password);
+    const result = await controller.changeRequiredPassword(req.user!._id, password, req.token);
     sendOrError(res, result, controllerError, req);
   } catch (error) {
     controllerError(error, req, res);
@@ -178,9 +183,9 @@ router.get('/admin', authAdminOnly(), async (req: Request, res: Response) => {
 });
 
 // Crear usuario desde el panel
-router.post('/admin', authAdminOnly(), async (req: Request, res: Response) => {
+router.post('/admin', authAdminOnly(), async (req: IGetUserAuthInfoRequest, res: Response) => {
   try {
-    const result = await controller.createUserAdmin(req.body);
+    const result = await controller.createUserAdmin(req.user!.role, req.body);
     sendOrError(res, result, controllerError, req);
   } catch (error) {
     controllerError(error, req, res);
@@ -198,9 +203,9 @@ router.get('/admin/:id', authAdminOnly(), async (req: Request, res: Response) =>
 });
 
 // Actualizar usuario
-router.patch('/admin/:id', authAdminOnly(), async (req: Request, res: Response) => {
+router.patch('/admin/:id', authAdminOnly(), async (req: IGetUserAuthInfoRequest, res: Response) => {
   try {
-    const result = await controller.updateUserAdmin(req.params.id, req.body);
+    const result = await controller.updateUserAdmin(req.user!.role, req.params.id, req.body);
     sendOrError(res, result, controllerError, req);
   } catch (error) {
     controllerError(error, req, res);
@@ -218,9 +223,9 @@ router.patch('/admin/:id/role', authSuperAdminOnly(), async (req: Request, res: 
 });
 
 // Activar / Desactivar
-router.patch('/admin/:id/active', authAdminOnly(), async (req: Request, res: Response) => {
+router.patch('/admin/:id/active', authAdminOnly(), async (req: IGetUserAuthInfoRequest, res: Response) => {
   try {
-    const result = await controller.setUserActive(req.params.id, req.body.active);
+    const result = await controller.setUserActive(req.user!, req.params.id, req.body?.active);
     sendOrError(res, result, controllerError, req);
   } catch (error) {
     controllerError(error, req, res);
@@ -228,9 +233,9 @@ router.patch('/admin/:id/active', authAdminOnly(), async (req: Request, res: Res
 });
 
 // Resetear contraseña
-router.patch('/admin/:id/password', authAdminOnly(), async (req: Request, res: Response) => {
+router.patch('/admin/:id/password', authAdminOnly(), async (req: IGetUserAuthInfoRequest, res: Response) => {
   try {
-    const result = await controller.setUserPassword(req.params.id, req.body.password);
+    const result = await controller.setUserPassword(req.user!.role, req.params.id, req.body?.password);
     sendOrError(res, result, controllerError, req);
   } catch (error) {
     controllerError(error, req, res);
@@ -241,11 +246,12 @@ router.patch('/admin/:id/password', authAdminOnly(), async (req: Request, res: R
 router.patch(
   '/admin/:id/force-password-change',
   authAdminOnly(),
-  async (req: Request, res: Response) => {
+  async (req: IGetUserAuthInfoRequest, res: Response) => {
     try {
       const result = await controller.setUserForcePasswordChange(
+        req.user!.role,
         req.params.id,
-        req.body.forcePasswordChangeOnNextLogin
+        req.body?.forcePasswordChangeOnNextLogin
       );
       sendOrError(res, result, controllerError, req);
     } catch (error) {

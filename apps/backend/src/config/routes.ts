@@ -1,6 +1,7 @@
 import { Express } from 'express';
 import userRouter from '../components/user/network';
 import configRouter from '../components/config/network';
+import groupRouter from '../components/group/network';
 import { healthRouter } from '../routes/health.routes';
 
 export default function registerRoutes(app: Express) {
@@ -14,4 +15,8 @@ export default function registerRoutes(app: Express) {
   // Módulo de Configuración del Sistema
   app.use('/config', configRouter);
   app.use('/api/config', configRouter);
+
+  // Módulo de Grupos de Amigo Secreto (sorteo, invitaciones, asignaciones)
+  app.use('/group', groupRouter);
+  app.use('/api/group', groupRouter);
 }

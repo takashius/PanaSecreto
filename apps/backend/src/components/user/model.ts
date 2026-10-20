@@ -1,6 +1,6 @@
 import validator from 'validator';
 import { hash, compare } from 'bcryptjs';
-import { sign } from 'jsonwebtoken';
+import { sign, decode } from 'jsonwebtoken';
 import { Schema, model } from 'mongoose';
 import config from '../../config/commons';
 import { ALL_ROLES, ROLES } from '../../config/roles';
@@ -41,6 +41,7 @@ const userSchema = new Schema<IUserDocument>(
     date: { type: Date, default: Date.now },
     recoveryCode: { type: Number },
     recoveryCodeExpires: { type: Date },
+    recoveryAttempts: { type: Number, default: 0 },
     tokens: [
       {
         token: { type: String, required: true },
@@ -56,7 +57,7 @@ const userSchema = new Schema<IUserDocument>(
 userSchema.pre('save', async function (next) {
   const user = this;
   if (user.isModified('password') && user.password) {
-    user.password = await hash(user.password, 8);
+    user.password = await hash(user.password, config.bcryptRounds);
   }
   next();
 });
@@ -65,7 +66,13 @@ userSchema.methods.generateAuthToken = async function (): Promise<string> {
   const user = this;
   const objToken = { _id: user._id, date: new Date() };
   const token = sign(objToken, config.JWT_KEY, { expiresIn: '7d' });
-  user.tokens = user.tokens.concat({ token, date: new Date() });
+  // Purga tokens expirados para que el arreglo de sesiones no crezca sin límite
+  const nowSec = Math.floor(Date.now() / 1000);
+  const alive = user.tokens.filter((t: { token: string }) => {
+    const payload = decode(t.token) as { exp?: number } | null;
+    return !!payload?.exp && payload.exp > nowSec;
+  });
+  user.tokens = alive.concat({ token, date: new Date() });
   await user.save();
   return token;
 };

@@ -3,20 +3,22 @@
   "version": "1.0.0",
   "private": true,
   "description": "Design tokens, color palette and typography for PanaSecreto",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/cjs/index.js",
+  "types": "./dist/esm/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "default": "./dist/index.js"
+      "types": "./dist/esm/index.d.ts",
+      "react-native": "./dist/esm/index.js",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "default": "./dist/cjs/index.js"
     }
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.cjs.json",
     "clean": "rimraf dist *.tsbuildinfo",
     "typecheck": "tsc --noEmit"
   },
@@ -24,5 +26,6 @@
     "@panasecreto/tsconfig": "workspace:*",
     "rimraf": "^6.0.1",
     "typescript": "^5.8.2"
-  }
+  },
+  "module": "./dist/esm/index.js"
 }

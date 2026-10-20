@@ -43,7 +43,8 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=4000
-ENV JWT_KEY=panasecreto_default_production_key_change_in_coolify
+# JWT_KEY / USER_ADMIN_PASSWORD deben inyectarse en tiempo de ejecución (Coolify / docker compose).
+# No se define un valor por defecto: el backend se niega a arrancar sin una clave segura.
 
 # Usuario no privilegiado para seguridad
 RUN addgroup --system --gid 1001 nodejs && \

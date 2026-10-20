@@ -1,9 +1,44 @@
+import { randomInt } from 'crypto';
 import { User } from './model';
-import { canAccessWeb, ROLES, UserRole } from '../../config/roles';
+import {
+  assignableRolesFor,
+  canAccessWeb,
+  canManageTarget,
+  isUserRole,
+  ROLES,
+  UserRole,
+} from '../../config/roles';
+import config from '../../config/commons';
 import { sanitizeEmail } from '../../utils/sanitizeEmail';
 import { StoreResponse } from '../../types/general';
 import { compare } from 'bcryptjs';
 import { removeImage } from '../../middleware/saveFile';
+
+const MAX_RECOVERY_ATTEMPTS = 5;
+
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/** Carga el usuario objetivo y verifica que el actor tenga jerarquía para gestionarlo. */
+async function loadManageableTarget(
+  actorRole: string | string[],
+  id: string
+): Promise<{ user?: any; error?: StoreResponse }> {
+  const user = await User.findById(id);
+  if (!user) return { error: { status: 404, message: 'Usuario no encontrado.' } };
+  if (!canManageTarget(actorRole, user.role)) {
+    return {
+      error: {
+        status: 403,
+        message: { code: 'INSUFFICIENT_PERMISSIONS', message: 'No puedes gestionar a este usuario.' },
+      },
+    };
+  }
+  return { user };
+}
+
+const PUBLIC_USER_FIELDS = '-password -tokens -__v -recoveryCode -recoveryCodeExpires -recoveryAttempts';
 
 export async function login(
   emailRaw: string,
@@ -129,7 +164,7 @@ export async function logoutAll(userId: string): Promise<StoreResponse> {
 
 export async function getProfile(userId: string): Promise<StoreResponse> {
   try {
-    const user = await User.findById(userId).select('-password -tokens -__v');
+    const user = await User.findById(userId).select(PUBLIC_USER_FIELDS);
     if (!user) {
       return { status: 404, message: 'Usuario no encontrado.' };
     }
@@ -142,23 +177,62 @@ export async function getProfile(userId: string): Promise<StoreResponse> {
 export async function changePassword(
   userId: string,
   oldPass: string,
-  newPass: string
+  newPass: string,
+  currentToken?: string
+): Promise<StoreResponse> {
+  try {
+    if (!oldPass) {
+      return { status: 400, message: 'La contraseña actual es requerida.' };
+    }
+    const user = await User.findById(userId);
+    if (!user) {
+      return { status: 404, message: 'Usuario no encontrado.' };
+    }
+
+    const match = await compare(oldPass, user.password || '');
+    if (!match) {
+      return { status: 400, message: 'La contraseña actual no es correcta.' };
+    }
+
+    user.password = newPass;
+    user.forcePasswordChangeOnNextLogin = false;
+    // Cierra las demás sesiones; conserva solo la actual
+    user.tokens = user.tokens.filter((t) => t.token === currentToken);
+    await user.save();
+
+    return { status: 200, message: { ok: true, message: 'Contraseña actualizada exitosamente.' } };
+  } catch (error) {
+    return { status: 500, message: 'Error al cambiar contraseña.', detail: error };
+  }
+}
+
+/**
+ * Cambio obligatorio de contraseña: solo permitido si el usuario tiene
+ * forcePasswordChangeOnNextLogin = true (no requiere la contraseña actual).
+ */
+export async function changeRequiredPassword(
+  userId: string,
+  newPass: string,
+  currentToken?: string
 ): Promise<StoreResponse> {
   try {
     const user = await User.findById(userId);
     if (!user) {
       return { status: 404, message: 'Usuario no encontrado.' };
     }
-
-    if (oldPass) {
-      const match = await compare(oldPass, user.password || '');
-      if (!match) {
-        return { status: 400, message: 'La contraseña actual no es correcta.' };
-      }
+    if (!user.forcePasswordChangeOnNextLogin) {
+      return {
+        status: 403,
+        message: {
+          code: 'PASSWORD_CHANGE_NOT_REQUIRED',
+          message: 'Tu cuenta no requiere cambio obligatorio. Usa el cambio de contraseña con tu clave actual.',
+        },
+      };
     }
 
     user.password = newPass;
     user.forcePasswordChangeOnNextLogin = false;
+    user.tokens = user.tokens.filter((t) => t.token === currentToken);
     await user.save();
 
     return { status: 200, message: { ok: true, message: 'Contraseña actualizada exitosamente.' } };
@@ -176,18 +250,23 @@ export async function recoveryStepOne(emailRaw: string): Promise<StoreResponse> 
       return { status: 200, message: { ok: true, message: 'Si el correo existe, recibirás un código.' } };
     }
 
-    const code = Math.floor(100000 + Math.random() * 900000);
+    const code = randomInt(100000, 1000000);
     user.recoveryCode = code;
     user.recoveryCodeExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutos
+    user.recoveryAttempts = 0;
     await user.save();
 
-    console.log(`[AUTH RECOVERY] Código para ${email}: ${code}`);
+    // TODO: enviar el código por correo electrónico (servicio de email pendiente).
+    if (config.dev) {
+      console.log(`[AUTH RECOVERY][dev] Código para ${email}: ${code}`);
+    }
     return {
       status: 200,
       message: {
         ok: true,
-        message: 'Código de recuperación generado.',
-        devCode: process.env.NODE_ENV !== 'production' ? code : undefined,
+        message: 'Si el correo existe, recibirás un código.',
+        // Solo en desarrollo/test se expone el código para facilitar pruebas
+        devCode: config.dev ? code : undefined,
       },
     };
   } catch (error) {
@@ -202,19 +281,40 @@ export async function recoveryStepTwo(
 ): Promise<StoreResponse> {
   try {
     const email = sanitizeEmail(emailRaw);
-    const user = await User.findOne({
-      email,
-      recoveryCode: code,
-      recoveryCodeExpires: { $gt: new Date() },
-    });
+    const invalid: StoreResponse = {
+      status: 400,
+      message: 'El código de recuperación es inválido o ha expirado.',
+    };
+    if (!newPass || newPass.length < 6) {
+      return { status: 400, message: 'La nueva contraseña debe tener al menos 6 caracteres.' };
+    }
 
-    if (!user) {
-      return { status: 400, message: 'El código de recuperación es inválido o ha expirado.' };
+    const user = await User.findOne({ email });
+    if (
+      !user ||
+      !user.recoveryCode ||
+      !user.recoveryCodeExpires ||
+      user.recoveryCodeExpires <= new Date()
+    ) {
+      return invalid;
+    }
+
+    if (user.recoveryCode !== code) {
+      // Contador por cuenta: tras N fallos se invalida el código
+      user.recoveryAttempts = (user.recoveryAttempts || 0) + 1;
+      if (user.recoveryAttempts >= MAX_RECOVERY_ATTEMPTS) {
+        user.recoveryCode = undefined;
+        user.recoveryCodeExpires = undefined;
+        user.recoveryAttempts = 0;
+      }
+      await user.save();
+      return invalid;
     }
 
     user.password = newPass;
     user.recoveryCode = undefined;
     user.recoveryCodeExpires = undefined;
+    user.recoveryAttempts = 0;
     user.tokens = []; // Cerrar todas las sesiones previas
     await user.save();
 
@@ -241,12 +341,12 @@ export async function listUsersAdmin(filters: {
     if (filters.active === 'true') query.active = true;
     if (filters.active === 'false') query.active = false;
 
-    if (filters.role) {
+    if (filters.role && isUserRole(filters.role)) {
       query.role = filters.role;
     }
 
-    if (filters.q?.trim()) {
-      const regex = new RegExp(filters.q.trim(), 'i');
+    if (typeof filters.q === 'string' && filters.q.trim()) {
+      const regex = new RegExp(escapeRegex(filters.q.trim().slice(0, 100)), 'i');
       query.$or = [{ name: regex }, { lastName: regex }, { email: regex }, { phone: regex }];
     }
 
@@ -256,7 +356,7 @@ export async function listUsersAdmin(filters: {
 
     const [results, total] = await Promise.all([
       User.find(query)
-        .select('-password -tokens -__v')
+        .select(PUBLIC_USER_FIELDS)
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -283,7 +383,7 @@ export async function listUsersAdmin(filters: {
 
 export async function getUserAdminDetail(id: string): Promise<StoreResponse> {
   try {
-    const user = await User.findById(id).select('-password -tokens -__v');
+    const user = await User.findById(id).select(PUBLIC_USER_FIELDS);
     if (!user) {
       return { status: 404, message: 'Usuario no encontrado.' };
     }
@@ -293,7 +393,7 @@ export async function getUserAdminDetail(id: string): Promise<StoreResponse> {
   }
 }
 
-export async function createUserAdmin(data: {
+export async function createUserAdmin(actorRole: string | string[], data: {
   name: string;
   lastName?: string;
   middleName?: string;
@@ -304,6 +404,17 @@ export async function createUserAdmin(data: {
   active?: boolean;
 }): Promise<StoreResponse> {
   try {
+    const requestedRole = (data.role || ROLES.USER) as string;
+    if (!isUserRole(requestedRole)) {
+      return { status: 400, message: 'Rol inválido.' };
+    }
+    if (!assignableRolesFor(actorRole).includes(requestedRole)) {
+      return {
+        status: 403,
+        message: { code: 'INSUFFICIENT_PERMISSIONS', message: 'No puedes asignar ese rol.' },
+      };
+    }
+
     const email = sanitizeEmail(data.email);
     const existing = await User.findOne({ email });
     if (existing) {
@@ -317,30 +428,37 @@ export async function createUserAdmin(data: {
       email,
       phone: data.phone?.trim(),
       password: data.password,
-      role: [data.role || ROLES.USER],
+      role: [requestedRole],
       active: data.active !== false,
       forcePasswordChangeOnNextLogin: true,
     });
 
     await user.save();
 
-    const created = await User.findById(user._id).select('-password -tokens -__v');
+    const created = await User.findById(user._id).select(PUBLIC_USER_FIELDS);
     return { status: 201, message: created };
   } catch (error: any) {
     return { status: 400, message: error?.message || 'Error al crear usuario.', detail: error };
   }
 }
 
-export async function updateUserAdmin(id: string, payload: any): Promise<StoreResponse> {
+export async function updateUserAdmin(
+  actorRole: string | string[],
+  id: string,
+  payload: any
+): Promise<StoreResponse> {
   try {
+    const target = await loadManageableTarget(actorRole, id);
+    if (target.error) return target.error;
+
     const allowed = ['name', 'lastName', 'middleName', 'phone', 'photo'];
     const update: any = {};
     for (const key of allowed) {
-      if (payload[key] !== undefined) update[key] = payload[key];
+      if (payload?.[key] !== undefined) update[key] = String(payload[key]);
     }
 
     const updated = await User.findByIdAndUpdate(id, { $set: update }, { new: true }).select(
-      '-password -tokens -__v'
+      PUBLIC_USER_FIELDS
     );
     if (!updated) {
       return { status: 404, message: 'Usuario no encontrado.' };
@@ -353,11 +471,14 @@ export async function updateUserAdmin(id: string, payload: any): Promise<StoreRe
 
 export async function setUserRole(id: string, role: string): Promise<StoreResponse> {
   try {
+    if (!isUserRole(role)) {
+      return { status: 400, message: 'Rol inválido.' };
+    }
     const updated = await User.findByIdAndUpdate(
       id,
       { $set: { role: [role] } },
       { new: true }
-    ).select('-password -tokens -__v');
+    ).select(PUBLIC_USER_FIELDS);
     if (!updated) return { status: 404, message: 'Usuario no encontrado.' };
     return { status: 200, message: updated };
   } catch (error) {
@@ -365,13 +486,26 @@ export async function setUserRole(id: string, role: string): Promise<StoreRespon
   }
 }
 
-export async function setUserActive(id: string, active: boolean): Promise<StoreResponse> {
+export async function setUserActive(
+  actor: { _id: string; role: string | string[] },
+  id: string,
+  active: boolean
+): Promise<StoreResponse> {
   try {
-    const updated = await User.findByIdAndUpdate(
-      id,
-      { $set: { active } },
-      { new: true }
-    ).select('-password -tokens -__v');
+    if (typeof active !== 'boolean') {
+      return { status: 400, message: 'El campo active debe ser booleano.' };
+    }
+    if (!active && actor._id === id) {
+      return { status: 400, message: 'No puedes desactivar tu propia cuenta.' };
+    }
+    const target = await loadManageableTarget(actor.role, id);
+    if (target.error) return target.error;
+
+    const update: any = { active };
+    if (!active) update.tokens = []; // Revoca todas sus sesiones
+    const updated = await User.findByIdAndUpdate(id, { $set: update }, { new: true }).select(
+      PUBLIC_USER_FIELDS
+    );
     if (!updated) return { status: 404, message: 'Usuario no encontrado.' };
     return { status: 200, message: updated };
   } catch (error) {
@@ -379,10 +513,15 @@ export async function setUserActive(id: string, active: boolean): Promise<StoreR
   }
 }
 
-export async function setUserPassword(id: string, password: string): Promise<StoreResponse> {
+export async function setUserPassword(
+  actorRole: string | string[],
+  id: string,
+  password: string
+): Promise<StoreResponse> {
   try {
-    const user = await User.findById(id);
-    if (!user) return { status: 404, message: 'Usuario no encontrado.' };
+    const target = await loadManageableTarget(actorRole, id);
+    if (target.error) return target.error;
+    const user = target.user;
 
     user.password = password;
     user.forcePasswordChangeOnNextLogin = true;
@@ -396,15 +535,18 @@ export async function setUserPassword(id: string, password: string): Promise<Sto
 }
 
 export async function setUserForcePasswordChange(
+  actorRole: string | string[],
   id: string,
   force: boolean
 ): Promise<StoreResponse> {
   try {
+    const target = await loadManageableTarget(actorRole, id);
+    if (target.error) return target.error;
     const updated = await User.findByIdAndUpdate(
       id,
-      { $set: { forcePasswordChangeOnNextLogin: force } },
+      { $set: { forcePasswordChangeOnNextLogin: force === true } },
       { new: true }
-    ).select('-password -tokens -__v');
+    ).select(PUBLIC_USER_FIELDS);
     if (!updated) return { status: 404, message: 'Usuario no encontrado.' };
     return { status: 200, message: updated };
   } catch (error) {
@@ -433,16 +575,16 @@ export async function updateProfile(
     if (data.phone !== undefined) user.phone = data.phone.trim();
     if (data.photo !== undefined) user.photo = data.photo;
 
-    if (data.password) {
-      if (data.password.length < 6) {
-        return { status: 400, message: 'La contraseña debe tener al menos 6 caracteres.' };
-      }
-      user.password = data.password;
-      user.forcePasswordChangeOnNextLogin = false;
+    // La contraseña NO se cambia por esta vía: usar /change-password (requiere la actual)
+    if (data.password !== undefined) {
+      return {
+        status: 400,
+        message: 'Para cambiar la contraseña usa el endpoint /user/change-password.',
+      };
     }
 
     await user.save();
-    const updated = await User.findById(userId).select('-password -tokens -__v');
+    const updated = await User.findById(userId).select(PUBLIC_USER_FIELDS);
     return { status: 200, message: updated };
   } catch (error) {
     return { status: 500, message: 'Error al actualizar el perfil.', detail: error };
@@ -469,7 +611,7 @@ export async function uploadUserPhoto(
     user.photo = file.path;
     await user.save();
 
-    const updated = await User.findById(userId).select('-password -tokens -__v');
+    const updated = await User.findById(userId).select(PUBLIC_USER_FIELDS);
     return { status: 200, message: updated };
   } catch (error) {
     return { status: 500, message: 'Error al subir la imagen de perfil.', detail: error };

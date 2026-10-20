@@ -64,3 +64,10 @@ export const isSuperAdminRole = (role?: string | string[] | null): boolean =>
   normalizeRole(role) === ROLES.SUPER_ADMIN;
 
 export const canManageUsers = (role?: string | string[] | null): boolean => isAdminRole(role);
+
+/** Roles que el actor puede asignar (espejo de la regla del backend). */
+export const assignableRolesFor = (role?: string | string[] | null): UserRole[] => {
+  if (isSuperAdminRole(role)) return [...ALL_ROLES];
+  if (isAdminRole(role)) return [ROLES.ADMIN, ROLES.ORGANIZER, ROLES.USER];
+  return [];
+};

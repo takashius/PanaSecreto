@@ -2,7 +2,8 @@ import { useEffect } from 'react';
 import { Modal, Form, Input, Select, Switch } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { ManagedUser } from '@app-types/users';
-import { ALL_ROLES, ROLE_DESCRIPTIONS } from '../../constants/roles';
+import { ROLE_DESCRIPTIONS, assignableRolesFor } from '../../constants/roles';
+import { useAuth } from '@context/useAuth';
 
 interface Props {
   open: boolean;
@@ -22,6 +23,11 @@ export default function UserFormModal({
   const { t } = useTranslation();
   const [form] = Form.useForm();
   const isEditing = Boolean(initialValues?._id);
+  const { user } = useAuth();
+  const currentRole = Array.isArray(initialValues?.role) ? initialValues?.role[0] : initialValues?.role;
+  const roleOptions = Array.from(
+    new Set([...assignableRolesFor(user?.role), ...(currentRole ? [currentRole] : [])])
+  );
 
   useEffect(() => {
     if (open) {
@@ -100,7 +106,7 @@ export default function UserFormModal({
           rules={[{ required: true, message: 'Selecciona un rol' }]}
         >
           <Select placeholder="Selecciona un rol">
-            {ALL_ROLES.map((role: string) => (
+            {roleOptions.map((role: string) => (
               <Select.Option key={role} value={role}>
                 {role}
               </Select.Option>

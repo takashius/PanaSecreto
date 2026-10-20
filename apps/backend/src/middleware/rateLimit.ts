@@ -11,6 +11,17 @@ export const loginRateLimiter = rateLimit({
   },
 });
 
+export const registerRateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hora
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    code: 'RATE_LIMITED',
+    message: 'Demasiados registros desde esta conexión. Intenta más tarde.',
+  },
+});
+
 export const recoveryRequestRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,

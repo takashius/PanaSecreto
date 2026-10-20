@@ -8,6 +8,12 @@ export async function seedAppData(): Promise<void> {
     const existing = await User.findOne({ email: adminEmail });
 
     if (!existing) {
+      if (!config.userAdminPassword) {
+        console.error(
+          '[Seed] USER_ADMIN_PASSWORD no está definido: no se crea el administrador inicial. Defínelo y reinicia.'
+        );
+        return;
+      }
       console.log(`[Seed] Creando usuario administrador inicial: ${adminEmail}`);
       const adminUser = new User({
         name: config.userAdminName,
@@ -16,6 +22,8 @@ export async function seedAppData(): Promise<void> {
         password: config.userAdminPassword,
         role: [ROLES.SUPER_ADMIN, ROLES.ADMIN],
         active: true,
+        // Obliga a cambiar la contraseña semilla en el primer inicio de sesión
+        forcePasswordChangeOnNextLogin: true,
       });
       await adminUser.save();
       console.log(`[Seed] Usuario administrador creado exitosamente.`);
