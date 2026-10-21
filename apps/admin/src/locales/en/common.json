@@ -70,7 +70,7 @@
   },
   "usersManagement": {
     "title": "User Management",
-    "description": "Manage PanaSecreto participants and administrators.",
+    "description": "Manage EntrePanas participants and administrators.",
     "searchPlaceholder": "First name, last name or email",
     "user": "User",
     "detail": "Detail",
@@ -81,7 +81,12 @@
     "phone": "Phone",
     "role": "Role",
     "status": "Status",
-    "created": "Registration date"
+    "created": "Registration date",
+    "roleRequired": "Select a role",
+    "roleSuperAdminOnly": "Only a Super administrator can change roles.",
+    "roleOwnLocked": "You can't change your own role.",
+    "roleChangeLogsOut": "Changing the role will sign this user out.",
+    "roleChanged": "Role updated. The user must sign in again."
   },
   "settings": {
     "title": "System Settings",
@@ -138,5 +143,87 @@
     "passwordsDoNotMatch": "Passwords do not match.",
     "updatePassword": "Change Password",
     "passwordSuccess": "Password updated successfully."
+  },
+  "groupStatus": {
+    "WAITING": "Waiting for members",
+    "LOCKED": "Drawn",
+    "REVEALED": "Revealed",
+    "COMPLETED": "Completed"
+  },
+  "memberRole": {
+    "CREATOR": "Organizer",
+    "PARTICIPANT": "Participant"
+  },
+  "groupsManagement": {
+    "title": "Exchange Groups",
+    "description": "Oversee Secret Santa groups: draw status, participants and dates.",
+    "searchPlaceholder": "Name or invite code",
+    "group": "Group",
+    "creator": "Organizer",
+    "status": "Status",
+    "members": "Participants",
+    "exchangeDate": "Exchange date",
+    "budget": "Budget",
+    "noLimit": "No limit",
+    "inviteCode": "Code",
+    "createdAt": "Created",
+    "detail": "Detail",
+    "deleteGroup": "Delete group",
+    "deleteConfirmTitle": "Delete this group?",
+    "deleteConfirmText": "The group, its assignments and wishlists will be deleted. This cannot be undone.",
+    "deleted": "Group deleted.",
+    "notFound": "Group not found",
+    "backToList": "Back to list",
+    "info": "Group information",
+    "currency": "Currency",
+    "maxParticipants": "Max participants",
+    "anonymousClues": "Anonymous clues",
+    "drawnAt": "Drawn on",
+    "revealedAt": "Revealed on",
+    "completedAt": "Completed on",
+    "joinedAt": "Joined",
+    "exclusions": "Does not give to",
+    "noExclusions": "No exclusions",
+    "privacyNote": "For privacy, the panel never shows who gives to whom.",
+    "yes": "Yes",
+    "no": "No",
+    "min": "Min",
+    "max": "Max"
+  },
+  "dashboard": {
+    "welcome": "Welcome back, {{name}}.",
+    "subtitle": "EntrePanas activity overview",
+    "users": "Users",
+    "activeUsers": "{{count}} active",
+    "groups": "Groups",
+    "participants": "Memberships",
+    "avgMembers": "{{avg}} per group on average",
+    "wishes": "Wishlist items",
+    "newLast30d": "+{{count}} in 30 days",
+    "groupsByStatus": "Groups by status",
+    "activity": "User sign-ups (last 30 days)",
+    "activityTotal": "{{count}} sign-ups in the period",
+    "upcoming": "Upcoming exchanges",
+    "noUpcoming": "No exchanges scheduled.",
+    "inDays": "in {{count}} days",
+    "today": "today",
+    "tomorrow": "tomorrow",
+    "membersCount": "{{count}} members",
+    "usersByRole": "Users by role",
+    "viewAll": "View all",
+    "loadError": "Could not load statistics.",
+    "signups": "sign-ups",
+    "date": "Date",
+    "count": "Count",
+    "showTable": "View as table",
+    "showChart": "View chart"
+  },
+  "header": {
+    "api": {
+      "online": "API online",
+      "degraded": "API without database",
+      "offline": "API offline",
+      "checking": "Checking API"
+    }
   }
 }

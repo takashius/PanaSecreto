@@ -1,4 +1,4 @@
-# Reglas del Proyecto (PanaSecreto)
+# Reglas del Proyecto (EntrePanas)
 
 ## Ejecución y Compilación Mobile (`@panasecreto/mobile`)
 

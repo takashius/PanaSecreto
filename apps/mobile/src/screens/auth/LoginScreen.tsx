@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Mail, Lock, Eye, EyeOff, ShieldCheck } from 'lucide-react-native';
 import { GoogleIcon } from '../../components/common/GoogleIcon';
+import type { SessionUser } from '../../types/session';
 import {
   theme,
   commonStyles,
@@ -25,7 +26,7 @@ import {
 interface LoginScreenProps {
   onNavigateToRegister?: () => void;
   onNavigateToRecoverPassword?: () => void;
-  onLoginSuccess?: (token: string, user: any) => void;
+  onLoginSuccess?: (token: string, user: SessionUser) => void;
 }
 
 export default function LoginScreen({
@@ -93,7 +94,7 @@ export default function LoginScreen({
 
             <View style={authStyles.titleRow}>
               <Text style={authStyles.brandTitle}>
-                Pana<Text style={authStyles.brandTitleAccent}>Secreto</Text>
+                Entre<Text style={authStyles.brandTitleAccent}>Panas</Text>
               </Text>
             </View>
 

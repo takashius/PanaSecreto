@@ -8,11 +8,12 @@ import RecoverPasswordScreen from './src/screens/auth/RecoverPasswordScreen';
 import DashboardScreen from './src/screens/dashboard/DashboardScreen';
 import CreateGroupScreen from './src/screens/group/CreateGroupScreen';
 import { theme } from './src/styles/theme';
+import type { SessionUser } from './src/types/session';
 
 export default function App() {
   // Pila de navegación para soportar el botón de atrás nativo de Android
   const [screenHistory, setScreenHistory] = useState<Array<'login' | 'register' | 'recover' | 'dashboard' | 'createGroup'>>(['login']);
-  const [sessionUser, setSessionUser] = useState<any>(null);
+  const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
 
   const currentScreen = screenHistory[screenHistory.length - 1];
 
@@ -45,7 +46,7 @@ export default function App() {
     return () => backSub.remove();
   }, [screenHistory]);
 
-  let content = null;
+  let content: React.ReactNode;
   if (currentScreen === 'login') {
     content = (
       <LoginScreen

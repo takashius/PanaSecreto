@@ -2,7 +2,7 @@ import { App, ConfigProvider as AntdConfigProvider } from 'antd';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { useTheme } from './context/useTheme';
-import { useConfigContext } from './context/ConfigContext';
+import { useConfigContext } from './context/useConfigContext';
 import { getThemeConfig } from './theme/config';
 import { protectedRoutes } from './routes';
 

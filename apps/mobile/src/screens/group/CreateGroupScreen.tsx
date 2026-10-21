@@ -27,9 +27,11 @@ import { theme } from '../../styles/theme';
 import { createGroupStyles } from '../../styles/createGroup.styles';
 import { CreateGroupSuccessModal } from '../../components/group/CreateGroupSuccessModal';
 
+import type { CreatedGroupDraft } from '../../types/session';
+
 interface CreateGroupScreenProps {
   onNavigateBack: () => void;
-  onGroupCreated?: (newGroup: any) => void;
+  onGroupCreated?: (newGroup: CreatedGroupDraft) => void;
 }
 
 export const CreateGroupScreen: React.FC<CreateGroupScreenProps> = ({

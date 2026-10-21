@@ -55,15 +55,14 @@ const userSchema = new Schema<IUserDocument>(
 );
 
 userSchema.pre('save', async function (next) {
-  const user = this;
-  if (user.isModified('password') && user.password) {
-    user.password = await hash(user.password, config.bcryptRounds);
+  if (this.isModified('password') && this.password) {
+    this.password = await hash(this.password, config.bcryptRounds);
   }
   next();
 });
 
-userSchema.methods.generateAuthToken = async function (): Promise<string> {
-  const user = this;
+userSchema.methods.generateAuthToken = async function (this: IUserDocument): Promise<string> {
+  const user: IUserDocument = this; // eslint-disable-line @typescript-eslint/no-this-alias -- legibilidad
   const objToken = { _id: user._id, date: new Date() };
   const token = sign(objToken, config.JWT_KEY, { expiresIn: '7d' });
   // Purga tokens expirados para que el arreglo de sesiones no crezca sin límite

@@ -1,5 +1,5 @@
 import { randomInt } from 'crypto';
-import { Types } from 'mongoose';
+import { Types, type FilterQuery } from 'mongoose';
 import {
   GROUP_MIN_PARTICIPANTS,
   GroupStatusEnum,
@@ -8,13 +8,25 @@ import {
   type CreateGroupDTO,
   type GroupStatus,
   type GroupSummary,
+  type InviteByEmailDTO,
   type SetExclusionsDTO,
   type UpdateGroupDTO,
 } from '@panasecreto/shared';
 import { Assignment, Group, IGroup, IGroupMember } from './model';
 import '../user/model'; // registra el modelo User para populate
+import { deleteWishesOfGroup, deleteWishesOfMember } from '../wishlist/cleanup';
 import { drawSecretFriends } from './draw';
 import { StoreResponse } from '../../types/general';
+import {
+  notifyDrawCompleted,
+  notifyDrawReset,
+  notifyGroupDeleted,
+  notifyMemberJoined,
+  notifyRemovedFromGroup,
+  notifyRevealed,
+  recipientsOfGroup,
+  sendGroupInvitations,
+} from '../../services/notifications';
 
 /* ==============================================================
    Utilidades
@@ -22,7 +34,7 @@ import { StoreResponse } from '../../types/general';
 
 const INVITE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sin 0/O/1/I para evitar confusiones
 const USER_PUBLIC_FIELDS = 'name lastName photo';
-const USER_CREATOR_FIELDS = 'name lastName photo email';
+const USER_CREATOR_FIELDS = 'name lastName photo email active';
 const ACTIVE_DRAW_STATUSES: GroupStatus[] = [
   GroupStatusEnum.LOCKED,
   GroupStatusEnum.REVEALED,
@@ -58,7 +70,24 @@ function escapeRegex(value: string): string {
 
 const isValidId = (id: string) => Types.ObjectId.isValid(id) && String(new Types.ObjectId(id)) === id;
 
-const idOf = (value: any): string => String(value?._id ?? value);
+/** Usuario poblado (populate) con los campos públicos */
+interface PopulatedUser {
+  _id: Types.ObjectId;
+  name?: string;
+  lastName?: string;
+  photo?: string | null;
+  email?: string;
+  active?: boolean;
+}
+
+type IdLike = Types.ObjectId | string | { _id: Types.ObjectId | string } | null | undefined;
+
+const idOf = (value: IdLike | unknown): string => {
+  const v = value as { _id?: unknown } | null | undefined;
+  return String(v && typeof v === 'object' && '_id' in v ? v._id : value);
+};
+
+const asUser = (value: unknown) => (value && typeof value === 'object' ? (value as PopulatedUser) : undefined);
 
 function findMember(group: IGroup, userId: string) {
   return group.members.find((m) => idOf(m.user) === userId);
@@ -66,7 +95,8 @@ function findMember(group: IGroup, userId: string) {
 
 const isCreator = (group: IGroup, userId: string) => idOf(group.creator) === userId;
 
-function displayName(user: any): string {
+function displayName(value: unknown): string {
+  const user = asUser(value);
   if (!user) return 'Usuario';
   return [user.name, user.lastName].filter(Boolean).join(' ');
 }
@@ -113,7 +143,7 @@ function serializeGroup(group: IGroup, viewerId: string, privileged = false) {
     revealedAt: group.revealedAt,
     completedAt: group.completedAt,
     members: group.members.map((m) => {
-      const u: any = m.user;
+      const u = asUser(m.user);
       return {
         userId: idOf(u),
         name: u?.name ?? 'Usuario',
@@ -180,8 +210,9 @@ export async function createGroup(userId: string, dto: CreateGroupDTO): Promise<
           members: [{ user: creator, role: MemberRoleEnum.CREATOR, joinedAt: new Date(), exclusions: [] }],
         });
         return respondWithGroup(idOf(group._id), userId, 201);
-      } catch (error: any) {
-        const dupInviteCode = error?.code === 11000 && error?.keyPattern?.inviteCode;
+      } catch (error) {
+        const e = error as { code?: number; keyPattern?: Record<string, unknown> };
+        const dupInviteCode = e?.code === 11000 && e?.keyPattern?.inviteCode;
         if (!dupInviteCode) throw error;
       }
     }
@@ -197,7 +228,7 @@ export async function listMyGroups(
 ): Promise<StoreResponse> {
   try {
     const uid = new Types.ObjectId(userId);
-    const query: any = { 'members.user': uid };
+    const query: FilterQuery<IGroup> = { 'members.user': uid };
     if (scope === 'created') query.creator = uid;
     if (scope === 'joined') query.creator = { $ne: uid };
 
@@ -211,8 +242,8 @@ export async function listMyGroups(
       .lean();
     const assignedSet = new Set(assigned.map((a) => idOf(a.group)));
 
-    const results: GroupSummary[] = groups.map((g: any) => {
-      const me = g.members.find((m: any) => idOf(m.user) === userId);
+    const results: GroupSummary[] = groups.map((g) => {
+      const me = g.members.find((m) => idOf(m.user) === userId);
       return {
         id: idOf(g._id),
         name: g.name,
@@ -288,7 +319,7 @@ export async function updateGroup(actorId: string, id: string, dto: UpdateGroupD
       if (value !== undefined) set[key] = value;
     }
 
-    const filter: any = { _id: group!._id, status: group!.status };
+    const filter: FilterQuery<IGroup> = { _id: group!._id, status: group!.status };
     if (dto.maxParticipants !== undefined) {
       filter.$expr = { $lte: [{ $size: '$members' }, dto.maxParticipants] };
     }
@@ -307,8 +338,12 @@ export async function deleteGroup(actorId: string, id: string, actorIsAdmin = fa
     if (!group || (!findMember(group, actorId) && !actorIsAdmin)) return notFound();
     if (!isCreator(group, actorId) && !actorIsAdmin) return notCreator();
 
+    // Destinatarios antes de borrar (después ya no existe el grupo)
+    const audience = await recipientsOfGroup(idOf(group._id));
     await Assignment.deleteMany({ group: group._id });
+    await deleteWishesOfGroup(group._id);
     await Group.deleteOne({ _id: group._id });
+    if (audience) notifyGroupDeleted(group.name, audience.members.filter((m) => m.id !== actorId));
     return { status: 200, message: { ok: true, message: 'Grupo eliminado.' } };
   } catch (error) {
     return { status: 500, message: 'Error al eliminar el grupo.', detail: error };
@@ -365,7 +400,10 @@ export async function joinGroup(userId: string, inviteCode: string): Promise<Sto
       },
       { new: true }
     );
-    if (updated) return respondWithGroup(idOf(updated._id), userId, 201);
+    if (updated) {
+      notifyMemberJoined(idOf(updated._id), userId);
+      return respondWithGroup(idOf(updated._id), userId, 201);
+    }
 
     // Determinar por qué no se pudo unir
     const group = await Group.findOne({ inviteCode });
@@ -389,6 +427,10 @@ async function removeMemberInternal(group: IGroup, targetId: string): Promise<bo
     { _id: group._id, status: GroupStatusEnum.WAITING, membersVersion: group.membersVersion },
     { $set: { members }, $inc: { membersVersion: 1 } }
   );
+  if (result.matchedCount === 1) {
+    // Su lista de deseos ya no tiene sentido en el grupo
+    await deleteWishesOfMember(group._id, targetId);
+  }
   return result.matchedCount === 1;
 }
 
@@ -418,7 +460,15 @@ export async function removeMember(actorId: string, id: string, targetId: string
     if (targetId === actorId) return fail(400, 'CANNOT_REMOVE_SELF', 'No puedes expulsarte a ti mismo.');
     if (!findMember(group!, targetId)) return fail(404, 'MEMBER_NOT_FOUND', 'Ese usuario no es miembro del grupo.');
     if (group!.status !== GroupStatusEnum.WAITING) return notWaiting();
+    const target = asUser(findMember(group!, targetId)!.user);
     if (!(await removeMemberInternal(group!, targetId))) return concurrentChange();
+    if (target?.email) {
+      notifyRemovedFromGroup(
+        { id: targetId, name: target.name ?? 'Pana', lastName: target.lastName, email: target.email, active: target.active },
+        group!.name,
+        displayName(group!.creator)
+      );
+    }
     return respondWithGroup(id, actorId);
   } catch (error) {
     return { status: 500, message: 'Error al expulsar al miembro.', detail: error };
@@ -477,7 +527,7 @@ export async function setExclusions(
     const response = await respondWithGroup(id, actorId);
     if (response.status === 200) {
       response.message = {
-        ...response.message,
+        ...(response.message as Record<string, unknown>),
         drawPossible: feasibility.ok || feasibility.reason === 'NOT_ENOUGH_PARTICIPANTS',
       };
     }
@@ -496,13 +546,48 @@ export async function regenerateInviteCode(actorId: string, id: string): Promise
       try {
         await Group.updateOne({ _id: group!._id }, { $set: { inviteCode: generateInviteCode() } });
         return respondWithGroup(id, actorId);
-      } catch (err: any) {
-        if (err?.code !== 11000) throw err;
+      } catch (err) {
+        if ((err as { code?: number })?.code !== 11000) throw err;
       }
     }
     return { status: 500, message: 'No se pudo generar un código de invitación único.' };
   } catch (error) {
     return { status: 500, message: 'Error al regenerar el código.', detail: error };
+  }
+}
+
+/** Invita por correo a una lista de personas (solo el organizador, antes del sorteo y con cupo). */
+export async function inviteByEmail(actorId: string, id: string, dto: InviteByEmailDTO): Promise<StoreResponse> {
+  try {
+    const { group, error } = await loadAsCreator(actorId, id);
+    if (error) return error;
+    if (group!.status !== GroupStatusEnum.WAITING) return notWaiting();
+    if (group!.members.length >= group!.maxParticipants) {
+      return fail(409, 'GROUP_FULL', 'El grupo alcanzó su cupo máximo; no tiene sentido invitar a más personas.');
+    }
+
+    const memberEmails = new Set(
+      group!.members.map((m) => asUser(m.user)?.email?.toLowerCase()).filter((x): x is string => Boolean(x))
+    );
+    const unique = Array.from(new Set(dto.emails));
+    const alreadyMembers = unique.filter((em) => memberEmails.has(em));
+    const toInvite = unique.filter((em) => !memberEmails.has(em));
+    if (toInvite.length === 0) {
+      return fail(400, 'NOTHING_TO_SEND', 'Todas esas personas ya son miembros del grupo.', { alreadyMembers });
+    }
+
+    const result = await sendGroupInvitations({
+      groupId: idOf(group!._id),
+      inviterName: displayName(group!.creator),
+      emails: toInvite,
+      personalMessage: dto.message,
+    });
+    return {
+      status: 200,
+      message: { sent: result.sent, failed: result.failed, invited: toInvite, alreadyMembers },
+    };
+  } catch (error) {
+    return { status: 500, message: 'Error al enviar las invitaciones.', detail: error };
   }
 }
 
@@ -569,6 +654,7 @@ export async function drawGroup(actorId: string, id: string): Promise<StoreRespo
       throw insertError;
     }
 
+    notifyDrawCompleted(id);
     return respondWithGroup(id, actorId);
   } catch (error) {
     return { status: 500, message: 'Error al realizar el sorteo.', detail: error };
@@ -588,6 +674,7 @@ export async function resetDraw(actorId: string, id: string): Promise<StoreRespo
     );
     if (result.matchedCount === 0) return concurrentChange();
     await Assignment.deleteMany({ group: group!._id });
+    notifyDrawReset(id);
     return respondWithGroup(id, actorId);
   } catch (error) {
     return { status: 500, message: 'Error al deshacer el sorteo.', detail: error };
@@ -615,7 +702,7 @@ async function transition(
 
 export async function revealGroup(actorId: string, id: string): Promise<StoreResponse> {
   try {
-    return await transition(
+    const result = await transition(
       actorId,
       id,
       [GroupStatusEnum.LOCKED],
@@ -623,6 +710,8 @@ export async function revealGroup(actorId: string, id: string): Promise<StoreRes
       'revealedAt',
       'Solo se puede revelar un grupo ya sorteado.'
     );
+    if (result.status === 200) notifyRevealed(id);
+    return result;
   } catch (error) {
     return { status: 500, message: 'Error al revelar el sorteo.', detail: error };
   }
@@ -656,7 +745,7 @@ export async function getMyAssignment(userId: string, id: string): Promise<Store
       .lean();
     if (!assignment) return fail(404, 'ASSIGNMENT_NOT_FOUND', 'No tienes una asignación en este grupo.');
 
-    const receiver: any = assignment.receiver;
+    const receiver = asUser(assignment.receiver);
     const view: AssignmentView = {
       groupId: idOf(group._id),
       receiver: {
@@ -684,7 +773,10 @@ export async function listAssignments(userId: string, id: string): Promise<Store
       .populate('giver', USER_PUBLIC_FIELDS)
       .populate('receiver', USER_PUBLIC_FIELDS)
       .lean();
-    const person = (u: any) => ({ userId: idOf(u), name: u?.name ?? 'Usuario', lastName: u?.lastName, photo: u?.photo ?? null });
+    const person = (value: unknown) => {
+      const u = asUser(value);
+      return { userId: idOf(value), name: u?.name ?? 'Usuario', lastName: u?.lastName, photo: u?.photo ?? null };
+    };
     return {
       status: 200,
       message: { results: assignments.map((a) => ({ giver: person(a.giver), receiver: person(a.receiver) })) },
@@ -705,7 +797,7 @@ export async function adminListGroups(filters: {
   limit?: unknown;
 }): Promise<StoreResponse> {
   try {
-    const query: any = {};
+    const query: FilterQuery<IGroup> = {};
     if (typeof filters.status === 'string' && (Object.values(GroupStatusEnum) as string[]).includes(filters.status)) {
       query.status = filters.status;
     }
@@ -726,7 +818,7 @@ export async function adminListGroups(filters: {
       Group.countDocuments(query),
     ]);
 
-    const results = groups.map((g: any) => ({
+    const results = groups.map((g) => ({
       id: idOf(g._id),
       name: g.name,
       emoji: g.emoji,
@@ -738,7 +830,7 @@ export async function adminListGroups(filters: {
       budgetMax: g.budgetMax ?? null,
       maxParticipants: g.maxParticipants,
       memberCount: g.members.length,
-      creator: { id: idOf(g.creator), name: displayName(g.creator), email: g.creator?.email },
+      creator: { id: idOf(g.creator), name: displayName(g.creator), email: asUser(g.creator)?.email },
       createdAt: g.createdAt,
     }));
 
@@ -746,4 +838,24 @@ export async function adminListGroups(filters: {
   } catch (error) {
     return { status: 500, message: 'Error al listar grupos.', detail: error };
   }
+}
+
+/* ==============================================================
+   Utilidades para otros módulos (wishlist, chat)
+   ============================================================== */
+
+/** Devuelve el grupo (lean) si el usuario es miembro; null si no existe o no pertenece. */
+export async function findGroupForMember(groupId: string, userId: string) {
+  if (!isValidId(groupId) || !Types.ObjectId.isValid(userId)) return null;
+  return Group.findOne({ _id: groupId, 'members.user': new Types.ObjectId(userId) })
+    .select('status currency members.user')
+    .lean();
+}
+
+/** ID del usuario al que le regala `userId` en el grupo, o null si no hay sorteo. */
+export async function findReceiverId(groupId: string, userId: string): Promise<string | null> {
+  const a = await Assignment.findOne({ group: new Types.ObjectId(groupId), giver: new Types.ObjectId(userId) })
+    .select('receiver')
+    .lean();
+  return a ? idOf(a.receiver) : null;
 }

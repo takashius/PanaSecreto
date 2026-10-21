@@ -1,5 +1,5 @@
 /**
- * Tipografía y bordes para PanaSecreto
+ * Tipografía y bordes para EntrePanas
  */
 export const typography = {
   fontFamily: {

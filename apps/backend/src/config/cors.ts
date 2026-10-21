@@ -3,9 +3,13 @@ import config from './commons';
 
 export function buildCorsOptions(): CorsOptions {
   if (config.corsOrigin === '*') {
+    if (config.isDeployedEnv) {
+      console.warn('[cors] CORS_ORIGIN=* en un entorno desplegado. Define los dominios permitidos separados por coma.');
+    }
+    // Comodín real sin credenciales (la API usa Bearer tokens, no cookies)
     return {
-      origin: true,
-      credentials: true,
+      origin: '*',
+      credentials: false,
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization', 'Accept-Language', 'responseType'],
     };

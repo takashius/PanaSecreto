@@ -28,7 +28,7 @@ export default {
           light: '#E64C4C',
           dark: '#B01E1E',
         },
-        background: '#F5F5F5', // Fondo Claro Estilo UniSan
+        background: '#F8F9FA', // Hueso Suave (token background)
         textDark: '#1C1B24',   // Carbón Lente
         surface: '#FFFFFF',    // Blanco Puro
       },

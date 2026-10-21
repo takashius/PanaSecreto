@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Gift, Mail, MessageSquare, Sparkles } from 'lucide-react-native';
+import { Gift, Mail, MessageSquare, Sparkles, type LucideIcon } from 'lucide-react-native';
 import { theme, dashboardStyles } from '../../styles';
 
 export type DashboardTab = 'grupos' | 'papelitos' | 'chat' | 'mipana';
@@ -17,7 +17,7 @@ export const FloatingTabBar: React.FC<FloatingTabBarProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
 
-  const tabs: Array<{ id: DashboardTab; label: string; icon: any }> = [
+  const tabs: Array<{ id: DashboardTab; label: string; icon: LucideIcon }> = [
     { id: 'grupos', label: 'Grupos', icon: Gift },
     { id: 'papelitos', label: 'Papelitos', icon: Mail },
     { id: 'chat', label: 'Chat Secreto', icon: MessageSquare },

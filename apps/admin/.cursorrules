@@ -1,4 +1,4 @@
-# PanaSecreto Admin Web - Architecture & Team Rules (Replicated from UniSan)
+# EntrePanas Admin Web - Arquitectura y reglas del equipo
 
 ## Stack Tecnológico
 
@@ -34,4 +34,5 @@ Usar siempre los aliases configurados:
 - Los filtros de listado (`q`, `role`, `active`, etc.) deben implementarse en `Table.columns` usando `filters` y/o `filterDropdown`.
 - Prohibido renderizar filtros de listado fuera de la tabla.
 - Excepción: acciones no-filtro (crear, exportar, refrescar).
-- Solo roles con acceso web (`SUPER_ADMIN`, `ADMIN`) pueden autenticarse en el panel; el rol `USER` es exclusivo de la app móvil.
+- Roles con acceso web: `SUPER_ADMIN`, `ADMIN` y `ORGANIZER` (este último sin métricas ni gestión). El rol `USER` es exclusivo de la app móvil.
+- Los roles se importan de `@panasecreto/shared` (fuente única); `src/constants/roles.ts` solo agrega utilidades del panel.

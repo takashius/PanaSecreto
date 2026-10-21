@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "PanaSecreto",
+    "name": "EntrePanas",
     "slug": "panasecreto",
     "owner": "erdesarrollo",
     "version": "1.0.0",
@@ -14,13 +14,13 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.erdesarrollo.panasecreto"
+      "bundleIdentifier": "com.erdesarrollo.entrepanas"
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#1E1338"
       },
-      "package": "com.erdesarrollo.panasecreto",
+      "package": "com.erdesarrollo.entrepanas",
       "edgeToEdgeEnabled": true,
       "softwareKeyboardLayoutMode": "resize"
     },

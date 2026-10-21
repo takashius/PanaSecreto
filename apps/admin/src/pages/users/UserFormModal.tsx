@@ -1,14 +1,14 @@
 import { useEffect } from 'react';
 import { Modal, Form, Input, Select, Switch } from 'antd';
 import { useTranslation } from 'react-i18next';
-import type { ManagedUser } from '@app-types/users';
-import { ROLE_DESCRIPTIONS, assignableRolesFor } from '../../constants/roles';
+import type { CreateUserRequest, ManagedUser } from '@app-types/users';
+import { assignableRolesFor, isSuperAdminRole } from '../../constants/roles';
 import { useAuth } from '@context/useAuth';
 
 interface Props {
   open: boolean;
   onCancel: () => void;
-  onSubmit: (values: any) => void;
+  onSubmit: (values: CreateUserRequest) => void;
   initialValues?: ManagedUser | null;
   loading?: boolean;
 }
@@ -28,6 +28,16 @@ export default function UserFormModal({
   const roleOptions = Array.from(
     new Set([...assignableRolesFor(user?.role), ...(currentRole ? [currentRole] : [])])
   );
+  // Al editar, el rol solo lo cambia un SUPER_ADMIN y nunca el suyo propio
+  const isSelf = isEditing && initialValues?._id === user?._id;
+  const canChangeRole = !isEditing || (isSuperAdminRole(user?.role) && !isSelf);
+  const roleHelp = !canChangeRole
+    ? isSelf
+      ? t('usersManagement.roleOwnLocked')
+      : t('usersManagement.roleSuperAdminOnly')
+    : isEditing
+      ? t('usersManagement.roleChangeLogsOut')
+      : undefined;
 
   useEffect(() => {
     if (open) {
@@ -103,12 +113,13 @@ export default function UserFormModal({
         <Form.Item
           name="role"
           label={t('usersManagement.role')}
-          rules={[{ required: true, message: 'Selecciona un rol' }]}
+          rules={[{ required: true, message: t('usersManagement.roleRequired') }]}
+          extra={roleHelp}
         >
-          <Select placeholder="Selecciona un rol">
+          <Select placeholder={t('usersManagement.roleRequired')} disabled={!canChangeRole}>
             {roleOptions.map((role: string) => (
               <Select.Option key={role} value={role}>
-                {role}
+                {t(`roles.${role}`, role)}
               </Select.Option>
             ))}
           </Select>

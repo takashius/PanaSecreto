@@ -13,7 +13,7 @@ export function sendResult(res: Response, result: StoreResponse, _success = 200)
 export function sendOrError(
   res: Response,
   result: StoreResponse,
-  _controllerError: Function,
+  _controllerError: (err: unknown, req: Request, res: Response) => unknown,
   req: Request
 ) {
   if (result.status < 500) {

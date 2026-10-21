@@ -18,12 +18,8 @@ export default function Login() {
   const { login } = useAuth();
   const loginMutation = useLogin();
   const [messageApi, contextHolder] = message.useMessage();
-  const [initialUsername, setInitialUsername] = useState<string | undefined>(undefined);
-
-  useEffect(() => {
-    const storedEmail = localStorage.getItem('email');
-    if (storedEmail) setInitialUsername(storedEmail);
-  }, []);
+  // Correo recordado: se lee una sola vez al montar (sin setState dentro de un efecto)
+  const [initialUsername] = useState<string | undefined>(() => localStorage.getItem('email') ?? undefined);
 
   useEffect(() => {
     const state = location.state as { webAccessDenied?: boolean } | null;

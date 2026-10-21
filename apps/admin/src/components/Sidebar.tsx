@@ -5,7 +5,7 @@ import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 import { getMenuItemsForRole, type MenuItem } from './menuItems';
 import { useAuth } from '@context/useAuth';
 import { useTheme } from '@context/useTheme';
-import { useConfigContext } from '@context/ConfigContext';
+import { useConfigContext } from '@context/useConfigContext';
 import AppLogo from './AppLogo';
 
 interface SidebarProps {

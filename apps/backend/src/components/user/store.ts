@@ -1,5 +1,8 @@
 import { randomInt } from 'crypto';
 import { User } from './model';
+import type { FilterQuery } from 'mongoose';
+import type { IUserDocument } from '../../types/users';
+import { describeSaveError } from '../../middleware/controllerError';
 import {
   assignableRolesFor,
   canAccessWeb,
@@ -12,9 +15,16 @@ import config from '../../config/commons';
 import { sanitizeEmail } from '../../utils/sanitizeEmail';
 import { StoreResponse } from '../../types/general';
 import { compare } from 'bcryptjs';
-import { removeImage } from '../../middleware/saveFile';
+import { deleteImage } from '../../services/storage';
+import type { UploadedImage } from '../../types/general';
+import { sendMail } from '../../services/mail';
+import { recoveryCodeEmail } from '../../services/mailTemplates';
+import { notifyAccountCreated, notifyPasswordChanged, notifyWelcome } from '../../services/notifications';
 
 const MAX_RECOVERY_ATTEMPTS = 5;
+const RECOVERY_CODE_MINUTES = 15;
+/** Tiempo mínimo entre dos envíos de código a la misma cuenta */
+const RECOVERY_RESEND_SECONDS = 60;
 
 function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -24,7 +34,7 @@ function escapeRegex(value: string): string {
 async function loadManageableTarget(
   actorRole: string | string[],
   id: string
-): Promise<{ user?: any; error?: StoreResponse }> {
+): Promise<{ user: IUserDocument; error?: undefined } | { user?: undefined; error: StoreResponse }> {
   const user = await User.findById(id);
   if (!user) return { error: { status: 404, message: 'Usuario no encontrado.' } };
   if (!canManageTarget(actorRole, user.role)) {
@@ -36,6 +46,15 @@ async function loadManageableTarget(
     };
   }
   return { user };
+}
+
+/** Datos mínimos para notificar por correo a un usuario */
+function recipientOf(user: { _id: unknown; name: string; lastName?: string; email: string; active?: boolean }) {
+  return { id: String(user._id), name: user.name, lastName: user.lastName, email: user.email, active: user.active };
+}
+
+function displayFullName(user: { name?: string; lastName?: string }): string {
+  return [user.name, user.lastName].filter(Boolean).join(' ');
 }
 
 const PUBLIC_USER_FIELDS = '-password -tokens -__v -recoveryCode -recoveryCodeExpires -recoveryAttempts';
@@ -118,6 +137,7 @@ export async function register(data: {
     });
 
     await user.save();
+    notifyWelcome(recipientOf(user));
     const token = await user.generateAuthToken();
 
     return {
@@ -132,10 +152,11 @@ export async function register(data: {
         token,
       },
     };
-  } catch (error: any) {
+  } catch (error) {
+    const safe = describeSaveError(error, 'Error al registrar usuario.');
     return {
-      status: 400,
-      message: error?.message || 'Error al registrar usuario.',
+      status: safe.status,
+      message: safe.message,
       detail: error,
     };
   }
@@ -199,6 +220,7 @@ export async function changePassword(
     // Cierra las demás sesiones; conserva solo la actual
     user.tokens = user.tokens.filter((t) => t.token === currentToken);
     await user.save();
+    notifyPasswordChanged(recipientOf(user), 'self');
 
     return { status: 200, message: { ok: true, message: 'Contraseña actualizada exitosamente.' } };
   } catch (error) {
@@ -234,6 +256,7 @@ export async function changeRequiredPassword(
     user.forcePasswordChangeOnNextLogin = false;
     user.tokens = user.tokens.filter((t) => t.token === currentToken);
     await user.save();
+    notifyPasswordChanged(recipientOf(user), 'required');
 
     return { status: 200, message: { ok: true, message: 'Contraseña actualizada exitosamente.' } };
   } catch (error) {
@@ -244,21 +267,34 @@ export async function changeRequiredPassword(
 export async function recoveryStepOne(emailRaw: string): Promise<StoreResponse> {
   try {
     const email = sanitizeEmail(emailRaw);
+    const genericOk: StoreResponse = {
+      status: 200,
+      message: { ok: true, message: 'Si el correo existe, recibirás un código.' },
+    };
     const user = await User.findOne({ email });
-    if (!user) {
-      // Por seguridad respondemos ok aunque no exista para no filtrar emails
-      return { status: 200, message: { ok: true, message: 'Si el correo existe, recibirás un código.' } };
+    // Misma respuesta si no existe o está inactivo: no se filtra qué correos están registrados
+    if (!user || user.active === false) return genericOk;
+
+    // Anti-spam por cuenta: si se envió un código hace menos de 60 s, no se envía otro
+    if (user.recoveryCodeExpires) {
+      const issuedAt = user.recoveryCodeExpires.getTime() - RECOVERY_CODE_MINUTES * 60 * 1000;
+      if (Date.now() - issuedAt < RECOVERY_RESEND_SECONDS * 1000) return genericOk;
     }
 
     const code = randomInt(100000, 1000000);
     user.recoveryCode = code;
-    user.recoveryCodeExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutos
+    user.recoveryCodeExpires = new Date(Date.now() + RECOVERY_CODE_MINUTES * 60 * 1000);
     user.recoveryAttempts = 0;
     await user.save();
 
-    // TODO: enviar el código por correo electrónico (servicio de email pendiente).
-    if (config.dev) {
-      console.log(`[AUTH RECOVERY][dev] Código para ${email}: ${code}`);
+    const mail = recoveryCodeEmail({ name: user.name, code, minutes: RECOVERY_CODE_MINUTES });
+    const sent = await sendMail({
+      to: { email: user.email, name: displayFullName(user) },
+      ...mail,
+      customId: `recovery-${user._id}`,
+    });
+    if (!sent.ok) {
+      console.error(`[AUTH RECOVERY] No se pudo enviar el código a ${email}: ${sent.error}`);
     }
     return {
       status: 200,
@@ -317,6 +353,7 @@ export async function recoveryStepTwo(
     user.recoveryAttempts = 0;
     user.tokens = []; // Cerrar todas las sesiones previas
     await user.save();
+    notifyPasswordChanged(recipientOf(user), 'recovery');
 
     return { status: 200, message: { ok: true, message: 'Contraseña restablecida exitosamente.' } };
   } catch (error) {
@@ -336,7 +373,7 @@ export async function listUsersAdmin(filters: {
   limit?: number;
 }): Promise<StoreResponse> {
   try {
-    const query: any = {};
+    const query: FilterQuery<IUserDocument> = {};
 
     if (filters.active === 'true') query.active = true;
     if (filters.active === 'false') query.active = false;
@@ -434,27 +471,30 @@ export async function createUserAdmin(actorRole: string | string[], data: {
     });
 
     await user.save();
+    notifyAccountCreated(recipientOf(user), requestedRole);
 
     const created = await User.findById(user._id).select(PUBLIC_USER_FIELDS);
     return { status: 201, message: created };
-  } catch (error: any) {
-    return { status: 400, message: error?.message || 'Error al crear usuario.', detail: error };
+  } catch (error) {
+    const safe = describeSaveError(error, 'Error al crear usuario.');
+    return { status: safe.status, message: safe.message, detail: error };
   }
 }
 
 export async function updateUserAdmin(
   actorRole: string | string[],
   id: string,
-  payload: any
+  payload: unknown
 ): Promise<StoreResponse> {
   try {
     const target = await loadManageableTarget(actorRole, id);
     if (target.error) return target.error;
 
-    const allowed = ['name', 'lastName', 'middleName', 'phone', 'photo'];
-    const update: any = {};
+    const allowed = ['name', 'lastName', 'middleName', 'phone'];
+    const input = (payload && typeof payload === 'object' ? payload : {}) as Record<string, unknown>;
+    const update: Record<string, string> = {};
     for (const key of allowed) {
-      if (payload?.[key] !== undefined) update[key] = String(payload[key]);
+      if (input[key] !== undefined && input[key] !== null) update[key] = String(input[key]);
     }
 
     const updated = await User.findByIdAndUpdate(id, { $set: update }, { new: true }).select(
@@ -469,14 +509,23 @@ export async function updateUserAdmin(
   }
 }
 
-export async function setUserRole(id: string, role: string): Promise<StoreResponse> {
+export async function setUserRole(actorId: string, id: string, role: unknown): Promise<StoreResponse> {
   try {
     if (!isUserRole(role)) {
-      return { status: 400, message: 'Rol inválido.' };
+      return { status: 400, message: { code: 'INVALID_ROLE', message: 'Rol inválido.' } };
     }
+    if (actorId === id) {
+      return { status: 400, message: { code: 'CANNOT_CHANGE_OWN_ROLE', message: 'No puedes cambiar tu propio rol.' } };
+    }
+    const target = await User.findById(id).select('role');
+    if (!target) return { status: 404, message: 'Usuario no encontrado.' };
+
+    // Siempre queda al menos un SUPER_ADMIN: quien hace el cambio lo es y no puede cambiar su propio rol.
+
+    // Cambiar el rol cierra sus sesiones: vuelve a entrar con los permisos nuevos
     const updated = await User.findByIdAndUpdate(
       id,
-      { $set: { role: [role] } },
+      { $set: { role: [role], tokens: [] } },
       { new: true }
     ).select(PUBLIC_USER_FIELDS);
     if (!updated) return { status: 404, message: 'Usuario no encontrado.' };
@@ -501,7 +550,7 @@ export async function setUserActive(
     const target = await loadManageableTarget(actor.role, id);
     if (target.error) return target.error;
 
-    const update: any = { active };
+    const update: { active: boolean; tokens?: [] } = { active };
     if (!active) update.tokens = []; // Revoca todas sus sesiones
     const updated = await User.findByIdAndUpdate(id, { $set: update }, { new: true }).select(
       PUBLIC_USER_FIELDS
@@ -527,6 +576,7 @@ export async function setUserPassword(
     user.forcePasswordChangeOnNextLogin = true;
     user.tokens = [];
     await user.save();
+    notifyPasswordChanged(recipientOf(user), 'admin');
 
     return { status: 200, message: { ok: true, message: 'Contraseña cambiada exitosamente.' } };
   } catch (error) {
@@ -554,26 +604,29 @@ export async function setUserForcePasswordChange(
   }
 }
 
-export async function updateProfile(
-  userId: string,
-  data: {
-    name?: string;
-    lastName?: string;
-    phone?: string;
-    photo?: string;
-    password?: string;
-  }
-): Promise<StoreResponse> {
+/** Campos que el usuario puede enviar al actualizar su perfil (pueden llegar con cualquier tipo) */
+export interface ProfileUpdate {
+  name?: unknown;
+  lastName?: unknown;
+  phone?: unknown;
+  photo?: unknown;
+  password?: unknown;
+}
+
+const optionalText = (value: unknown): string | undefined =>
+  typeof value === 'string' ? value.trim() : value == null ? undefined : String(value).trim();
+
+export async function updateProfile(userId: string, data: ProfileUpdate): Promise<StoreResponse> {
   try {
     const user = await User.findById(userId);
     if (!user) {
       return { status: 404, message: 'Usuario no encontrado.' };
     }
 
-    if (data.name !== undefined) user.name = data.name.trim();
-    if (data.lastName !== undefined) user.lastName = data.lastName.trim();
-    if (data.phone !== undefined) user.phone = data.phone.trim();
-    if (data.photo !== undefined) user.photo = data.photo;
+    if (data.name !== undefined) user.name = optionalText(data.name) ?? user.name;
+    if (data.lastName !== undefined) user.lastName = optionalText(data.lastName);
+    if (data.phone !== undefined) user.phone = optionalText(data.phone);
+    // La foto solo se cambia subiendo una imagen (POST /user/upload), nunca con una URL arbitraria
 
     // La contraseña NO se cambia por esta vía: usar /change-password (requiere la actual)
     if (data.password !== undefined) {
@@ -591,12 +644,9 @@ export async function updateProfile(
   }
 }
 
-export async function uploadUserPhoto(
-  userId: string,
-  file?: Express.Multer.File
-): Promise<StoreResponse> {
+export async function uploadUserPhoto(userId: string, image?: UploadedImage): Promise<StoreResponse> {
   try {
-    if (!file?.path) {
+    if (!image?.url) {
       return { status: 400, message: 'No se recibió ningún archivo de imagen.' };
     }
     const user = await User.findById(userId);
@@ -604,12 +654,11 @@ export async function uploadUserPhoto(
       return { status: 404, message: 'Usuario no encontrado.' };
     }
 
-    if (user.photo) {
-      await removeImage(user.photo);
-    }
-
-    user.photo = file.path;
+    const previous = user.photo;
+    user.photo = image.url;
     await user.save();
+    // Se borra la anterior solo después de guardar la nueva
+    if (previous) await deleteImage(previous);
 
     const updated = await User.findById(userId).select(PUBLIC_USER_FIELDS);
     return { status: 200, message: updated };

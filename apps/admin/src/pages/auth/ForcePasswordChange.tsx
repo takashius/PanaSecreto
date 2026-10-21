@@ -9,7 +9,7 @@ import AuthFooter from '@components/AuthFooter';
 
 export default function ForcePasswordChange() {
   const navigate = useNavigate();
-  const { user, login, token } = useAuth();
+  const { user, login, token, logout } = useAuth();
   const changeMutation = useChangePasswordRequired();
   const [messageApi, contextHolder] = message.useMessage();
 
@@ -91,6 +91,9 @@ export default function ForcePasswordChange() {
             </Button>
           </Form.Item>
         </Form>
+        <Button type="link" className="w-full" onClick={logout}>
+          Cerrar sesión
+        </Button>
         <AuthFooter />
       </div>
     </div>

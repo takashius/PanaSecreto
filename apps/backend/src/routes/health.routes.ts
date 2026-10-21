@@ -4,10 +4,12 @@ import mongoose from 'mongoose';
 export const healthRouter: Router = Router();
 
 healthRouter.get('/health', (_req: Request, res: Response) => {
-  const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+  const connected = mongoose.connection.readyState === 1;
+  const dbStatus = connected ? 'connected' : 'disconnected';
 
-  res.status(200).json({
-    status: 'ok',
+  // 503 si la BD no está disponible: el healthcheck de Docker/Coolify lo detecta
+  res.status(connected ? 200 : 503).json({
+    status: connected ? 'ok' : 'degraded',
     timestamp: new Date().toISOString(),
     service: '@panasecreto/backend',
     database: dbStatus,

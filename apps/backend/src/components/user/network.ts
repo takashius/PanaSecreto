@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import * as controller from './controller';
 import auth, { authAdminOnly, authSuperAdminOnly } from '../../middleware/auth';
 import controllerError from '../../middleware/controllerError';
-import { upload } from '../../middleware/saveFile';
+import { uploadImages } from '../../services/storage';
 import { sendOrError, sendResult } from '../../utils/http';
 import {
   loginRateLimiter,
@@ -56,28 +56,10 @@ router.patch('/me', auth(), async (req: IGetUserAuthInfoRequest, res: Response) 
   }
 });
 
-router.patch('/', auth(), async (req: IGetUserAuthInfoRequest, res: Response) => {
-  try {
-    const result = await controller.updateProfile(req.user!._id, req.body);
-    sendOrError(res, result, controllerError, req);
-  } catch (error) {
-    controllerError(error, req, res);
-  }
-});
-
 // Subir foto de perfil a Cloudinary
-router.post('/upload', auth(), upload.single('photo'), async (req: IGetUserAuthInfoRequest, res: Response) => {
+router.post('/upload', auth(), uploadImages([{ name: 'photo', folder: 'avatars' }]), async (req: IGetUserAuthInfoRequest, res: Response) => {
   try {
-    const result = await controller.uploadUserPhoto(req.user!._id, req.file);
-    sendOrError(res, result, controllerError, req);
-  } catch (error) {
-    controllerError(error, req, res);
-  }
-});
-
-router.post('/me/photo', auth(), upload.single('photo'), async (req: IGetUserAuthInfoRequest, res: Response) => {
-  try {
-    const result = await controller.uploadUserPhoto(req.user!._id, req.file);
+    const result = await controller.uploadUserPhoto(req.user!._id, req.uploads?.photo);
     sendOrError(res, result, controllerError, req);
   } catch (error) {
     controllerError(error, req, res);
@@ -86,15 +68,6 @@ router.post('/me/photo', auth(), upload.single('photo'), async (req: IGetUserAut
 
 // Cerrar sesión activa
 router.post('/logout', auth(), async (req: IGetUserAuthInfoRequest, res: Response) => {
-  try {
-    const result = await controller.logoutUser(req.user!._id, req.token!);
-    sendResult(res, result);
-  } catch (error) {
-    controllerError(error, req, res);
-  }
-});
-
-router.post('/me/logout', auth(), async (req: IGetUserAuthInfoRequest, res: Response) => {
   try {
     const result = await controller.logoutUser(req.user!._id, req.token!);
     sendResult(res, result);
@@ -139,10 +112,10 @@ router.post('/change_password_required', auth(), async (req: IGetUserAuthInfoReq
   }
 });
 
-// Paso 1 de recuperación
-router.get('/recovery/:email', recoveryRequestRateLimiter, async (req: Request, res: Response) => {
+// Paso 1 de recuperación: envía el código por correo (POST para no exponer el email en la URL)
+router.post('/recovery/request', recoveryRequestRateLimiter, async (req: Request, res: Response) => {
   try {
-    const result = await controller.recoveryStepOne(req.params.email);
+    const result = await controller.recoveryStepOne(req.body?.email);
     sendResult(res, result);
   } catch (error) {
     controllerError(error, req, res);
@@ -213,9 +186,9 @@ router.patch('/admin/:id', authAdminOnly(), async (req: IGetUserAuthInfoRequest,
 });
 
 // Cambiar rol
-router.patch('/admin/:id/role', authSuperAdminOnly(), async (req: Request, res: Response) => {
+router.patch('/admin/:id/role', authSuperAdminOnly(), async (req: IGetUserAuthInfoRequest, res: Response) => {
   try {
-    const result = await controller.setUserRole(req.params.id, req.body.role);
+    const result = await controller.setUserRole(req.user!._id, req.params.id, req.body?.role);
     sendOrError(res, result, controllerError, req);
   } catch (error) {
     controllerError(error, req, res);

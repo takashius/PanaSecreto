@@ -1,5 +1,6 @@
 import * as store from './store';
 import { UserRole } from '../../config/roles';
+import type { UploadedImage } from '../../types/general';
 
 export function loginUser(email: string, password: string, client?: 'web' | 'mobile') {
   if (!email || !password) {
@@ -63,8 +64,8 @@ export function changeRequiredPassword(userId: string, newPass: string, currentT
   return store.changeRequiredPassword(userId, newPass, currentToken);
 }
 
-export function recoveryStepOne(email: string) {
-  if (!email) {
+export function recoveryStepOne(email: unknown) {
+  if (!email || typeof email !== 'string') {
     return Promise.resolve({
       status: 400,
       message: 'El correo electrónico es requerido.',
@@ -117,12 +118,12 @@ export function createUserAdmin(actorRole: string | string[], data: {
   return store.createUserAdmin(actorRole, data);
 }
 
-export function updateUserAdmin(actorRole: string | string[], id: string, payload: any) {
+export function updateUserAdmin(actorRole: string | string[], id: string, payload: unknown) {
   return store.updateUserAdmin(actorRole, id, payload);
 }
 
-export function setUserRole(id: string, role: string) {
-  return store.setUserRole(id, role);
+export function setUserRole(actorId: string, id: string, role: unknown) {
+  return store.setUserRole(actorId, id, role);
 }
 
 export function setUserActive(
@@ -147,10 +148,11 @@ export function setUserForcePasswordChange(actorRole: string | string[], id: str
   return store.setUserForcePasswordChange(actorRole, id, force);
 }
 
-export function updateProfile(userId: string, data: any) {
-  if (!data || typeof data !== 'object') {
+export function updateProfile(userId: string, body: unknown) {
+  if (!body || typeof body !== 'object') {
     return Promise.resolve({ status: 400, message: 'Cuerpo de la petición inválido.' });
   }
+  const data = body as store.ProfileUpdate;
   if (data.name !== undefined && (typeof data.name !== 'string' || !data.name.trim())) {
     return Promise.resolve({
       status: 400,
@@ -160,7 +162,7 @@ export function updateProfile(userId: string, data: any) {
   return store.updateProfile(userId, data);
 }
 
-export function uploadUserPhoto(userId: string, file?: Express.Multer.File) {
-  return store.uploadUserPhoto(userId, file);
+export function uploadUserPhoto(userId: string, image?: UploadedImage) {
+  return store.uploadUserPhoto(userId, image);
 }
 

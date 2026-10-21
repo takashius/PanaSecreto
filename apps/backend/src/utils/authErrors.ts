@@ -13,8 +13,8 @@ export function sendAuthError(
   });
 }
 
-export function mapJwtVerifyError(err: any): { code: string; error: string } {
-  if (err?.name === 'TokenExpiredError') {
+export function mapJwtVerifyError(err: unknown): { code: string; error: string } {
+  if ((err as { name?: string } | null)?.name === 'TokenExpiredError') {
     return {
       code: 'TOKEN_EXPIRED',
       error: 'Tu sesión ha expirado. Por favor, inicia sesión de nuevo.',
@@ -26,10 +26,11 @@ export function mapJwtVerifyError(err: any): { code: string; error: string } {
   };
 }
 
-export function mapAuthCatchError(err: any): { status: number; code: string; error: string } {
+export function mapAuthCatchError(_err: unknown): { status: number; code: string; error: string } {
   return {
     status: 401,
     code: 'AUTH_FAILED',
-    error: err?.message || 'Error en autenticación.',
+    // Sin detalles internos: el error real queda en el log del middleware
+    error: 'Error en autenticación.',
   };
 }

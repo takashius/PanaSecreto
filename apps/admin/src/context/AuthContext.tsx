@@ -1,8 +1,7 @@
-import { createContext, useState, useEffect, ReactNode } from 'react';
-import type { AuthContextType, AuthUser, LoginResponse } from '@app-types/auth';
+import { useState, useEffect, ReactNode } from 'react';
+import type { AuthUser, LoginResponse } from '@app-types/auth';
 import { canAccessWeb } from '../constants/roles';
-
-export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import { AuthContext } from './contexts';
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(() => {

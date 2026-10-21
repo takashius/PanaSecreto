@@ -1,5 +1,5 @@
 /**
- * Paleta de colores oficial de PanaSecreto
+ * Paleta de colores oficial de EntrePanas
  */
 export const colors = {
   primary: '#1E1338',       // Morado Noche (Brand Primary)

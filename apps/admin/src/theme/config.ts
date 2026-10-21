@@ -19,7 +19,7 @@ export function getThemeConfig(
       colorError: colors.danger,
       borderRadius: 10,
       fontFamily: 'Inter, system-ui, sans-serif',
-      colorBgLayout: isDark ? '#12111A' : '#F5F5F5',
+      colorBgLayout: isDark ? '#12111A' : colors.background,
       colorBgContainer: isDark ? '#1E1D2A' : '#FFFFFF',
       colorText: isDark ? '#F8F9FA' : '#1C1B24',
       colorTextSecondary: isDark ? '#9CA3AF' : '#6B7280',

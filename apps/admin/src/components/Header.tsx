@@ -3,7 +3,15 @@ import { UserOutlined, MoonOutlined, SunFilled, MenuFoldOutlined, MenuUnfoldOutl
 import { useUserMenuItems } from './UserMenu';
 import LanguageSwitcher from './LanguageSwitcher';
 import { useAuth } from '@context/useAuth';
-import { useConfigContext } from '@context/ConfigContext';
+import { useConfigContext } from '@context/useConfigContext';
+import { useTranslation } from 'react-i18next';
+import { API_HOST, useApiHealth, type ApiHealth } from '@api/health';
+
+const HEALTH_DOT: Record<ApiHealth, string> = {
+  online: 'bg-emerald-400',
+  degraded: 'bg-amber-400 animate-pulse',
+  offline: 'bg-red-500 animate-pulse',
+};
 
 const { Header: AntHeader } = Layout;
 
@@ -22,6 +30,8 @@ export default function Header({
 }: HeaderProps) {
   const { user } = useAuth();
   const { config } = useConfigContext();
+  const { t } = useTranslation();
+  const { data: health } = useApiHealth();
   const userMenuItems = useUserMenuItems();
 
   return (
@@ -47,11 +57,14 @@ export default function Header({
           </button>
         )}
 
-        <div className="hidden sm:inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white text-xs border border-white/15">
-          <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>API Online:</span>
+        <div
+          className="hidden sm:inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white text-xs border border-white/15"
+          title={API_HOST}
+        >
+          <span className={`h-2 w-2 rounded-full ${HEALTH_DOT[health ?? 'online']}`}></span>
+          <span>{t(`header.api.${health ?? 'checking'}`)}</span>
           <span className="font-mono" style={{ color: config.secondaryColor }}>
-            port 4000
+            {API_HOST}
           </span>
         </div>
       </div>

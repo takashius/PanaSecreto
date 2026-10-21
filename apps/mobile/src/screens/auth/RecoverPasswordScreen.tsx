@@ -28,7 +28,6 @@ import {
   Info,
   ArrowRight,
   Edit2,
-  ChevronRight,
 } from 'lucide-react-native';
 import {
   theme,
@@ -87,7 +86,7 @@ export default function RecoverPasswordScreen({
   }, [step, onNavigateToLogin]);
 
   useEffect(() => {
-    let interval: any = null;
+    let interval: ReturnType<typeof setInterval> | null = null;
     if (step === 2 && resendTimer > 0) {
       interval = setInterval(() => {
         setResendTimer((prev) => prev - 1);
@@ -209,7 +208,7 @@ export default function RecoverPasswordScreen({
 
         <View style={commonStyles.rowCenter}>
           <Text style={authStyles.headerNavBrand}>
-            Pana<Text style={authStyles.headerNavBrandAccent}>Secreto</Text>
+            Entre<Text style={authStyles.headerNavBrandAccent}>Panas</Text>
           </Text>
         </View>
       </View>
@@ -269,7 +268,7 @@ export default function RecoverPasswordScreen({
               {/* Título y Explicación */}
               <Text style={authStyles.registerHeading}>¿Olvidaste tu clave?</Text>
               <Text style={authStyles.registerSubheading}>
-                No te preocupes. Ingresa el correo asociado a tu cuenta de PanaSecreto y te enviaremos un código de seguridad de 6 dígitos para restablecerla.
+                No te preocupes. Ingresa el correo asociado a tu cuenta de EntrePanas y te enviaremos un código de seguridad de 6 dígitos para restablecerla.
               </Text>
 
               {/* Tarjeta del Formulario */}

@@ -6,7 +6,7 @@ import { ALL_ROLES, ROLES, UserRole, isSuperAdminRole } from '../config/roles';
 import { mapAuthCatchError, mapJwtVerifyError, sendAuthError } from '../utils/authErrors';
 import { IGetUserAuthInfoRequest } from '../types/general';
 
-function toRoleArray(role: any): UserRole[] {
+function toRoleArray(role: unknown): UserRole[] {
   if (Array.isArray(role)) {
     return role.filter((item): item is UserRole => ALL_ROLES.includes(item as UserRole));
   }

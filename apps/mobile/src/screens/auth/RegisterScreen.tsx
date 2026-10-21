@@ -38,9 +38,11 @@ import {
   authStyles,
 } from '../../styles';
 
+import type { SessionUser } from '../../types/session';
+
 interface RegisterScreenProps {
   onNavigateToLogin?: () => void;
-  onRegisterSuccess?: (user: any) => void;
+  onRegisterSuccess?: (user: SessionUser) => void;
 }
 
 export default function RegisterScreen({
@@ -163,7 +165,7 @@ export default function RegisterScreen({
 
         <View style={commonStyles.rowCenter}>
           <Text style={authStyles.headerNavBrand}>
-            Pana<Text style={authStyles.headerNavBrandAccent}>Secreto</Text>
+            Entre<Text style={authStyles.headerNavBrandAccent}>Panas</Text>
           </Text>
         </View>
       </View>
@@ -559,7 +561,7 @@ export default function RegisterScreen({
               <Text style={formStyles.termsText}>
                 Acepto las{' '}
                 <Text style={formStyles.termsLink}>reglas del juego</Text> y la{' '}
-                <Text style={formStyles.termsLink}>política de privacidad</Text> de PanaSecreto.
+                <Text style={formStyles.termsLink}>política de privacidad</Text> de EntrePanas.
               </Text>
             </TouchableOpacity>
             {errors.terms ? (

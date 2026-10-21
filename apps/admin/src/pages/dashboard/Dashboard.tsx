@@ -1,131 +1,208 @@
-import { useTranslation } from 'react-i18next';
-import { Card, Button, Tag } from 'antd';
-import { UserOutlined, ArrowRightOutlined, SafetyCertificateOutlined, CloudServerOutlined } from '@ant-design/icons';
+import { Alert, Button, Card, Empty, Skeleton } from 'antd';
+import { GiftOutlined, HeartOutlined, TeamOutlined, UserOutlined, ArrowRightOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@context/useAuth';
 import PageHeader from '@components/PageHeader';
-import { colors } from '@panasecreto/ui-tokens';
+import StatTile from '@components/dashboard/StatTile';
+import BarList from '@components/dashboard/BarList';
+import ActivityChart from '@components/dashboard/ActivityChart';
+import GroupStatusTag from '@components/groups/GroupStatusTag';
+import { useDashboardStats } from '@api/stats';
+import { GROUP_STATUSES } from '@app-types/groups';
+import { ALL_ROLES, isAdminRole } from '../../constants/roles';
+import { formatDate, formatNumber } from '@utils/format';
+
+function daysUntil(date: string): number {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  const target = new Date(date);
+  target.setHours(0, 0, 0, 0);
+  return Math.round((target.getTime() - start.getTime()) / 864e5);
+}
 
 export default function Dashboard() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const canSeeStats = isAdminRole(user?.role);
+  const { data, isPending, isError, isFetching, refetch } = useDashboardStats();
+
+  const header = (
+    <PageHeader
+      breadcrumbItems={[{ title: t('menu.dashboard') }]}
+      title={t('menu.dashboard')}
+      description={t('dashboard.welcome', { name: user?.name || '' })}
+      onRefresh={canSeeStats ? () => void refetch() : undefined}
+      loading={isFetching}
+    />
+  );
+
+  // Los organizadores entran al panel pero las métricas globales son solo para administradores
+  if (!canSeeStats) {
+    return (
+      <div>
+        {header}
+        <Card className="rounded-2xl shadow-xs">
+          <Empty description={t('dashboard.subtitle')} />
+        </Card>
+      </div>
+    );
+  }
+
+  if (isPending) {
+    return (
+      <div>
+        {header}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+          {[0, 1, 2, 3].map((i) => (
+            <Card key={i} className="rounded-2xl">
+              <Skeleton active paragraph={{ rows: 1 }} />
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (isError || !data) {
+    return (
+      <div>
+        {header}
+        <Alert
+          type="error"
+          showIcon
+          message={t('dashboard.loadError')}
+          action={<Button size="small" onClick={() => void refetch()}>{t('error.retry')}</Button>}
+        />
+      </div>
+    );
+  }
+
+  const signups = data.activityByDay.map((d) => ({ date: d.date, value: d.signups }));
+  const signupsTotal = signups.reduce((s, p) => s + p.value, 0);
 
   return (
     <div>
-      <PageHeader
-        breadcrumbItems={[{ title: t('menu.dashboard') }]}
-        title={t('menu.dashboard')}
-        description={`Bienvenido de nuevo, ${user?.name || 'Administrador'}. Panel central de administración.`}
-      />
+      {header}
 
-      {/* Hero Welcome Card */}
-      <div
-        className="rounded-2xl p-6 md:p-8 text-white mb-8 shadow-md relative overflow-hidden"
-        style={{
-          background: `linear-gradient(135deg, ${colors.primary} 0%, #301B5E 100%)`,
-        }}
-      >
-        <div className="relative z-10 max-w-2xl">
-          <Tag color="#F7A800" className="text-black font-bold uppercase tracking-wider mb-3">
-            PanaSecreto Monorepo v2.0
-          </Tag>
-          <h2 className="text-2xl md:text-3xl font-heading font-extrabold text-white mb-2">
-            Base de Usuarios y Autenticación Activa
-          </h2>
-          <p className="text-gray-200 text-sm md:text-base mb-6 leading-relaxed">
-            Estructura arquitectónica replicada exitosamente desde UniSan. Módulos de autenticación por tokens JWT, control de roles granular y panel web con Ant Design y Tailwind CSS.
-          </p>
-          <div className="flex flex-wrap gap-3">
-            <Link to="/users-management">
-              <Button
-                type="primary"
-                size="large"
-                icon={<UserOutlined />}
-                style={{ backgroundColor: colors.secondary, color: colors.primary, fontWeight: 700 }}
-              >
-                Gestionar Usuarios
-              </Button>
+      {/* KPIs */}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 mb-6">
+        <StatTile
+          label={t('dashboard.users')}
+          value={formatNumber(data.users.total)}
+          hint={t('dashboard.activeUsers', { count: data.users.active })}
+          delta={data.users.newLast30d ? t('dashboard.newLast30d', { count: data.users.newLast30d }) : undefined}
+          icon={<UserOutlined />}
+          iconClassName="bg-purple-50 text-primary dark:bg-purple-900/30 dark:text-purple-200"
+        />
+        <StatTile
+          label={t('dashboard.groups')}
+          value={formatNumber(data.groups.total)}
+          delta={data.groups.newLast30d ? t('dashboard.newLast30d', { count: data.groups.newLast30d }) : undefined}
+          icon={<GiftOutlined />}
+          iconClassName="bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
+        />
+        <StatTile
+          label={t('dashboard.participants')}
+          value={formatNumber(data.groups.totalMembers)}
+          hint={t('dashboard.avgMembers', { avg: data.groups.avgMembers })}
+          icon={<TeamOutlined />}
+          iconClassName="bg-sky-50 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300"
+        />
+        <StatTile
+          label={t('dashboard.wishes')}
+          value={formatNumber(data.wishes.total)}
+          icon={<HeartOutlined />}
+          iconClassName="bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
+        <Card
+          className="rounded-2xl shadow-xs xl:col-span-2"
+          title={t('dashboard.activity')}
+          extra={<span className="text-xs text-gray-500 hidden sm:inline">{t('dashboard.activityTotal', { count: signupsTotal })}</span>}
+        >
+          <ActivityChart points={signups} unitLabel={t('dashboard.signups')} />
+        </Card>
+
+        <Card
+          className="rounded-2xl shadow-xs"
+          title={t('dashboard.groupsByStatus')}
+          extra={
+            <Link to="/groups" className="text-xs">
+              {t('dashboard.viewAll')}
             </Link>
-          </div>
-        </div>
-      </div>
-
-      {/* Metrics Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <Card className="rounded-2xl shadow-xs">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase font-semibold text-gray-400">Sesión Actual</p>
-              <h3 className="text-xl font-bold font-heading mt-1 text-gray-800 dark:text-gray-100">
-                {user?.name} {user?.lastName || ''}
-              </h3>
-              <p className="text-xs text-gray-500 mt-0.5">{user?.email}</p>
-            </div>
-            <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-primary dark:bg-purple-900/30">
-              <UserOutlined className="text-xl" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="rounded-2xl shadow-xs">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase font-semibold text-gray-400">Rol Activo</p>
-              <h3 className="text-xl font-bold font-heading mt-1 text-gray-800 dark:text-gray-100">
-                {String(user?.role || 'ADMIN')}
-              </h3>
-              <Tag color="purple" className="mt-1">Acceso Web Permitido</Tag>
-            </div>
-            <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center text-secondary dark:bg-amber-900/30">
-              <SafetyCertificateOutlined className="text-xl text-amber-600" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="rounded-2xl shadow-xs">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase font-semibold text-gray-400">Infraestructura</p>
-              <h3 className="text-xl font-bold font-heading mt-1 text-gray-800 dark:text-gray-100">
-                Docker & Coolify
-              </h3>
-              <div className="flex items-center gap-1.5 mt-1 text-xs text-emerald-600 font-medium">
-                <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Despliegue independiente
-              </div>
-            </div>
-            <div className="w-12 h-12 rounded-xl bg-sky-50 flex items-center justify-center text-accent dark:bg-sky-900/30">
-              <CloudServerOutlined className="text-xl text-sky-600" />
-            </div>
-          </div>
+          }
+        >
+          <BarList
+            ariaLabel={t('dashboard.groupsByStatus')}
+            items={GROUP_STATUSES.map((s) => ({
+              key: s,
+              label: <GroupStatusTag status={s} />,
+              value: data.groups.byStatus[s] ?? 0,
+            }))}
+          />
         </Card>
       </div>
 
-      {/* Quick Action Links */}
-      <Card className="rounded-2xl shadow-xs">
-        <h3 className="text-lg font-heading font-bold mb-4 text-gray-800 dark:text-gray-200">
-          Módulos Base Configurados
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Link
-            to="/users-management"
-            className="flex items-center justify-between p-4 rounded-xl border border-gray-100 dark:border-gray-800 hover:border-primary/40 hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-all group"
-          >
-            <div>
-              <h4 className="font-semibold text-gray-800 dark:text-gray-200">Módulo de Usuarios</h4>
-              <p className="text-xs text-gray-500 mt-0.5">Listado paginado, búsqueda, creación y asignación de roles.</p>
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <Card className="rounded-2xl shadow-xs xl:col-span-2" title={t('dashboard.upcoming')} styles={{ body: { padding: 0 } }}>
+          {data.upcomingExchanges.length === 0 ? (
+            <div className="p-6">
+              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('dashboard.noUpcoming')} />
             </div>
-            <ArrowRightOutlined className="text-gray-400 group-hover:text-primary transition-colors" />
-          </Link>
+          ) : (
+            <ul className="divide-y divide-gray-100 dark:divide-gray-800">
+              {data.upcomingExchanges.map((g) => {
+                const days = daysUntil(g.exchangeDate);
+                const when =
+                  days <= 0 ? t('dashboard.today') : days === 1 ? t('dashboard.tomorrow') : t('dashboard.inDays', { count: days });
+                return (
+                  <li key={g.id}>
+                    <Link
+                      to={`/groups/${g.id}`}
+                      className="flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group"
+                    >
+                      <span className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center text-lg shrink-0">
+                        {g.emoji || '🎁'}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-gray-900 dark:text-gray-100 truncate">{g.name}</p>
+                        <p className="text-xs text-gray-500">
+                          {formatDate(g.exchangeDate)} · {when} · {t('dashboard.membersCount', { count: g.memberCount })}
+                        </p>
+                        <div className="sm:hidden mt-1">
+                          <GroupStatusTag status={g.status} />
+                        </div>
+                      </div>
+                      <span className="hidden sm:inline-flex">
+                        <GroupStatusTag status={g.status} />
+                      </span>
+                      <ArrowRightOutlined className="text-gray-400 group-hover:text-primary transition-colors hidden sm:block" />
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </Card>
 
-          <div className="flex items-center justify-between p-4 rounded-xl border border-dashed border-gray-200 dark:border-gray-800">
-            <div>
-              <h4 className="font-semibold text-gray-500">Módulos de Negocio</h4>
-              <p className="text-xs text-gray-400 mt-0.5">Listos para ser desarrollados (Grupos, Sorteo, Regalos, Chat).</p>
-            </div>
-            <Tag color="default">Pendiente</Tag>
-          </div>
-        </div>
-      </Card>
+        <Card
+          className="rounded-2xl shadow-xs"
+          title={t('dashboard.usersByRole')}
+          extra={
+            <Link to="/users-management" className="text-xs">
+              {t('dashboard.viewAll')}
+            </Link>
+          }
+        >
+          <BarList
+            ariaLabel={t('dashboard.usersByRole')}
+            items={ALL_ROLES.map((r) => ({ key: r, label: t(`roles.${r}`), value: data.users.byRole[r] ?? 0 }))}
+          />
+        </Card>
+      </div>
     </div>
   );
 }

@@ -1,7 +1,7 @@
-import { colors, spacing, typography, radii } from '@panasecreto/ui-tokens';
+import { spacing, radii } from '@panasecreto/ui-tokens';
 
 /**
- * Paleta y tokens centralizados de PanaSecreto Mobile
+ * Paleta y tokens centralizados de EntrePanas Mobile
  * Sincronizados con @panasecreto/ui-tokens y Stitch DESIGN.md
  */
 export const theme = {
@@ -13,7 +13,7 @@ export const theme = {
     onPrimaryContainer: '#8A7DA9',
 
     secondary: '#F7A800',           // Amarillo Araguaney / Naranja oficial del manual
-    brandOrange: '#F7A800',         // Naranja Marca PanaSecreto ("Secreto")
+    brandOrange: '#F7A800',         // Naranja Marca EntrePanas ("Panas")
     secondaryLight: '#FFBF33',
     secondaryDark: '#815600',
     secondaryContainer: '#FEAE10',

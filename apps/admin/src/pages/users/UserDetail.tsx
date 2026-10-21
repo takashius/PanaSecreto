@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Card, Descriptions, Tag, Button, Modal, Input, message, Spin, Switch } from 'antd';
-import { KeyOutlined, UserOutlined } from '@ant-design/icons';
+import { KeyOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useUser, useSetUserPassword, useSetUserForcePasswordChange } from '@api/users';
 import PageHeader from '@components/PageHeader';

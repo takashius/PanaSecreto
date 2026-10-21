@@ -1,23 +1,7 @@
-import { createContext, useContext, useEffect, useMemo, ReactNode } from 'react';
+import { useEffect, useMemo, ReactNode } from 'react';
+import { ConfigContext, DEFAULT_SYSTEM_CONFIG } from './contexts';
 import { useSystemConfig } from '../api/config';
 import type { SystemConfigData } from '../types/config';
-
-export const DEFAULT_SYSTEM_CONFIG: SystemConfigData = {
-  appName: 'PanaSecreto',
-  primaryColor: '#1E1338',
-  secondaryColor: '#F7A800',
-  accentColor: '#1D84B5',
-  logoUrl: '',
-  faviconUrl: '',
-};
-
-interface ConfigContextType {
-  config: SystemConfigData;
-  isLoading: boolean;
-  refetch: () => void;
-}
-
-const ConfigContext = createContext<ConfigContextType | undefined>(undefined);
 
 export const ConfigProvider = ({ children }: { children: ReactNode }) => {
   const { data, isLoading, refetch } = useSystemConfig();
@@ -58,12 +42,4 @@ export const ConfigProvider = ({ children }: { children: ReactNode }) => {
       {children}
     </ConfigContext.Provider>
   );
-};
-
-export const useConfigContext = () => {
-  const context = useContext(ConfigContext);
-  if (!context) {
-    throw new Error('useConfigContext debe usarse dentro de un ConfigProvider');
-  }
-  return context;
 };

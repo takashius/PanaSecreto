@@ -32,6 +32,11 @@ COPY apps/admin ./apps/admin
 RUN pnpm --filter @panasecreto/ui-tokens build
 RUN pnpm --filter @panasecreto/shared build
 
+# URL pública de la API: Vite la incrusta en tiempo de compilación.
+# En Coolify: definir VITE_API_URL como "Build Variable" (ej. https://api.tudominio.com)
+ARG VITE_API_URL=http://localhost:4000
+ENV VITE_API_URL=$VITE_API_URL
+
 # Compilar aplicación admin con Vite
 RUN pnpm --filter @panasecreto/admin build
 

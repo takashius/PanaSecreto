@@ -1,63 +1,36 @@
-export const ROLES = {
-  USER: 'USER',
-  ORGANIZER: 'ORGANIZER',
-  ADMIN: 'ADMIN',
-  SUPER_ADMIN: 'SUPER_ADMIN',
-} as const;
+import {
+  ROLES,
+  ALL_ROLES,
+  ADMIN_ROLES,
+  WEB_ACCESS_ROLES,
+  ROLE_DESCRIPTIONS,
+  assignableRolesFor as sharedAssignableRolesFor,
+  type UserRole,
+} from '@panasecreto/shared';
 
-export type UserRole = (typeof ROLES)[keyof typeof ROLES];
+// Constantes compartidas con el backend (fuente única en packages/shared)
+export { ROLES, ALL_ROLES, ADMIN_ROLES, WEB_ACCESS_ROLES, ROLE_DESCRIPTIONS };
+export type { UserRole };
 
-export const ALL_ROLES: UserRole[] = [
-  ROLES.SUPER_ADMIN,
-  ROLES.ADMIN,
-  ROLES.ORGANIZER,
-  ROLES.USER,
-];
-
-export const ROLE_DESCRIPTIONS: Record<UserRole, string> = {
-  SUPER_ADMIN: 'Super Administrador del sistema',
-  ADMIN: 'Administrador general',
-  ORGANIZER: 'Organizador de grupos y eventos',
-  USER: 'Usuario participante',
-};
-
-/** El rol USER es exclusivo de la app móvil: no entra al panel. */
-export const WEB_ACCESS_ROLES: UserRole[] = [
-  ROLES.ADMIN,
-  ROLES.SUPER_ADMIN,
-  ROLES.ORGANIZER,
-];
-
-export const ADMIN_ROLES: UserRole[] = [ROLES.ADMIN, ROLES.SUPER_ADMIN];
-
-const ROLE_PRIORITY: UserRole[] = [
-  ROLES.SUPER_ADMIN,
-  ROLES.ADMIN,
-  ROLES.ORGANIZER,
-  ROLES.USER,
-];
-
+/** Normaliza el rol (string o arreglo) al de mayor jerarquía */
 export const normalizeRole = (role?: string | string[] | null): UserRole | null => {
   if (!role) return null;
   if (Array.isArray(role)) {
     const roles = role.map((item) => normalizeRole(item)).filter(Boolean) as UserRole[];
-    return ROLE_PRIORITY.find((candidate) => roles.includes(candidate)) ?? null;
+    return ALL_ROLES.find((candidate) => roles.includes(candidate)) ?? null;
   }
   const upper = role.toUpperCase() as UserRole;
-  if (Object.values(ROLES).includes(upper)) return upper;
-  return null;
+  return ALL_ROLES.includes(upper) ? upper : null;
 };
 
 export const canAccessWeb = (role?: string | string[] | null): boolean => {
   const normalized = normalizeRole(role);
-  if (!normalized) return false;
-  return WEB_ACCESS_ROLES.includes(normalized);
+  return normalized ? WEB_ACCESS_ROLES.includes(normalized) : false;
 };
 
 export const isAdminRole = (role?: string | string[] | null): boolean => {
   const normalized = normalizeRole(role);
-  if (!normalized) return false;
-  return ADMIN_ROLES.includes(normalized);
+  return normalized ? ADMIN_ROLES.includes(normalized) : false;
 };
 
 export const isSuperAdminRole = (role?: string | string[] | null): boolean =>
@@ -65,9 +38,5 @@ export const isSuperAdminRole = (role?: string | string[] | null): boolean =>
 
 export const canManageUsers = (role?: string | string[] | null): boolean => isAdminRole(role);
 
-/** Roles que el actor puede asignar (espejo de la regla del backend). */
-export const assignableRolesFor = (role?: string | string[] | null): UserRole[] => {
-  if (isSuperAdminRole(role)) return [...ALL_ROLES];
-  if (isAdminRole(role)) return [ROLES.ADMIN, ROLES.ORGANIZER, ROLES.USER];
-  return [];
-};
+/** Roles que el actor puede asignar (misma regla que el backend) */
+export const assignableRolesFor = (role?: string | string[] | null): UserRole[] => sharedAssignableRolesFor(role);

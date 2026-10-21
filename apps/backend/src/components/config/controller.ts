@@ -1,5 +1,7 @@
 import { getSystemConfig as storeGetConfig, updateSystemConfig as storeUpdateConfig } from './store';
 import { ISystemConfig } from './model';
+import { deleteImage } from '../../services/storage';
+import type { UploadedImage } from '../../types/general';
 
 const HEX_COLOR_REGEX = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3}|[A-Fa-f0-9]{8})$/;
 
@@ -18,7 +20,7 @@ export interface UpdateConfigInput {
 
 export async function updateConfig(
   input: UpdateConfigInput,
-  files?: Record<string, Express.Multer.File | undefined>
+  files?: Record<string, UploadedImage | undefined>
 ): Promise<ISystemConfig | { status: number; message: string }> {
   const payload: Partial<ISystemConfig> = {};
 
@@ -55,18 +57,27 @@ export async function updateConfig(
   }
 
   // Si se subió un logo por multipart a Cloudinary
-  if (files?.logo?.path) {
-    payload.logoUrl = files.logo.path;
+  if (files?.logo?.url) {
+    payload.logoUrl = files.logo.url;
   } else if (input.logoUrl !== undefined) {
     payload.logoUrl = input.logoUrl;
   }
 
   // Si se subió un favicon por multipart a Cloudinary
-  if (files?.favicon?.path) {
-    payload.faviconUrl = files.favicon.path;
+  if (files?.favicon?.url) {
+    payload.faviconUrl = files.favicon.url;
   } else if (input.faviconUrl !== undefined) {
     payload.faviconUrl = input.faviconUrl;
   }
 
-  return await storeUpdateConfig(payload);
+  const previous = await storeGetConfig();
+  const updated = await storeUpdateConfig(payload);
+  // Borra de Cloudinary las imágenes reemplazadas
+  if (payload.logoUrl !== undefined && previous.logoUrl && previous.logoUrl !== payload.logoUrl) {
+    await deleteImage(previous.logoUrl);
+  }
+  if (payload.faviconUrl !== undefined && previous.faviconUrl && previous.faviconUrl !== payload.faviconUrl) {
+    await deleteImage(previous.faviconUrl);
+  }
+  return updated;
 }

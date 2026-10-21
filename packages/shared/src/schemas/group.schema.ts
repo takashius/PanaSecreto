@@ -9,7 +9,7 @@ import {
 } from '../enums';
 
 /**
- * Miembro de un grupo de PanaSecreto (vista pública dentro del grupo).
+ * Miembro de un grupo de EntrePanas (vista pública dentro del grupo).
  * El email y las exclusiones solo se exponen al creador del grupo.
  */
 export const GroupMemberSchema = z.object({
@@ -134,6 +134,21 @@ export const SetExclusionsSchema = z.object({
 });
 
 export type SetExclusionsDTO = z.infer<typeof SetExclusionsSchema>;
+
+/** Máximo de correos por invitación */
+export const INVITE_MAX_EMAILS = 20;
+
+export const InviteByEmailSchema = z
+  .object({
+    emails: z
+      .array(z.string().trim().toLowerCase().email('Correo inválido'))
+      .min(1, 'Indica al menos un correo')
+      .max(INVITE_MAX_EMAILS, `Máximo ${INVITE_MAX_EMAILS} correos por envío`),
+    message: z.string().trim().max(300, 'El mensaje puede tener máximo 300 caracteres').optional(),
+  })
+  .strict();
+
+export type InviteByEmailDTO = z.infer<typeof InviteByEmailSchema>;
 
 /* ------------------------------------------------------------------
  * Respuestas auxiliares

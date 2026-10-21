@@ -1,15 +1,17 @@
 import { useMemo, useState } from 'react';
 import { Avatar, Button, Input, Space, Switch, Table, Tag, message } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 import type { FilterDropdownProps, FilterValue } from 'antd/es/table/interface';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { PlusOutlined, SearchOutlined, UserOutlined } from '@ant-design/icons';
 import PageHeader from '@components/PageHeader';
-import { useCreateUser, useSetUserActive, useUpdateUser, useUsers } from '@api/users';
+import { useCreateUser, useSetUserActive, useSetUserRole, useUpdateUser, useUsers } from '@api/users';
+import { useAuth } from '@context/useAuth';
 import type { CreateUserRequest, ManagedUser } from '@app-types/users';
 import { getErrorMessage } from '@utils/GetMessage';
 import UserFormModal from './UserFormModal';
-import { ALL_ROLES } from '../../constants/roles';
+import { ALL_ROLES, isSuperAdminRole } from '../../constants/roles';
 
 const getFilterString = (value: FilterValue | null | undefined) => {
   const first = value?.[0];
@@ -40,19 +42,40 @@ export default function UserList() {
   const createMutation = useCreateUser();
   const updateMutation = useUpdateUser();
   const setActiveMutation = useSetUserActive();
+  const setRoleMutation = useSetUserRole();
+  const { user: currentUser } = useAuth();
 
   const rows = data?.results ?? [];
   const total = data?.total ?? 0;
 
-  const onSubmit = (values: any) => {
+  const onSubmit = (values: CreateUserRequest) => {
     if (editing?._id) {
+      const editingId = editing._id;
+      const { role, ...payload } = values;
+      const previousRole = Array.isArray(editing.role) ? editing.role[0] : editing.role;
+      const roleChanged =
+        Boolean(role) && role !== previousRole && isSuperAdminRole(currentUser?.role) && editingId !== currentUser?._id;
       updateMutation.mutate(
-        { id: editing._id, payload: values },
+        { id: editingId, payload },
         {
           onSuccess: () => {
-            void messageApi.success(t('global.updateSuccess'));
-            setOpenModal(false);
-            setEditing(null);
+            const finish = () => {
+              void messageApi.success(t('global.updateSuccess'));
+              setOpenModal(false);
+              setEditing(null);
+            };
+            if (!roleChanged) return finish();
+            // El rol va por su propio endpoint (solo SUPER_ADMIN)
+            setRoleMutation.mutate(
+              { id: editingId, role },
+              {
+                onSuccess: () => {
+                  void messageApi.info(t('usersManagement.roleChanged'));
+                  finish();
+                },
+                onError: (e) => void messageApi.error(getErrorMessage(e)),
+              }
+            );
           },
           onError: (e) => void messageApi.error(getErrorMessage(e)),
         }
@@ -60,7 +83,7 @@ export default function UserList() {
       return;
     }
 
-    createMutation.mutate(values as CreateUserRequest, {
+    createMutation.mutate(values, {
       onSuccess: () => {
         void messageApi.success(t('global.createSuccess'));
         setOpenModal(false);
@@ -69,7 +92,7 @@ export default function UserList() {
     });
   };
 
-  const columns = useMemo(
+  const columns = useMemo<ColumnsType<ManagedUser>>(
     () => [
       {
         title: t('usersManagement.user'),
@@ -125,11 +148,8 @@ export default function UserList() {
         filters: ALL_ROLES.map((r: string) => ({ text: r, value: r })),
         render: (_: unknown, record: ManagedUser) => {
           const r = Array.isArray(record.role) ? record.role[0] : record.role;
-          let color = 'default';
-          if (r === 'SUPER_ADMIN') color = 'purple';
-          else if (r === 'ADMIN') color = 'blue';
-          else if (r === 'ORGANIZER') color = 'gold';
-          else color = 'cyan';
+          const ROLE_COLORS: Record<string, string> = { SUPER_ADMIN: 'purple', ADMIN: 'blue', ORGANIZER: 'gold' };
+          const color = ROLE_COLORS[r as string] ?? 'cyan';
 
           return <Tag color={color}>{r}</Tag>;
         },
@@ -218,7 +238,7 @@ export default function UserList() {
 
       <Table
         rowKey="_id"
-        columns={columns as any}
+        columns={columns}
         dataSource={rows}
         loading={isPending}
         onChange={(pagination, filters) => {
@@ -249,7 +269,7 @@ export default function UserList() {
           setEditing(null);
         }}
         onSubmit={onSubmit}
-        loading={createMutation.isPending || updateMutation.isPending}
+        loading={createMutation.isPending || updateMutation.isPending || setRoleMutation.isPending}
       />
     </div>
   );

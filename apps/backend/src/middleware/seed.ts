@@ -1,6 +1,7 @@
 import { User } from '../components/user/model';
 import config from '../config/commons';
 import { ROLES } from '../config/roles';
+import { SystemConfig } from '../components/config/model';
 
 export async function seedAppData(): Promise<void> {
   try {
@@ -30,5 +31,21 @@ export async function seedAppData(): Promise<void> {
     }
   } catch (error) {
     console.warn('[Seed] Advertencia al verificar/crear superadmin:', (error as Error).message);
+  }
+}
+
+/**
+ * Migración de marca: PanaSecreto → EntrePanas.
+ * Solo cambia el nombre si sigue siendo el valor por defecto anterior (respeta nombres personalizados).
+ */
+export async function migrateBrandName(): Promise<void> {
+  try {
+    const result = await SystemConfig.updateOne(
+      { key: 'system', appName: 'PanaSecreto' },
+      { $set: { appName: 'EntrePanas' } }
+    );
+    if (result.modifiedCount > 0) console.log('[Seed] Nombre de la aplicación actualizado a EntrePanas.');
+  } catch (error) {
+    console.warn('[Seed] No se pudo migrar el nombre de la aplicación:', (error as Error).message);
   }
 }

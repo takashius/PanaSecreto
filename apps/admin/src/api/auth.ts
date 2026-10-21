@@ -38,7 +38,7 @@ export const useLogout = () => {
 export const useRecoveryOne = (): UseMutationResult<unknown, unknown, string> => {
   return useMutation({
     mutationFn: async (email: string) => {
-      const response = await ERDEAxios.get(`/user/recovery/${encodeURIComponent(email)}`);
+      const response = await ERDEAxios.post('/user/recovery/request', { email });
       return response.data;
     },
   });

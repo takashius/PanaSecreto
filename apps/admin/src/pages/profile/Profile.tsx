@@ -26,7 +26,7 @@ import {
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@context/useAuth';
-import { useConfigContext } from '@context/ConfigContext';
+import { useConfigContext } from '@context/useConfigContext';
 import {
   useProfile,
   useUpdateProfile,

@@ -51,11 +51,32 @@ const config = {
     process.env.USER_ADMIN_PASSWORD?.trim() || (isDeployedEnv ? '' : 'Admin123456!'),
   bcryptRounds: Math.max(10, parseInt(process.env.BCRYPT_ROUNDS || '10', 10) || 10),
   userAdminName: process.env.USER_ADMIN_NAME || 'Administrador',
+  mail: {
+    // 'mailjet' envía correos reales; 'log' solo los imprime en consola (desarrollo/tests)
+    transport: (process.env.MAIL_TRANSPORT ||
+      (process.env.MJ_APIKEY_PUBLIC && process.env.MJ_APIKEY_PRIVATE ? 'mailjet' : 'log')) as 'mailjet' | 'log',
+    fromEmail: process.env.MAIL_FROM_EMAIL?.trim() || '',
+    fromName: process.env.MAIL_FROM_NAME?.trim() || 'EntrePanas',
+    mailjetPublicKey: process.env.MJ_APIKEY_PUBLIC?.trim() || '',
+    mailjetPrivateKey: process.env.MJ_APIKEY_PRIVATE?.trim() || '',
+  },
+  uploads: {
+    // 'cloudinary' sube de verdad; 'mock' simula la subida (tests y desarrollo sin credenciales)
+    transport: (process.env.UPLOAD_TRANSPORT ||
+      (process.env.CLOUD_NAME && process.env.CLOUDINARY_KEY && process.env.CLOUDINARY_SECRET
+        ? 'cloudinary'
+        : isDeployedEnv
+          ? 'cloudinary'
+          : 'mock')) as 'cloudinary' | 'mock',
+    maxFileSizeMb: 8,
+  },
+  appUrl: (process.env.APP_PUBLIC_URL || 'https://entrepanas.app').replace(/\/$/, ''),
+  adminUrl: (process.env.ADMIN_PUBLIC_URL || 'http://localhost:3000').replace(/\/$/, ''),
   cloudinary: {
     CLOUD_NAME: process.env.CLOUD_NAME || '',
     CLOUDINARY_KEY: process.env.CLOUDINARY_KEY || '',
     CLOUDINARY_SECRET: process.env.CLOUDINARY_SECRET || '',
-    FOLDER_NAME: process.env.FOLDER_NAME || 'PanaSecreto',
+    FOLDER_NAME: process.env.FOLDER_NAME || 'EntrePanas',
   },
 };
 

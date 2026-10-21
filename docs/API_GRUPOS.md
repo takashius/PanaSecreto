@@ -1,4 +1,4 @@
-# API de Grupos — PanaSecreto
+# API de Grupos — EntrePanas
 
 Base: `/api/group` (también disponible como `/group`). Todas las rutas requieren `Authorization: Bearer <token>`.
 
@@ -30,6 +30,7 @@ WAITING ──draw──▶ LOCKED ──reveal──▶ REVEALED ──complete
 | `PATCH` | `/:id` | organizador | Editar datos (no el estado) |
 | `DELETE` | `/:id` | organizador / admin | Eliminar grupo y sus asignaciones |
 | `POST` | `/:id/invite-code` | organizador | Regenerar código (solo WAITING) |
+| `POST` | `/:id/invitations` | organizador | Invitar por correo `{ emails: [..20], message? }` (solo WAITING y con cupo; omite a los que ya son miembros; 10 envíos/hora) |
 | `DELETE` | `/:id/members/me` | participante | Salir del grupo (solo WAITING) |
 | `DELETE` | `/:id/members/:userId` | organizador | Expulsar miembro (solo WAITING) |
 | `PUT` | `/:id/members/:userId/exclusions` | organizador | `{ exclusions: [userId], mutual?: true }` |
@@ -78,3 +79,44 @@ El sorteo solo se confirma si nadie cambió los miembros mientras se calculaba (
 ## Códigos de error frecuentes
 
 `GROUP_NOT_FOUND` · `NOT_GROUP_CREATOR` · `GROUP_NOT_WAITING` · `GROUP_FULL` · `INVALID_INVITE_CODE` · `ALREADY_DRAWN` · `NOT_DRAWN_YET` · `NOT_ENOUGH_PARTICIPANTS` · `NO_VALID_ASSIGNMENT` · `NOT_REVEALED` · `MAX_BELOW_MEMBERS` · `CREATOR_CANNOT_LEAVE` · `INVALID_EXCLUSIONS` · `CONCURRENT_CHANGE` · `VALIDATION_ERROR`
+
+## Lista de deseos
+
+Base: `/api/group/:id/wishlist`. Requiere ser miembro del grupo.
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| `GET` | `/me` | Mi lista en este grupo (favoritos primero) |
+| `POST` | `/` | Agregar deseo (máx. 20 por persona y grupo). JSON o `multipart/form-data` con campo `image` |
+| `PATCH` | `/:wishId` | Editar un deseo propio (`productUrl: null` lo borra; `image` la reemplaza; `removeImage: true` la quita) |
+| `DELETE` | `/:wishId` | Eliminar un deseo propio |
+| `GET` | `/assigned` | Lista de mi amigo secreto (solo tras el sorteo) |
+
+Cuerpo de creación:
+
+```json
+{
+  "title": "Cien años de soledad",
+  "description": "Edición tapa dura",
+  "estimatedPrice": 25,
+  "currency": "USD",          // por defecto la moneda del grupo
+  "productUrl": "https://…",   // solo http/https
+  "isFavorite": true
+}
+```
+
+- **Imagen:** JPG, PNG, WEBP, GIF o ICO de hasta 8 MB (sin SVG). Se guarda en Cloudinary (`<FOLDER_NAME>/wishlist`) limitada a 1600 px, y la respuesta incluye `imageUrl`. La membresía se valida **antes** de aceptar el archivo. Si la operación falla, la imagen recién subida se borra, y al reemplazar, quitar o eliminar un deseo se borra la anterior. Errores: `INVALID_FILE_TYPE` (400), `FILE_TOO_LARGE` (413), `UPLOAD_FAILED` (502).
+- En multipart los campos llegan como texto; el backend convierte `estimatedPrice`, `isFavorite` y `null`.
+- Un deseo ajeno responde `404`.
+- Con el grupo `COMPLETED`, la lista queda en solo lectura (`409 GROUP_COMPLETED`).
+- Al salir o ser expulsado de un grupo se borran los deseos de esa persona (y sus imágenes). Al eliminar el grupo se borran todos.
+- Errores: `WISH_NOT_FOUND`, `WISHLIST_FULL`, `NOT_DRAWN_YET`, `ASSIGNMENT_NOT_FOUND`.
+
+## Estadísticas (panel)
+
+`GET /api/stats` (ADMIN / SUPER_ADMIN) devuelve:
+- Usuarios: total, activos, por rol y nuevos en 30 días.
+- Grupos: por estado, participaciones y promedio por grupo.
+- Total de deseos.
+- Registros por día de los últimos 30 días (zona `REPORT_TIMEZONE`).
+- Próximos intercambios.

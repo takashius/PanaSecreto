@@ -4,6 +4,7 @@ import auth, { authAdminOnly } from '../../middleware/auth';
 import controllerError from '../../middleware/controllerError';
 import { sendOrError } from '../../utils/http';
 import { isAdminRole } from '../../config/roles';
+import { invitationRateLimiter } from '../../middleware/rateLimit';
 import { IGetUserAuthInfoRequest } from '../../types/general';
 import { StoreResponse } from '../../types/general';
 
@@ -47,6 +48,14 @@ router.post(
   '/:id/invite-code',
   auth(),
   handle((req) => controller.regenerateInviteCode(uid(req), req.params.id))
+);
+
+// Invitar por correo (máx. 20 correos por envío, 10 envíos por hora por organizador)
+router.post(
+  '/:id/invitations',
+  auth(),
+  invitationRateLimiter,
+  handle((req) => controller.inviteByEmail(uid(req), req.params.id, req.body))
 );
 
 /* ---------- Miembros ---------- */

@@ -1,6 +1,7 @@
 import { z, ZodTypeAny } from 'zod';
 import {
   CreateGroupSchema,
+  InviteByEmailSchema,
   JoinGroupSchema,
   SetExclusionsSchema,
   UpdateGroupSchema,
@@ -77,6 +78,12 @@ export function setExclusions(userId: string, id: string, targetId: string, body
   const parsed = parse(SetExclusionsSchema, body);
   if (parsed.error) return resolve(parsed.error);
   return store.setExclusions(userId, id, targetId, parsed.data);
+}
+
+export function inviteByEmail(userId: string, id: string, body: unknown) {
+  const parsed = parse(InviteByEmailSchema, body);
+  if (parsed.error) return resolve(parsed.error);
+  return store.inviteByEmail(userId, id, parsed.data);
 }
 
 export function regenerateInviteCode(userId: string, id: string) {

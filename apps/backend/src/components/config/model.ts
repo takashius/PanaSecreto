@@ -14,7 +14,7 @@ export interface ISystemConfig extends Document {
 
 export const DEFAULT_CONFIG = {
   key: 'system',
-  appName: 'PanaSecreto',
+  appName: 'EntrePanas',
   primaryColor: '#1E1338', // Morado Noche
   secondaryColor: '#F7A800', // Amarillo Araguaney
   accentColor: '#1D84B5', // Azul Caribe
@@ -34,7 +34,7 @@ const systemConfigSchema = new Schema<ISystemConfig>(
       type: String,
       required: true,
       trim: true,
-      default: 'PanaSecreto',
+      default: 'EntrePanas',
     },
     primaryColor: {
       type: String,

@@ -1,4 +1,4 @@
-# Revisión del proyecto PanaSecreto
+# Revisión del proyecto EntrePanas (antes PanaSecreto)
 
 > Fecha: 2026-10-20 · Alcance: monorepo completo (`apps/backend`, `apps/admin`, `apps/mobile`, `packages/*`, Docker y docs).
 > Estado de compilación al momento de la revisión: `tsc --noEmit` pasa en los 5 paquetes.
@@ -17,7 +17,7 @@ Leyenda: 🔴 crítico · 🟠 importante · 🟡 menor · ✅ corregido
   - `POST /user/change_password_required` cambia la clave sin validar que el usuario tenga `forcePasswordChangeOnNextLogin = true`.
 - [x] ✅ 🔴 **`JWT_KEY` por defecto en producción.** `apps/backend/Dockerfile` define `ENV JWT_KEY=...default...`, lo que anula la validación `requireEnv`. `docker-compose.yml` también tiene el secreto escrito en el archivo.
 - [x] ✅ 🔴 **Admin semilla con contraseña conocida.** Sin `USER_ADMIN_PASSWORD`, se crea `admin@panasecreto.local / Admin123456!`, también en producción.
-- [ ] 🟠 **Recuperación de contraseña débil.** _(parcial: ✅ `crypto.randomInt`, ✅ `devCode` solo en development/test, ✅ contador de 5 intentos por cuenta. Pendiente: envío por correo y pasar el paso 1 a `POST`.)_
+- [x] ✅ 🟠 **Recuperación de contraseña débil.** Ahora el código se envía por correo con Mailjet, el paso 1 es `POST /user/recovery/request`, el código sale de `crypto.randomInt`, hay un límite de 5 intentos por cuenta y 60 s de espera entre reenvíos, y `devCode` solo aparece en desarrollo/test.
   - No se envía correo; en producción el código solo se imprime en el log.
   - `devCode` se devuelve en la respuesta en cualquier entorno distinto de `production` (incluido `staging`).
   - El código se genera con `Math.random` (usar `crypto.randomInt`).
@@ -28,10 +28,10 @@ Leyenda: 🔴 crítico · 🟠 importante · 🟡 menor · ✅ corregido
 - [x] ✅ 🟡 bcrypt con costo 8 (recomendado ≥ 10).
 - [x] ✅ 🟡 El arreglo `tokens` del usuario crece sin límite (no se purgan los expirados).
 - [x] ✅ 🟡 `listUsersAdmin` mete `q` directo en un `RegExp` (riesgo de ReDoS e inyección de regex). Hay que escaparlo.
-- [ ] 🟡 _(parcial: ✅ `sendOrError` ya respeta los 4xx (409/422) y responde 500 genérico registrando el detalle en el servidor)_ `controllerError` devuelve mensajes internos (`err.message`) al cliente con estado 400, y `sendOrError` manda los 500 por ahí, así que terminan respondiendo 400.
-- [ ] 🟡 Con `CORS_ORIGIN=*` se reflejan todos los orígenes con `credentials: true`.
-- [ ] 🟡 Se permiten subidas SVG (posible XSS si se sirven directamente).
-- [ ] 🟡 El admin web no obliga el flujo de `forcePasswordChangeOnNextLogin`: el usuario puede navegar a otras rutas.
+- [x] ✅ 🟡 `controllerError` y `sendOrError` ya no exponen mensajes internos: los errores inesperados responden 500 genérico y el detalle queda en el log del servidor; los 4xx (409/422) se respetan.
+- [x] ✅ 🟡 Con `CORS_ORIGIN=*` se reflejan todos los orígenes con `credentials: true`.
+- [x] ✅ 🟡 Se permiten subidas SVG (posible XSS si se sirven directamente).
+- [x] ✅ 🟡 El admin web no obliga el flujo de `forcePasswordChangeOnNextLogin`: el usuario puede navegar a otras rutas.
 
 ## Prioridad 2 — Build de `packages/shared`
 
@@ -46,7 +46,7 @@ Leyenda: 🔴 crítico · 🟠 importante · 🟡 menor · ✅ corregido
 - [x] ✅ 🟠 El código de invitación es corto (`Math.random`, 4 caracteres) y no maneja colisiones.
 - [x] ✅ 🟠 `GET /groups` lista todos los grupos del sistema sin filtrar por usuario.
 - [x] ✅ 🟠 El esquema `CreateGroupSchema` no cubre lo que pide el diseño mobile: presupuesto mín./máx. o "sin límite", moneda VES, número de participantes y pistas anónimas.
-- [ ] 🟡 Wishlist (`gift.schema.ts`) definida, sin modelo ni rutas.
+- [x] ✅ 🟡 Wishlist (`gift.schema.ts`) definida, sin modelo ni rutas.
 
 ## Prioridad 4 — App móvil conectada al backend
 
@@ -65,24 +65,24 @@ Leyenda: 🔴 crítico · 🟠 importante · 🟡 menor · ✅ corregido
 
 ## Despliegue e infraestructura
 
-- [ ] 🟠 El Dockerfile del admin no recibe `VITE_API_URL` como `ARG`, así que el build de producción apunta a `http://localhost:4000`.
-- [ ] 🟠 El backend arranca aunque Mongo falle ("modo degradado") y las peticiones se quedan colgadas en el buffer de Mongoose. Hay que fallar rápido o desactivar `bufferCommands`.
-- [ ] 🟡 `docker-compose.yml` usa `CORS_ORIGIN: "*"` y expone Mongo en `27017` sin autenticación.
-- [ ] 🟡 `nginx.conf` sin `Content-Security-Policy`; `X-XSS-Protection` está obsoleto.
+- [x] ✅ 🟠 El Dockerfile del admin no recibe `VITE_API_URL` como `ARG`, así que el build de producción apunta a `http://localhost:4000`.
+- [x] ✅ 🟠 El backend arranca aunque Mongo falle ("modo degradado") y las peticiones se quedan colgadas en el buffer de Mongoose. Hay que fallar rápido o desactivar `bufferCommands`.
+- [x] ✅ 🟡 `docker-compose.yml`: `CORS_ORIGIN` ya no es `*` por defecto y Mongo solo escucha en `127.0.0.1`. _(Mongo local sigue sin usuario/contraseña; es aceptable solo para desarrollo.)_
+- [x] ✅ 🟡 `nginx.conf` sin `Content-Security-Policy`; `X-XSS-Protection` está obsoleto.
 
 ## Deuda técnica y consistencia
 
-- [ ] 🟡 Código muerto _(parcial: ✅ eliminados `config/index.ts`, `models/user.model.ts`, `models/group.model.ts` y `routes/group.routes.ts`; queda `admin/src/App.tsx`)_:
+- [x] ✅ 🟡 Código muerto eliminado: `config/index.ts`, `models/*.model.ts`, `routes/group.routes.ts` y `admin/src/App.tsx`.
   - `backend/src/config/index.ts` (config duplicada).
   - `backend/src/models/user.model.ts` (segundo modelo `User`, provocaría `OverwriteModelError`).
   - `admin/src/App.tsx` (maqueta vieja).
-- [ ] 🟡 El README dice Expo SDK 52 (es 57) y no documenta las variables de Cloudinary ni `USER_ADMIN_*`.
-- [ ] 🟡 `.cursorrules` dice que solo SUPER_ADMIN/ADMIN entran al panel, pero el código también deja entrar a ORGANIZER.
-- [ ] 🟡 El `background` del admin en Tailwind (`#F5F5F5`) no coincide con el token (`#F8F9FA`).
-- [ ] 🟡 Los roles están duplicados entre backend y admin; deberían vivir en `packages/shared`.
-- [ ] 🟡 Rutas duplicadas (`/user` y `/api/user`, `/upload` y `/me/photo`, `/logout` y `/me/logout`).
-- [ ] 🟡 No hay tests ni lint (`lint` = `tsc --noEmit`). Añadir Vitest/Jest + Supertest y ESLint.
-- [ ] 🟡 Textos de la UI "replicada desde UniSan" visibles en el dashboard del admin y en la ruta `/` de la API.
+- [x] ✅ 🟡 El README dice Expo SDK 52 (es 57) y no documenta las variables de Cloudinary ni `USER_ADMIN_*`.
+- [x] ✅ 🟡 `.cursorrules` dice que solo SUPER_ADMIN/ADMIN entran al panel, pero el código también deja entrar a ORGANIZER.
+- [x] ✅ 🟡 El `background` del admin en Tailwind (`#F5F5F5`) no coincide con el token (`#F8F9FA`).
+- [x] ✅ 🟡 Los roles están duplicados entre backend y admin; deberían vivir en `packages/shared`.
+- [x] ✅ 🟡 Rutas duplicadas eliminadas (`PATCH /user`, `/user/me/photo`, `/user/me/logout`, `PATCH /api/config`). _(Se mantienen los montajes `/user` y `/api/user` por compatibilidad.)_
+- [x] ✅ 🟡 Tests (82, `pnpm test`) y ESLint (`pnpm lint`, 0 errores). _(Quedan 60 advertencias de `any` como tipado pendiente.)_
+- [x] ✅ 🟡 Textos de "UniSan" eliminados del backend y del admin; el dashboard ahora muestra datos reales. _(Quedan comentarios en el código de mobile, que no se tocó.)_
 
 ---
 
@@ -153,3 +153,127 @@ Referencia completa de la API: [`docs/API_GRUPOS.md`](./API_GRUPOS.md).
 - La app móvil todavía no consume esta API (prioridad 4). Ojo: el selector de fecha de mobile hoy produce texto ("24 de Diciembre, 2025") y la API espera una fecha ISO.
 - Wishlist (`gift.schema.ts`) sigue sin modelo ni rutas.
 - No hay tests automatizados en el repo: las pruebas se corrieron con scripts temporales. Conviene llevarlas a Vitest + Supertest + `mongodb-memory-server`.
+
+### 2026-10-20 — Backend y panel admin completos
+
+**Tests automatizados** (`pnpm --filter @panasecreto/backend test`)
+- `src/app.ts` separa la app Express del arranque, para poder probarla sin abrir puertos ni conectar a la BD real.
+- `node --test` + `tsx` + `mongodb-memory-server`. **82 tests, 13 suites**: auth y roles, recuperación, grupos, sorteo, lista de deseos, estadísticas y correo (Mailjet simulado).
+- `tsconfig.build.json` deja los tests fuera de `dist`. Script `test` en la raíz.
+
+**Seguridad y despliegue**
+- `controllerError`/`sendOrError`: sin filtración de mensajes internos. Manejador final de errores y 404 en JSON.
+- CORS `*` sin credenciales y con aviso en producción. `trust proxy` activo para que el rate limit vea la IP real.
+- Subidas SVG deshabilitadas en backend y admin.
+- MongoDB: hasta 5 reintentos con espera creciente; si no conecta, el proceso termina (lo verifiqué: sale con código 1 a los ~42 s). `/api/health` responde 503 sin BD.
+- Dockerfile del admin con `ARG VITE_API_URL`. Compose con Mongo solo en localhost. nginx con CSP, `Permissions-Policy` y `index.html` sin caché.
+
+**Correo con Mailjet**
+- `services/mail.ts` llama a la API v3.1 con `fetch` (sin dependencias nuevas). Modo `log` en desarrollo y tests.
+- `services/mailTemplates.ts`: plantilla de recuperación con la marca, en HTML escapado y texto plano.
+- Credenciales verificadas con una consulta de solo lectura. Remitente configurado: `panasecreto@erdesarrollo.com.ve` (dominio validado en la cuenta).
+
+**Lista de deseos** (`components/wishlist`)
+- Cada miembro tiene un CRUD propio por grupo (máx. 20 deseos) y, tras el sorteo, puede ver la lista de su amigo secreto. Se borra al salir del grupo o al eliminarlo.
+- `packages/shared`: `WishSchema`, `CreateWishSchema` y `UpdateWishSchema` (solo URLs http/https).
+
+**Panel admin**
+- Nuevo `GET /api/stats` y un dashboard real:
+  - KPIs: usuarios, grupos, participaciones y deseos.
+  - Registros de los últimos 30 días, con tooltip y vista de tabla.
+  - Grupos por estado y usuarios por rol.
+  - Próximos intercambios.
+- Nuevas páginas **Grupos de Intercambio** (tabla con filtros de búsqueda y estado) y **Detalle de grupo** (datos, miembros, exclusiones y eliminación con confirmación). El panel nunca muestra las asignaciones.
+- El cambio de contraseña obligatorio se aplica: no se puede usar el panel hasta completarlo (también afecta al admin semilla).
+- Indicador real del estado de la API en la cabecera (en línea / sin BD / sin conexión).
+- Revisión visual con Playwright en modo claro y oscuro, escritorio y móvil.
+
+**Limpieza**
+- Los roles viven en `packages/shared/src/roles.ts`; backend y admin los importan de ahí.
+- README reescrito (estado de módulos, variables de entorno, tests, despliegue). `API_GRUPOS.md` incluye la lista de deseos y las estadísticas.
+
+**Para hacer en tu máquina**
+- `pnpm install`: agrega `mongodb-memory-server` (solo para tests). El lockfile ya está actualizado.
+- En Coolify: `MJ_APIKEY_PUBLIC`, `MJ_APIKEY_PRIVATE`, `MAIL_FROM_EMAIL`; Build Variable `VITE_API_URL` en el admin; `CORS_ORIGIN` con el dominio del panel.
+
+**Pendiente**
+- Chat anónimo (prioridad 5): se hará junto con la app móvil.
+- App móvil (prioridad 4).
+
+### 2026-10-20 — Correo real y ESLint
+
+**Prueba de Mailjet**
+- Envié un correo real de recuperación a `erick.h.recalde@gmail.com` desde `panasecreto@erdesarrollo.com.ve`. La API de Mailjet lo reporta con estado `sent` (entregado al servidor de destino).
+
+**ESLint** (`pnpm lint` / `pnpm lint:fix`)
+- `eslint.config.mjs` único en la raíz (flat config):
+  - ESLint 10.12, `@eslint/js` y `typescript-eslint` 8.71.
+  - `eslint-plugin-react-hooks` 7.1 (reglas del React Compiler) en el admin y mobile.
+  - `react-refresh` en el admin; `globals` según el entorno (Node, navegador, React Native).
+- Se permite `any` en los tests; las variables sin usar con prefijo `_` se ignoran.
+- Se eliminaron los scripts `lint` de cada paquete, que solo repetían `tsc --noEmit` (eso es `pnpm typecheck`).
+- Corregí los 21 errores iniciales:
+  - Imports sin usar en el admin y mobile.
+  - `setState` dentro de un efecto en `Login.tsx` (ahora es un inicializador perezoso).
+  - Asignaciones inútiles.
+  - Alias de `this` en el modelo `User`.
+  - Tipo `Function` en `sendOrError`.
+  - Una expresión ternaria suelta en `DashboardScreen` (mobile).
+- Tipé `group/store.ts` (sin `any`, con `FilterQuery<IGroup>` y un tipo `PopulatedUser`).
+- Resultado: **0 errores, 60 advertencias** (`any` repartidos y 5 de fast-refresh en los contextos del admin).
+- Los tests (82/82), los builds y `tsc` siguen pasando.
+- Hay dos conflictos de peers que ya existían y no vienen de ESLint: `multer-storage-cloudinary` pide cloudinary v1 (se usa v2), y `react-dom` 18 del admin convive con React 19 de mobile.
+
+### 2026-10-21 — Imagen en la lista de deseos, cambio de rol, correos, tipado y dependencias
+
+**Dependencias**
+- Se eliminó `multer-storage-cloudinary` (pedía cloudinary v1). Nuevo `services/storage.ts`: multer en memoria + SDK oficial de Cloudinary v2 (`upload_stream`), carpetas por tipo (`avatars`, `branding`, `wishlist`), límite de 1600 px, lista blanca de tipos, 8 MB, extracción robusta del `public_id` y modo `mock` para tests. Verificado con una subida y un borrado reales en Cloudinary.
+- Mobile tiene ahora su propio `react-dom` 19.2.3, que resuelve el conflicto con el `react-dom` 18 del admin (la dependencia opcional de `expo` tomaba la del admin).
+- Auditoría (`pnpm audit --prod`): 3 avisos, todos en herramientas de mobile (`node-forge`, `braces`, `uuid` vía Expo CLI/Metro), sin versión corregida publicada todavía. No afectan al backend ni al admin.
+
+**Imagen en la lista de deseos**
+- `POST`/`PATCH /group/:id/wishlist` aceptan `multipart/form-data` con `image`. También `removeImage: true`, y `imageUrl` aparece en las respuestas.
+- La membresía se valida antes de aceptar el archivo. Si la operación falla, la imagen subida se borra (sin huérfanas). Al reemplazar, quitar o eliminar un deseo, o al salir o eliminar el grupo, se borran también las imágenes (`wishlist/cleanup.ts`).
+- El avatar y la marca usan el mismo servicio; el logo y el favicon reemplazados se borran de Cloudinary. `PATCH /user/me` ya no acepta URLs de foto.
+
+**Cambio de rol en el panel**
+- Backend: solo SUPER_ADMIN, nunca sobre el propio usuario (así siempre queda al menos un SUPER_ADMIN), y cierra las sesiones del usuario afectado.
+- Panel: el selector de rol se habilita al editar solo para un SUPER_ADMIN sobre otro usuario, con aviso; usa el endpoint `PATCH /user/admin/:id/role`. Verificado con capturas.
+
+**Correos transaccionales (12 plantillas)**
+- Bienvenida, cuenta creada por un admin, recuperación, contraseña cambiada, invitación por correo (nuevo `POST /group/:id/invitations`), bienvenida al grupo, aviso al organizador, sorteo realizado, sorteo reiniciado, revelación, expulsión y grupo eliminado.
+- Envío en segundo plano y en lotes de 50 (Mailjet v3.1). Nunca a cuentas inactivas, nunca con contraseñas ni asignaciones. Apagado ordenado que espera los envíos pendientes. Nuevas variables `APP_PUBLIC_URL` y `ADMIN_PUBLIC_URL`.
+
+**Tipado estricto**
+- Se eliminaron los 46 `any` restantes (backend, admin y mobile) y las 5 advertencias de fast-refresh: los contextos del admin se separaron en `contexts.ts` y hooks propios.
+- `no-explicit-any` pasa a **error** y `pnpm lint` corre con `--max-warnings 0`. Resultado: **0 errores, 0 advertencias**.
+- De paso: los errores de guardado de usuarios ya no exponen mensajes internos (`describeSaveError`), y Socket.io usa `socket.data` tipado.
+
+**Verificación**
+- `tsc` en los 5 paquetes, build del backend y del admin: OK.
+- **103/103 tests**: se sumaron imágenes (9), cambio de rol (2) y correos (10).
+- Capturas del modal de rol y galería con las 12 plantillas de correo.
+
+**Para hacer en tu máquina:** `pnpm install` (aplica el lockfile actualizado: quita `multer-storage-cloudinary` y agrega ESLint, `mongodb-memory-server` y el `react-dom` de mobile). En Coolify: `APP_PUBLIC_URL` y `ADMIN_PUBLIC_URL`.
+
+### 2026-10-21 — Cambio de marca: PanaSecreto → EntrePanas
+
+Se mantienen colores, tipografías y la paleta (Morado Noche, Amarillo Araguaney…). El logotipo bicolor pasa a **Entre** + **Panas** (la parte en amarillo es «Panas»).
+
+**Cambiado a EntrePanas (todo lo que ve el usuario)**
+- **Correos:** las 12 plantillas (encabezado, textos, pie y asuntos), el remitente `EntrePanas <entrepanas@erdesarrollo.com.ve>` (el dominio sigue validado en Mailjet) y los enlaces a `APP_PUBLIC_URL`, con valor por defecto `https://entrepanas.app`.
+- **Backend:** nombre de la API (`EntrePanas API`), logs, nombre por defecto en la configuración y carpeta de Cloudinary por defecto (`EntrePanas/…`).
+- **Migración automática:** al arrancar, si la configuración guardada sigue con «PanaSecreto», pasa a «EntrePanas». Respeta los nombres personalizados.
+- **Panel admin:** título de la pestaña, pie, textos (es/en), nombre por defecto y placeholder de la configuración.
+- **App móvil (solo textos):** logotipo del login, registro y recuperación; cabecera de inicio; textos legales; mensaje para compartir por WhatsApp; enlace `https://entrepanas.app/join/…`.
+- **App móvil (`app.json`):** `name: "EntrePanas"`, y el paquete Android y el bundle iOS pasan a `com.erdesarrollo.entrepanas`.
+- Descripciones de los paquetes, `AGENTS.md`, `.cursorrules`, README y docs. Los contenedores de Docker se llaman `entrepanas-*`.
+
+**Se conserva a propósito (identificadores internos)**
+- El repositorio, las carpetas y el scope `@panasecreto/*`, como pediste.
+- La base de datos `panasecreto` (cambiarla dejaría los datos existentes atrás).
+- El admin semilla `admin@panasecreto.local` (cambiarlo crearía un segundo SUPER_ADMIN en bases ya inicializadas).
+- `slug: "panasecreto"` en `app.json`: el `projectId` de EAS y la URL de updates están atados a ese slug. Para cambiarlo hay que renombrar primero el proyecto en expo.dev.
+- Los conceptos del juego: «Amigo Secreto», «tu pana secreto», «Registro de Pana» y los códigos `PANA-XXXX-XX`.
+- `docs/creargrupo*` (exportaciones de diseño) y el manual de marca en PDF.
+- Las imágenes ya subidas siguen en la carpeta `PanaSecreto/` de Cloudinary y funcionan (el borrado usa la URL); las nuevas van a `EntrePanas/`.

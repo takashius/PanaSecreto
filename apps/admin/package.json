@@ -2,13 +2,12 @@
   "name": "@panasecreto/admin",
   "version": "1.0.0",
   "private": true,
-  "description": "Admin Web Dashboard for PanaSecreto (React + Vite + Ant Design + Tailwind)",
+  "description": "Admin Web Dashboard for EntrePanas (React + Vite + Ant Design + Tailwind)",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf dist"
   },

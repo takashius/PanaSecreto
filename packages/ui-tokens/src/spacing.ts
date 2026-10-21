@@ -1,5 +1,5 @@
 /**
- * Escala de espaciado estándar para PanaSecreto (Web y Mobile)
+ * Escala de espaciado estándar para EntrePanas (Web y Mobile)
  */
 export const spacing = {
   none: 0,

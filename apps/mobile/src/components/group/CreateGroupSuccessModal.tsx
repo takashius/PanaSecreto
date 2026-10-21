@@ -7,7 +7,6 @@ import {
   Image,
   Linking,
   Share,
-  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Copy, Check, MessageCircle, Link as LinkIcon } from 'lucide-react-native';
@@ -33,8 +32,8 @@ export const CreateGroupSuccessModal: React.FC<CreateGroupSuccessModalProps> = (
   const [codeCopied, setCodeCopied] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
 
-  const shareUrl = `https://panasecreto.app/join/${inviteCode}`;
-  const shareMessage = `¡Pana! Únete a nuestro Amigo Secreto "${groupName}" en PanaSecreto. 🎄🎁\nCódigo: ${inviteCode}\nEnlace: ${shareUrl}`;
+  const shareUrl = `https://entrepanas.app/join/${inviteCode}`;
+  const shareMessage = `¡Pana! Únete a nuestro Amigo Secreto "${groupName}" en EntrePanas. 🎄🎁\nCódigo: ${inviteCode}\nEnlace: ${shareUrl}`;
 
   const handleCopyCode = async () => {
     setCodeCopied(true);
@@ -82,7 +81,7 @@ export const CreateGroupSuccessModal: React.FC<CreateGroupSuccessModalProps> = (
           <Image
             source={require('../../../assets/icon.png')}
             style={createGroupStyles.modalMascotImage}
-            accessibilityLabel="Mascota Guaca de PanaSecreto"
+            accessibilityLabel="Mascota Guaca de EntrePanas"
           />
 
           {/* Textos de cabecera */}

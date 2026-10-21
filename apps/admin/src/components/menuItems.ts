@@ -1,11 +1,12 @@
-import { DashboardOutlined, UserOutlined, SettingOutlined } from '@ant-design/icons';
+import { DashboardOutlined, UserOutlined, SettingOutlined, GiftOutlined } from '@ant-design/icons';
+import type { ComponentType } from 'react';
 import { ROLES, normalizeRole, type UserRole } from '../constants/roles';
 
 export interface MenuItem {
   key: string;
   labelKey: string;
   path: string;
-  icon?: any;
+  icon?: ComponentType<{ className?: string }>;
   allowedRoles?: UserRole[];
   match?: 'exact' | 'startsWith';
   children?: MenuItem[];
@@ -24,6 +25,14 @@ export const allMenuItems: MenuItem[] = [
     labelKey: 'menu.usersManagement',
     path: '/users-management',
     icon: UserOutlined,
+    allowedRoles: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
+    match: 'startsWith',
+  },
+  {
+    key: 'groups',
+    labelKey: 'menu.groups',
+    path: '/groups',
+    icon: GiftOutlined,
     allowedRoles: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
     match: 'startsWith',
   },

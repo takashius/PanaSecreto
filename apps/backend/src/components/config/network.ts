@@ -2,55 +2,42 @@ import { Router, Request, Response } from 'express';
 import { getConfig, updateConfig } from './controller';
 import auth from '../../middleware/auth';
 import { ADMIN_ROLES } from '../../config/roles';
-import { handleConfigUpload, pickUploadedFiles } from '../../middleware/saveFile';
+import { uploadImages } from '../../services/storage';
+import { IGetUserAuthInfoRequest } from '../../types/general';
 
 const router = Router();
 
-// GET /api/config - Obtiene la configuración pública del sistema
+// GET /api/config - Configuración pública del sistema (nombre, colores, logo, favicon)
 router.get('/', async (_req: Request, res: Response) => {
   try {
-    const config = await getConfig();
-    res.json(config);
-  } catch (error: any) {
-    console.error('[Config Network] Error getting config:', error);
-    res.status(500).json({ success: false, message: 'Error al obtener la configuración' });
+    res.json(await getConfig());
+  } catch (error) {
+    console.error('[config] Error al obtener la configuración:', error);
+    res.status(500).json({ code: 'INTERNAL_ERROR', message: 'Error al obtener la configuración' });
   }
 });
 
-// PUT /api/config - Actualiza configuración y sube archivos a Cloudinary
-router.put('/', auth(ADMIN_ROLES), handleConfigUpload, async (req: Request, res: Response) => {
-  try {
-    const uploadedFiles = (req as any).uploadedFiles || pickUploadedFiles(req);
-    const result = await updateConfig(req.body, uploadedFiles);
-
-    if ('status' in result && typeof result.status === 'number' && result.status >= 400) {
-      res.status(result.status).json({ success: false, message: result.message });
-      return;
+// PUT /api/config - Actualiza la configuración; logo y favicon se suben a Cloudinary
+router.put(
+  '/',
+  auth(ADMIN_ROLES),
+  uploadImages([
+    { name: 'logo', folder: 'branding' },
+    { name: 'favicon', folder: 'branding' },
+  ]),
+  async (req: IGetUserAuthInfoRequest, res: Response) => {
+    try {
+      const result = await updateConfig(req.body, req.uploads);
+      if ('status' in result && typeof result.status === 'number' && result.status >= 400) {
+        res.status(result.status).json({ code: 'VALIDATION_ERROR', message: result.message });
+        return;
+      }
+      res.json(result);
+    } catch (error) {
+      console.error('[config] Error al actualizar la configuración:', error);
+      res.status(500).json({ code: 'INTERNAL_ERROR', message: 'Error al actualizar la configuración' });
     }
-
-    res.json(result);
-  } catch (error: any) {
-    console.error('[Config Network] Error updating config:', error);
-    res.status(500).json({ success: false, message: 'Error al actualizar la configuración' });
   }
-});
-
-// PATCH /api/config - Soporte alternativo de actualización
-router.patch('/', auth(ADMIN_ROLES), handleConfigUpload, async (req: Request, res: Response) => {
-  try {
-    const uploadedFiles = (req as any).uploadedFiles || pickUploadedFiles(req);
-    const result = await updateConfig(req.body, uploadedFiles);
-
-    if ('status' in result && typeof result.status === 'number' && result.status >= 400) {
-      res.status(result.status).json({ success: false, message: result.message });
-      return;
-    }
-
-    res.json(result);
-  } catch (error: any) {
-    console.error('[Config Network] Error updating config:', error);
-    res.status(500).json({ success: false, message: 'Error al actualizar la configuración' });
-  }
-});
+);
 
 export default router;

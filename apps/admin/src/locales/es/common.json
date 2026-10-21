@@ -70,7 +70,7 @@
   },
   "usersManagement": {
     "title": "Gestión de Usuarios",
-    "description": "Administra participantes y administradores de PanaSecreto, sus roles y accesos.",
+    "description": "Administra participantes y administradores de EntrePanas, sus roles y accesos.",
     "searchPlaceholder": "Nombre, apellido o correo",
     "user": "Usuario",
     "detail": "Detalle",
@@ -81,7 +81,12 @@
     "phone": "Teléfono",
     "role": "Rol",
     "status": "Estado",
-    "created": "Fecha de registro"
+    "created": "Fecha de registro",
+    "roleRequired": "Selecciona un rol",
+    "roleSuperAdminOnly": "Solo un Super administrador puede cambiar roles.",
+    "roleOwnLocked": "No puedes cambiar tu propio rol.",
+    "roleChangeLogsOut": "Si cambias el rol, se cerrarán las sesiones de este usuario.",
+    "roleChanged": "Rol actualizado. El usuario deberá iniciar sesión de nuevo."
   },
   "settings": {
     "title": "Configuración del Sistema",
@@ -138,5 +143,87 @@
     "passwordsDoNotMatch": "Las contraseñas no coinciden.",
     "updatePassword": "Actualizar Contraseña",
     "passwordSuccess": "Contraseña actualizada exitosamente."
+  },
+  "groupStatus": {
+    "WAITING": "Esperando panas",
+    "LOCKED": "Sorteado",
+    "REVEALED": "Revelado",
+    "COMPLETED": "Finalizado"
+  },
+  "memberRole": {
+    "CREATOR": "Organizador",
+    "PARTICIPANT": "Participante"
+  },
+  "groupsManagement": {
+    "title": "Grupos de Intercambio",
+    "description": "Supervisa los grupos de Amigo Secreto: estado del sorteo, participantes y fechas.",
+    "searchPlaceholder": "Nombre o código de invitación",
+    "group": "Grupo",
+    "creator": "Organizador",
+    "status": "Estado",
+    "members": "Participantes",
+    "exchangeDate": "Fecha del intercambio",
+    "budget": "Presupuesto",
+    "noLimit": "Sin límite",
+    "inviteCode": "Código",
+    "createdAt": "Creado",
+    "detail": "Detalle",
+    "deleteGroup": "Eliminar grupo",
+    "deleteConfirmTitle": "¿Eliminar este grupo?",
+    "deleteConfirmText": "Se borrarán el grupo, sus asignaciones y las listas de deseos. Esta acción no se puede deshacer.",
+    "deleted": "Grupo eliminado.",
+    "notFound": "Grupo no encontrado",
+    "backToList": "Volver al listado",
+    "info": "Información del grupo",
+    "currency": "Moneda",
+    "maxParticipants": "Cupo máximo",
+    "anonymousClues": "Pistas anónimas",
+    "drawnAt": "Sorteado el",
+    "revealedAt": "Revelado el",
+    "completedAt": "Finalizado el",
+    "joinedAt": "Se unió",
+    "exclusions": "No le regala a",
+    "noExclusions": "Sin exclusiones",
+    "privacyNote": "Por privacidad, el panel nunca muestra quién le regala a quién.",
+    "yes": "Sí",
+    "no": "No",
+    "min": "Mín.",
+    "max": "Máx."
+  },
+  "dashboard": {
+    "welcome": "Bienvenido de nuevo, {{name}}.",
+    "subtitle": "Resumen de actividad de EntrePanas",
+    "users": "Usuarios",
+    "activeUsers": "{{count}} activos",
+    "groups": "Grupos",
+    "participants": "Participaciones",
+    "avgMembers": "{{avg}} por grupo en promedio",
+    "wishes": "Deseos en listas",
+    "newLast30d": "+{{count}} en 30 días",
+    "groupsByStatus": "Grupos por estado",
+    "activity": "Registros de usuarios (últimos 30 días)",
+    "activityTotal": "{{count}} registros en el período",
+    "upcoming": "Próximos intercambios",
+    "noUpcoming": "No hay intercambios programados.",
+    "inDays": "en {{count}} días",
+    "today": "hoy",
+    "tomorrow": "mañana",
+    "membersCount": "{{count}} panas",
+    "usersByRole": "Usuarios por rol",
+    "viewAll": "Ver todos",
+    "loadError": "No se pudieron cargar las estadísticas.",
+    "signups": "registros",
+    "date": "Fecha",
+    "count": "Cantidad",
+    "showTable": "Ver como tabla",
+    "showChart": "Ver gráfico"
+  },
+  "header": {
+    "api": {
+      "online": "API en línea",
+      "degraded": "API sin base de datos",
+      "offline": "API sin conexión",
+      "checking": "Verificando API"
+    }
   }
 }

@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import type { RouteObject } from 'react-router-dom';
 import Layout from '@components/Layout';
 import RootAuth from '@components/RootAuth';
@@ -11,13 +11,15 @@ import ForcePasswordChange from '@pages/auth/ForcePasswordChange';
 import Dashboard from '@pages/dashboard/Dashboard';
 import UserList from '@pages/users/UserList';
 import UserDetail from '@pages/users/UserDetail';
+import GroupList from '@pages/groups/GroupList';
+import GroupDetail from '@pages/groups/GroupDetail';
 import Configuration from './pages/settings/Configuration';
 import Profile from './pages/profile/Profile';
 import { ROLES, type UserRole } from './constants/roles';
 
 type AppChildRoute = {
   path: string;
-  element: ReactNode;
+  element: ReactElement;
   protected?: boolean;
   allowedRoles?: UserRole[];
 };
@@ -49,13 +51,24 @@ export const routes: AppRoute[] = [
         allowedRoles: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
       },
       {
+        path: '/groups',
+        element: <GroupList />,
+        protected: true,
+        allowedRoles: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
+      },
+      {
+        path: '/groups/:id',
+        element: <GroupDetail />,
+        protected: true,
+        allowedRoles: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
+      },
+      {
         path: '/settings',
         element: <Configuration />,
         protected: true,
         allowedRoles: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
       },
       { path: '/profile', element: <Profile />, protected: true },
-      { path: '/force-password-change', element: <ForcePasswordChange />, protected: true },
     ],
   },
   {
@@ -66,6 +79,8 @@ export const routes: AppRoute[] = [
       { path: '/login', element: <Login />, protected: false },
       { path: '/recover-password', element: <RecoverPassword />, protected: false },
       { path: '/recover-password/step2', element: <RecoveryStep2 />, protected: false },
+      // Pantalla completa (sin menú lateral) pero requiere sesión
+      { path: '/force-password-change', element: <ForcePasswordChange />, protected: true },
     ],
   },
 ];
@@ -80,7 +95,7 @@ export const protectedRoutes: RouteObject[] = routes.map((route) => {
         if (child.protected) {
           return {
             path: child.path,
-            element: <ProtectedRoute element={child.element as any} allowedRoles={child.allowedRoles} />,
+            element: <ProtectedRoute element={child.element} allowedRoles={child.allowedRoles} />,
           };
         }
         return {

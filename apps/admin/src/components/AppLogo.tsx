@@ -1,5 +1,5 @@
 import { Sparkles } from 'lucide-react';
-import { useConfigContext } from '../context/ConfigContext';
+import { useConfigContext } from '../context/useConfigContext';
 
 interface AppLogoProps {
   className?: string;

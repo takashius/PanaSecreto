@@ -5,11 +5,21 @@ import type { UploadFile } from 'antd/es/upload/interface';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import PageHeader from '@components/PageHeader';
-import { useConfigContext } from '@context/ConfigContext';
+import { useConfigContext } from '@context/useConfigContext';
 import { useUpdateSystemConfig } from '../../api/config';
 import { getErrorMessage } from '@utils/GetMessage';
 
 const { Text } = Typography;
+
+/** Los ColorPicker de antd devuelven un objeto Color o un string hexadecimal */
+type ColorValue = string | { toHexString: () => string } | undefined;
+
+interface ConfigFormValues {
+  appName?: string;
+  primaryColor?: ColorValue;
+  secondaryColor?: ColorValue;
+  accentColor?: ColorValue;
+}
 
 export default function Configuration() {
   const { t } = useTranslation();
@@ -38,7 +48,7 @@ export default function Configuration() {
     }
   }, [config, form]);
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: ConfigFormValues) => {
     const formData = new FormData();
 
     formData.append('appName', values.appName || config.appName);
@@ -138,7 +148,7 @@ export default function Configuration() {
                   extra={t('settings.appNameHelp')}
                   rules={[{ required: true, message: 'El nombre es requerido' }]}
                 >
-                  <Input size="large" placeholder="PanaSecreto" />
+                  <Input size="large" placeholder="EntrePanas" />
                 </Form.Item>
               </Card>
 
@@ -257,7 +267,7 @@ export default function Configuration() {
                         beforeUpload={() => false}
                         onChange={({ fileList }) => setLogoFileList(fileList.slice(-1))}
                         maxCount={1}
-                        accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                        accept="image/png,image/jpeg,image/webp"
                       >
                         <Button icon={<UploadOutlined />}>{t('settings.uploadButton')}</Button>
                       </Upload>
@@ -288,7 +298,7 @@ export default function Configuration() {
                         beforeUpload={() => false}
                         onChange={({ fileList }) => setFaviconFileList(fileList.slice(-1))}
                         maxCount={1}
-                        accept="image/png,image/x-icon,image/svg+xml,image/jpeg"
+                        accept="image/png,image/x-icon,image/jpeg"
                       >
                         <Button icon={<UploadOutlined />}>{t('settings.uploadButton')}</Button>
                       </Upload>

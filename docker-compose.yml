@@ -2,10 +2,11 @@ services:
   # Base de Datos MongoDB
   mongodb:
     image: mongo:7-jammy
-    container_name: panasecreto-mongodb
+    container_name: entrepanas-mongodb
     restart: unless-stopped
+    # Solo accesible desde la máquina local (no expuesto a la red)
     ports:
-      - "27017:27017"
+      - "127.0.0.1:27017:27017"
     environment:
       MONGO_INITDB_DATABASE: panasecreto
     volumes:
@@ -16,7 +17,7 @@ services:
     build:
       context: .
       dockerfile: apps/backend/Dockerfile
-    container_name: panasecreto-backend
+    container_name: entrepanas-backend
     restart: unless-stopped
     ports:
       - "4000:4000"
@@ -32,7 +33,13 @@ services:
       CLOUD_NAME: ${CLOUD_NAME:-}
       CLOUDINARY_KEY: ${CLOUDINARY_KEY:-}
       CLOUDINARY_SECRET: ${CLOUDINARY_SECRET:-}
-      FOLDER_NAME: ${FOLDER_NAME:-PanaSecreto}
+      FOLDER_NAME: ${FOLDER_NAME:-EntrePanas}
+      MJ_APIKEY_PUBLIC: ${MJ_APIKEY_PUBLIC:-}
+      MJ_APIKEY_PRIVATE: ${MJ_APIKEY_PRIVATE:-}
+      MAIL_FROM_EMAIL: ${MAIL_FROM_EMAIL:-}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME:-EntrePanas}
+      APP_PUBLIC_URL: ${APP_PUBLIC_URL:-https://entrepanas.app}
+      ADMIN_PUBLIC_URL: ${ADMIN_PUBLIC_URL:-http://localhost:8080}
     depends_on:
       - mongodb
 
@@ -41,7 +48,9 @@ services:
     build:
       context: .
       dockerfile: apps/admin/Dockerfile
-    container_name: panasecreto-admin
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:4000}
+    container_name: entrepanas-admin
     restart: unless-stopped
     ports:
       - "8080:80"

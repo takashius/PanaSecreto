@@ -26,13 +26,14 @@ import {
   LockOpen,
   RotateCcw,
   Smartphone,
-  LogOut,
 } from 'lucide-react-native';
-import { theme, dashboardStyles, commonStyles } from '../../styles';
+import { theme, dashboardStyles } from '../../styles';
 import { FloatingTabBar, DashboardTab } from '../../components/common/FloatingTabBar';
 
+import type { SessionUser } from '../../types/session';
+
 interface DashboardScreenProps {
-  user?: any;
+  user?: SessionUser | null;
   onLogout?: () => void;
   onNavigateToCreateGroup?: () => void;
 }
@@ -68,8 +69,8 @@ export default function DashboardScreen({
   };
 
   const handleEnterCode = () => {
-    Alert.prompt
-      ? Alert.prompt(
+    if (Alert.prompt) {
+      Alert.prompt(
           'Código de Invitación',
           'Ingresa el código o enlace que te compartieron tus panas:',
           [
@@ -80,11 +81,13 @@ export default function DashboardScreen({
                 Alert.alert('¡Éxito!', `Te has unido al grupo con el código ${code || 'PANA-2024'}`),
             },
           ]
-        )
-      : Alert.alert(
-          'Código de Invitación',
-          'Ingresa el código que te compartieron tus panas para unirte a su intercambio.'
         );
+    } else {
+      Alert.alert(
+        'Código de Invitación',
+        'Ingresa el código que te compartieron tus panas para unirte a su intercambio.'
+      );
+    }
   };
 
   const handleProfilePress = () => {
@@ -107,7 +110,7 @@ export default function DashboardScreen({
             <PartyPopper size={20} color={theme.colors.primary} />
           </View>
           <View>
-            <Text style={dashboardStyles.headerBrandSub}>PanaSecreto</Text>
+            <Text style={dashboardStyles.headerBrandSub}>EntrePanas</Text>
             <Text style={dashboardStyles.headerTitle}>Mis Grupos</Text>
           </View>
         </View>

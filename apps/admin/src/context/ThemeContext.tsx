@@ -1,15 +1,5 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-
-export type Theme = 'light' | 'dark';
-
-export interface ThemeContextType {
-  theme: Theme;
-  isDarkMode: boolean;
-  toggleTheme: () => void;
-  toggleDarkMode: () => void;
-}
-
-export const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+import { useEffect, useState, ReactNode } from 'react';
+import { ThemeContext, type Theme } from './contexts';
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
@@ -49,12 +39,4 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
       {children}
     </ThemeContext.Provider>
   );
-};
-
-export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme debe usarse dentro de un ThemeProvider');
-  }
-  return context;
 };

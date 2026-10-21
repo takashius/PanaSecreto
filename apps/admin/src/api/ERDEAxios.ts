@@ -10,7 +10,6 @@ import {
   type ApiErrorReject,
 } from '@utils/apiAuthError';
 
-const DEBUG = import.meta.env.VITE_API_DEBUG === 'true';
 const apiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
 
 const ERDEAxios = axios.create();
