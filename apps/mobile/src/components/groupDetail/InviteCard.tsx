@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Linking, Share, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Linking, Share } from 'react-native';
+import { Alert } from '../common/AppDialog';
 import * as Clipboard from 'expo-clipboard';
 import { Send, Copy, MessageCircle, Mail, Link } from 'lucide-react-native';
 import { theme, groupDetailStyles as styles } from '../../styles';

@@ -8,10 +8,10 @@ import {
   ScrollView,
   Platform,
   ActivityIndicator,
-  Alert,
   Image,
   BackHandler,
 } from 'react-native';
+import { Alert } from '../../components/common/AppDialog';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   ArrowLeft,

@@ -6,10 +6,10 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
-  Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { Alert } from '../../components/common/AppDialog';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import {

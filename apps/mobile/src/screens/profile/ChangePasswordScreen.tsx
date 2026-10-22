@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { Alert } from '../../components/common/AppDialog';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Shield, KeyRound, RotateCcw, CircleCheck, CheckCheck, ShieldCheck } from 'lucide-react-native';
 import { theme, profileStyles as styles } from '../../styles';

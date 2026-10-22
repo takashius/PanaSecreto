@@ -1,4 +1,13 @@
 /** Datos generales de la app (mantener la versión igual a app.json) */
 export const APP_VERSION = '1.0.0';
-export const SUPPORT_EMAIL = 'entrepanas@erdesarrollo.com.ve';
-export const TERMS_URL = 'https://entrepanas.app/terminos';
+
+/** Contacto que se muestra en Perfil › Contáctanos */
+export const CONTACT = {
+  name: 'Erick Recalde',
+  role: 'Equipo EntrePanas · Erdesarrollo',
+  email: 'erick.h.recalde@gmail.com',
+  /** Formato internacional sin espacios para los enlaces (tel:, WhatsApp). Vacío = no se muestra */
+  phone: '',
+  /** Cómo se muestra el teléfono */
+  phoneLabel: '',
+};

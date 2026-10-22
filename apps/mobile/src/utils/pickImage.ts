@@ -1,4 +1,5 @@
-import { Alert } from 'react-native';
+import {  } from 'react-native';
+import { Alert } from '../components/common/AppDialog';
 import * as ImagePicker from 'expo-image-picker';
 
 /**

@@ -7,8 +7,8 @@ import {
   ScrollView,
   Switch,
   Image,
-  Alert,
 } from 'react-native';
+import { Alert } from '../../components/common/AppDialog';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   ArrowLeft,
@@ -26,9 +26,13 @@ import {
 import { theme } from '../../styles/theme';
 import { createGroupStyles } from '../../styles/createGroup.styles';
 import { CreateGroupSuccessModal } from '../../components/group/CreateGroupSuccessModal';
+import { CalendarModal } from '../../components/common/CalendarModal';
 
 import type { CreatedGroupDraft } from '../../types/session';
 import { BRAND_ISOTIPO } from '../../constants/brand';
+
+/** Código de invitación de ejemplo (mientras no hay API) */
+const mockInviteCode = () => `PANA-${Math.floor(1000 + Math.random() * 9000)}-GO`;
 
 interface CreateGroupScreenProps {
   onNavigateBack: () => void;
@@ -41,7 +45,9 @@ export const CreateGroupScreen: React.FC<CreateGroupScreenProps> = ({
 }) => {
   // Form States
   const [groupName, setGroupName] = useState('Hallacas con los Primos 🫔');
-  const [exchangeDate, setExchangeDate] = useState('24 de Diciembre, 2025');
+  // Fecha del intercambio elegida en el calendario
+  const [exchangeDate, setExchangeDate] = useState<Date | null>(null);
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [currency, setCurrency] = useState<'USD' | 'VES'>('USD');
   const [minBudget, setMinBudget] = useState('10');
   const [maxBudget, setMaxBudget] = useState('35');
@@ -77,32 +83,9 @@ export const CreateGroupScreen: React.FC<CreateGroupScreenProps> = ({
     setParticipantsCount((prev) => Math.max(3, Math.min(50, prev + delta)));
   };
 
-  // Date Selection Picker Simulation
-  const handlePickDate = () => {
-    Alert.alert(
-      '📅 Fecha del Intercambio',
-      'Selecciona el día oficial para el destape de los regalos:',
-      [
-        {
-          text: '24 de Diciembre, 2025 (Nochebuena)',
-          onPress: () => setExchangeDate('24 de Diciembre, 2025'),
-        },
-        {
-          text: '25 de Diciembre, 2025 (Navidad)',
-          onPress: () => setExchangeDate('25 de Diciembre, 2025'),
-        },
-        {
-          text: '31 de Diciembre, 2025 (Fin de Año)',
-          onPress: () => setExchangeDate('31 de Diciembre, 2025'),
-        },
-        {
-          text: '15 de Diciembre, 2025 (Parranda de Oficina)',
-          onPress: () => setExchangeDate('15 de Diciembre, 2025'),
-        },
-        { text: 'Cancelar', style: 'cancel' },
-      ]
-    );
-  };
+  const exchangeDateLabel = exchangeDate
+    ? exchangeDate.toLocaleDateString('es-VE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+    : null;
 
   // Submit Handler
   const handleCreateGroup = () => {
@@ -110,14 +93,19 @@ export const CreateGroupScreen: React.FC<CreateGroupScreenProps> = ({
       Alert.alert('Nombre requerido', 'Por favor ingresa un nombre para el grupo de panas.');
       return;
     }
+    if (!exchangeDate) {
+      Alert.alert('Falta la fecha', 'Elige en el calendario el día del intercambio.');
+      return;
+    }
 
-    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-    const newCode = `PANA-${randomSuffix}-GO`;
+    // Código de maqueta; el real lo genera el backend al crear el grupo
+    const newCode = mockInviteCode();
     setGeneratedInviteCode(newCode);
 
     onGroupCreated?.({
       name: groupName,
-      date: exchangeDate,
+      date: exchangeDateLabel ?? '',
+      exchangeAt: exchangeDate.toISOString(),
       currency,
       minBudget: noLimit ? null : minBudget,
       maxBudget: noLimit ? null : maxBudget,
@@ -240,11 +228,16 @@ export const CreateGroupScreen: React.FC<CreateGroupScreenProps> = ({
             <TouchableOpacity
               style={createGroupStyles.dateTrigger}
               activeOpacity={0.8}
-              onPress={handlePickDate}
+              onPress={() => setCalendarOpen(true)}
             >
               <View style={createGroupStyles.dateTriggerLeft}>
                 <Calendar size={18} color={theme.colors.secondaryDark} />
-                <Text style={createGroupStyles.dateTriggerText}>{exchangeDate}</Text>
+                <Text
+                  style={[createGroupStyles.dateTriggerText, !exchangeDateLabel && { color: theme.colors.outline }]}
+                  numberOfLines={1}
+                >
+                  {exchangeDateLabel ? exchangeDateLabel.charAt(0).toUpperCase() + exchangeDateLabel.slice(1) : 'Elige la fecha en el calendario'}
+                </Text>
               </View>
               <ChevronDown size={18} color={theme.colors.textSecondary} />
             </TouchableOpacity>
@@ -254,7 +247,7 @@ export const CreateGroupScreen: React.FC<CreateGroupScreenProps> = ({
         {/* Card 2: Rango de Presupuesto */}
         <View style={createGroupStyles.card}>
           <View style={createGroupStyles.cardHeaderRow}>
-            <View>
+            <View style={createGroupStyles.cardHeaderText}>
               <Text style={createGroupStyles.cardHeaderTitle}>Rango de Presupuesto</Text>
               <Text style={createGroupStyles.cardHeaderSub}>
                 Establece una guía para que nadie gaste de más (ni de menos).
@@ -555,6 +548,17 @@ export const CreateGroupScreen: React.FC<CreateGroupScreenProps> = ({
         onClose={() => setIsSuccessModalVisible(false)}
         onGoToGroups={handleFinishAndReturn}
       />
+      {calendarOpen && (
+        <CalendarModal
+          visible
+          value={exchangeDate}
+          onConfirm={(d) => {
+            setExchangeDate(d);
+            setCalendarOpen(false);
+          }}
+          onCancel={() => setCalendarOpen(false)}
+        />
+      )}
     </SafeAreaView>
   );
 };

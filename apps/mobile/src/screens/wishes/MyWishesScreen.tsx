@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { Alert } from '../../components/common/AppDialog';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Heart, Camera, Lock } from 'lucide-react-native';
 import { theme, myWishesStyles as styles } from '../../styles';

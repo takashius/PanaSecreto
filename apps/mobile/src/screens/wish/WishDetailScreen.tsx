@@ -7,10 +7,10 @@ import {
   ScrollView,
   Image,
   Linking,
-  Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { Alert } from '../../components/common/AppDialog';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ArrowLeft,

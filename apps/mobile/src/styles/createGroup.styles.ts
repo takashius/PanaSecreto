@@ -172,6 +172,11 @@ export const createGroupStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  // El texto ocupa el espacio libre para que la etiqueta de la derecha no se salga de la pantalla
+  cardHeaderText: {
+    flex: 1,
+    paddingRight: 10,
+  },
   cardHeaderTitle: {
     fontFamily: theme.typography.fontFamily.heading,
     fontSize: theme.typography.fontSize.xl,

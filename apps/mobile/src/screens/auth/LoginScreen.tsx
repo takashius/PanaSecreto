@@ -8,9 +8,9 @@ import {
   ScrollView,
   Platform,
   ActivityIndicator,
-  Alert,
   Image,
 } from 'react-native';
+import { Alert } from '../../components/common/AppDialog';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Mail, Lock, Eye, EyeOff, ShieldCheck } from 'lucide-react-native';
 import { GoogleIcon } from '../../components/common/GoogleIcon';

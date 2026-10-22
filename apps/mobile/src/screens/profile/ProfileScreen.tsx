@@ -1,5 +1,6 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image, Alert, Linking, StatusBar } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, Image, StatusBar } from 'react-native';
+import { Alert } from '../../components/common/AppDialog';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Settings,
@@ -13,11 +14,13 @@ import {
   CircleHelp,
   Shield,
   Headset,
+  FileText,
   LogOut,
 } from 'lucide-react-native';
 import { theme, profileStyles as styles } from '../../styles';
 import { BRAND_ISOTIPO } from '../../constants/brand';
-import { APP_VERSION, SUPPORT_EMAIL, TERMS_URL } from '../../constants/app';
+import { APP_VERSION } from '../../constants/app';
+import { ContactModal } from '../../components/profile/ContactModal';
 import { FloatingTabBar, type DashboardTab } from '../../components/common/FloatingTabBar';
 import { MenuRow } from '../../components/profile/MenuRow';
 import { choosePhotoSource, initialsOf } from '../../utils/pickImage';
@@ -31,6 +34,7 @@ interface ProfileScreenProps {
   onChangePassword: () => void;
   onLogout: () => void;
   onNavigateTab: (tab: DashboardTab) => void;
+  onOpenLegal: (document: 'terminos' | 'privacidad') => void;
   chatUnread?: number;
 }
 
@@ -50,9 +54,11 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   onChangePassword,
   onLogout,
   onNavigateTab,
+  onOpenLegal,
   chatUnread = 0,
 }) => {
   const insets = useSafeAreaInsets();
+  const [contactOpen, setContactOpen] = useState(false);
 
   // Al conectar la API: POST /api/user/upload (campo "photo", carpeta avatars de Cloudinary)
   const changePhoto = () =>
@@ -171,17 +177,24 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
               onPress={() => Alert.alert('¿Cómo funciona EntrePanas?', HOW_IT_WORKS)}
             />
             <MenuRow
+              icon={FileText}
+              title="Términos y condiciones"
+              subtitle="Reglas para usar EntrePanas"
+              onPress={() => onOpenLegal('terminos')}
+              divider
+            />
+            <MenuRow
               icon={Shield}
-              title="Términos y privacidad"
-              subtitle="Anonimato 100% garantizado por sistema"
-              onPress={() => void Linking.openURL(TERMS_URL)}
+              title="Política de privacidad"
+              subtitle="Qué datos guardamos y cómo los cuidamos"
+              onPress={() => onOpenLegal('privacidad')}
               divider
             />
             <MenuRow
               icon={Headset}
               title="Contáctanos"
-              subtitle="Escríbele al equipo de EntrePanas"
-              onPress={() => void Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent('Ayuda con EntrePanas')}`)}
+              subtitle="Correo y teléfono del equipo de EntrePanas"
+              onPress={() => setContactOpen(true)}
               divider
             />
           </View>
@@ -194,6 +207,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         </View>
       </ScrollView>
 
+      {contactOpen && <ContactModal visible onClose={() => setContactOpen(false)} />}
       <FloatingTabBar activeTab="perfil" onTabChange={onNavigateTab} badges={{ chats: chatUnread }} />
     </SafeAreaView>
   );

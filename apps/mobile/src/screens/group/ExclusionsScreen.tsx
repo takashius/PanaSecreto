@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { Alert } from '../../components/common/AppDialog';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, CircleHelp, ShieldCheck, TriangleAlert, ArrowLeftRight, Trash2, Ban, Plus, CircleCheck } from 'lucide-react-native';
 import { theme, wishFormStyles as form, exclusionsStyles as styles } from '../../styles';

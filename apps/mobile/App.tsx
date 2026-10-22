@@ -31,6 +31,8 @@ import ProfileScreen from './src/screens/profile/ProfileScreen';
 import EditProfileScreen from './src/screens/profile/EditProfileScreen';
 import ChangePasswordScreen from './src/screens/profile/ChangePasswordScreen';
 import { MOCK_PROFILE } from './src/mocks/profile';
+import { AppDialogHost } from './src/components/common/AppDialog';
+import LegalScreen from './src/screens/legal/LegalScreen';
 import NotificationsScreen from './src/screens/notifications/NotificationsScreen';
 import JoinGroupScreen from './src/screens/group/JoinGroupScreen';
 import ExclusionsScreen from './src/screens/group/ExclusionsScreen';
@@ -43,7 +45,7 @@ import type { AppNotification, ProfileView, ChatMessage, ChatRoomSummary, GroupD
 import { theme } from './src/styles/theme';
 import type { SessionUser } from './src/types/session';
 
-type Screen = 'login' | 'register' | 'recover' | 'dashboard' | 'createGroup' | 'groupDetail' | 'wishDetail' | 'myWishes' | 'wishForm' | 'chats' | 'chatRoom' | 'profile' | 'editProfile' | 'changePassword' | 'notifications' | 'joinGroup' | 'exclusions' | 'editGroup' | 'reveal';
+type Screen = 'login' | 'register' | 'recover' | 'dashboard' | 'createGroup' | 'groupDetail' | 'wishDetail' | 'myWishes' | 'wishForm' | 'chats' | 'chatRoom' | 'profile' | 'editProfile' | 'changePassword' | 'notifications' | 'joinGroup' | 'exclusions' | 'editGroup' | 'reveal' | 'legal';
 
 export default function App() {
   // Pila de navegación para soportar el botón de atrás nativo de Android
@@ -60,6 +62,7 @@ export default function App() {
   const [wishSource, setWishSource] = useState<'giver' | 'owner'>('giver');
   // Perfil (maqueta): se completa con los datos de la sesión cuando existen
   const [profile, setProfile] = useState<ProfileView>(MOCK_PROFILE);
+  const [legalDoc, setLegalDoc] = useState<'terminos' | 'privacidad'>('terminos');
 
   // Notificaciones (no son en tiempo real)
   const [notifications, setNotifications] = useState<AppNotification[]>(MOCK_NOTIFICATIONS);
@@ -359,6 +362,10 @@ export default function App() {
         onProfileChange={setProfile}
         onEditProfile={() => navigateTo('editProfile')}
         onChangePassword={() => navigateTo('changePassword')}
+        onOpenLegal={(doc) => {
+          setLegalDoc(doc);
+          navigateTo('legal');
+        }}
         onLogout={() => {
           setSessionUser(null);
           setScreenHistory(['login']);
@@ -380,6 +387,8 @@ export default function App() {
     );
   } else if (currentScreen === 'changePassword') {
     content = <ChangePasswordScreen onDone={goBack} onCancel={goBack} />;
+  } else if (currentScreen === 'legal') {
+    content = <LegalScreen document={legalDoc} onNavigateBack={goBack} />;
   } else if (currentScreen === 'notifications') {
     content = (
       <NotificationsScreen
@@ -505,6 +514,7 @@ export default function App() {
     <SafeAreaProvider style={{ flex: 1, backgroundColor: theme.colors.surface }}>
       <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
       {content}
+      <AppDialogHost />
     </SafeAreaProvider>
   );
 }

@@ -5,8 +5,8 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
-  Alert,
 } from 'react-native';
+import { Alert } from '../../components/common/AppDialog';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, RadialGradient, Stop, Rect } from 'react-native-svg';
 import {
@@ -93,25 +93,7 @@ export default function DashboardScreen({
       onJoinGroup();
       return;
     }
-    if (Alert.prompt) {
-      Alert.prompt(
-          'Código de Invitación',
-          'Ingresa el código o enlace que te compartieron tus panas:',
-          [
-            { text: 'Cancelar', style: 'cancel' },
-            {
-              text: 'Unirme',
-              onPress: (code?: string) =>
-                Alert.alert('¡Éxito!', `Te has unido al grupo con el código ${code || 'PANA-2024'}`),
-            },
-          ]
-        );
-    } else {
-      Alert.alert(
-        'Código de Invitación',
-        'Ingresa el código que te compartieron tus panas para unirte a su intercambio.'
-      );
-    }
+    Alert.alert('Código de invitación', 'Ingresa el código que te compartieron tus panas para unirte a su intercambio.');
   };
 
   const handleProfilePress = () => {

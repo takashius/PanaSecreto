@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Image, Alert, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Image, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import { Alert } from '../../components/common/AppDialog';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, CircleHelp, Sparkles, Check, CalendarDays, Banknote, MapPin, Users, ShieldCheck, Pencil, Search } from 'lucide-react-native';
 import { theme, wishFormStyles as form, joinGroupStyles as styles, groupDetailStyles } from '../../styles';

@@ -422,3 +422,16 @@ Reemplaza la paleta anterior (Morado Noche `#1E1338`, Amarillo Araguaney `#F7A80
 - **Detalle del grupo:** el menú, «Editar» del lugar y «Gestionar» de exclusiones ya navegan. Eliminar y salir piden confirmación y quitan el grupo de todas las listas.
 - **Tipos y mocks:** `AppNotification`, `JoinPreview`, `GroupReveal`, `exchangeAt` en el grupo, IDs en las exclusiones, `mocks/notifications.ts` y el grupo revelado «Los de la Promo UCAB».
 - **Pendiente en el backend:** modelo y endpoints de notificaciones (`GET /api/notifications`, marcar leídas), vista previa por código (`GET /api/group/invite/:code`), exclusiones por ID, revelación (quién me regaló y a quién le regalé) solo cuando el grupo está REVEALED, salir del grupo.
+
+### 2026-10-22 — App móvil: ajustes de la maqueta
+
+- **Calendario propio** (`components/common/CalendarModal.tsx`): mes en español, semana de lunes a domingo, días pasados deshabilitados, hoy marcado y el día elegido en amarillo. Se usa en Crear grupo (reemplaza el modal de fechas fijas; la fecha ahora es obligatoria y se guarda también como ISO en `CreatedGroupDraft.exchangeAt`) y en Editar grupo.
+- **Selector de hora** (`components/common/TimePickerModal.tsx`): columnas de hora, minutos de 5 en 5 y AM/PM, con vista previa grande. Se usa en Editar grupo; la fecha y la hora se eligen tocando los campos, sin escribir.
+- **Crear grupo › Rango de presupuesto:** la etiqueta «Opcional» se salía de la pantalla porque el texto no cedía espacio; se corrigió (`cardHeaderText` con `flex: 1`).
+- **Alertas y confirmaciones propias** (`components/common/AppDialog.tsx`): `Alert.alert(título, mensaje, botones)` con la misma firma que React Native, pero con el diseño de la app:
+  - Mascota arriba (advertencia roja en confirmaciones destructivas), botón principal amarillo, cancelar en gris y destructivo en rojo.
+  - Hasta 2 botones van en fila; con más, se apilan (menú de foto).
+  - Usa una cola para que los diálogos encadenados no se pisen. El host `<AppDialogHost />` va montado en `App.tsx`.
+  - Las 17 pantallas y componentes que usaban el `Alert` nativo ahora importan este. Se quitó el `Alert.prompt` (solo iOS) de Mis Grupos.
+- **Términos y condiciones** y **Política de privacidad**, por separado y dentro de la app (`screens/legal/LegalScreen.tsx`, textos en `constants/legal.ts`). Son un borrador base que conviene revisar con un abogado antes de publicar.
+- **Contáctanos:** hoja inferior (`components/profile/ContactModal.tsx`) con nombre, correo y teléfono del contacto (`constants/app.CONTACT`); toca para escribir, llamar o abrir WhatsApp. El teléfono queda vacío hasta que se complete.

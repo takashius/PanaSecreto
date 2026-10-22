@@ -12,7 +12,10 @@ export interface SessionUser {
 
 export interface CreatedGroupDraft {
   name: string;
+  /** Fecha legible, p. ej. "jueves, 24 de diciembre de 2026" */
   date: string;
+  /** ISO 8601 elegido en el calendario */
+  exchangeAt: string;
   currency: 'USD' | 'VES';
   minBudget: string | null;
   maxBudget: string | null;

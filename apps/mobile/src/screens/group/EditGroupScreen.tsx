@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, KeyboardAvoidingView, Platform, Linking } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Linking } from 'react-native';
+import { Alert } from '../../components/common/AppDialog';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, CalendarDays, Clock, Minus, Plus, MapPin, Map, Lock, TriangleAlert, Trash2, CircleCheck } from 'lucide-react-native';
 import { theme, wishFormStyles as form, createGroupStyles } from '../../styles';
 import { exchangeLabels } from '../../utils/format';
+import { CalendarModal } from '../../components/common/CalendarModal';
+import { TimePickerModal } from '../../components/common/TimePickerModal';
 import type { GroupDetailView } from '../../types/session';
 
 const EMOJIS = ['🎄', '🥂', '🎁', '🎓', '🎾', '🏠', '💼', '⚽', '🎉', '🫔'];
@@ -11,34 +14,10 @@ const MAX_NAME = 60;
 const MAX_NOTE = 300;
 const pad = (n: number) => String(n).padStart(2, '0');
 
-/** ISO → "24/12/2026" y "20:00" */
-function splitIso(iso: string) {
-  const d = new Date(iso);
-  return { date: `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`, time: `${pad(d.getHours())}:${pad(d.getMinutes())}` };
+/** Fecha local → ISO con el desfase de Venezuela (UTC-4), como lo guarda el backend */
+function toVenezuelaIso(d: Date): string {
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00-04:00`;
 }
-
-/** "24/12/2026" + "20:00" → ISO en hora de Venezuela (UTC-4), o null si no es válido */
-function joinIso(date: string, time: string): string | null {
-  const dm = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(date.trim());
-  const tm = /^(\d{1,2}):(\d{2})$/.exec(time.trim());
-  if (!dm || !tm) return null;
-  const [, dd, mm, yyyy] = dm;
-  const [, hh, mi] = tm;
-  if (+mm < 1 || +mm > 12 || +dd < 1 || +dd > 31 || +hh > 23 || +mi > 59) return null;
-  const iso = `${yyyy}-${mm}-${dd}T${pad(+hh)}:${mi}:00-04:00`;
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) || d.getDate() !== +dd ? null : iso;
-}
-
-/** Formatea mientras se escribe: "24122026" → "24/12/2026" */
-const maskDate = (v: string) => {
-  const d = v.replace(/\D/g, '').slice(0, 8);
-  return [d.slice(0, 2), d.slice(2, 4), d.slice(4, 8)].filter(Boolean).join('/');
-};
-const maskTime = (v: string) => {
-  const d = v.replace(/\D/g, '').slice(0, 4);
-  return d.length > 2 ? `${d.slice(0, 2)}:${d.slice(2)}` : d;
-};
 const toNumber = (v: string) => (v.trim() ? Number(v.replace(',', '.')) : null);
 
 interface EditGroupScreenProps {
@@ -52,12 +31,12 @@ interface EditGroupScreenProps {
 export const EditGroupScreen: React.FC<EditGroupScreenProps> = ({ group, onSave, onDelete, onCancel }) => {
   const insets = useSafeAreaInsets();
   const locked = group.status !== 'WAITING';
-  const initial = splitIso(group.exchangeAt);
 
   const [emoji, setEmoji] = useState(group.emoji);
   const [name, setName] = useState(group.name);
-  const [date, setDate] = useState(initial.date);
-  const [time, setTime] = useState(initial.time);
+  // Fecha y hora del intercambio (se eligen con el calendario y el selector de hora)
+  const [when, setWhen] = useState(() => new Date(group.exchangeAt));
+  const [picker, setPicker] = useState<'date' | 'time' | null>(null);
   const [currency, setCurrency] = useState(group.currency);
   const [min, setMin] = useState(group.budgetMin != null ? String(group.budgetMin) : '');
   const [max, setMax] = useState(group.budgetMax != null ? String(group.budgetMax) : '');
@@ -67,12 +46,14 @@ export const EditGroupScreen: React.FC<EditGroupScreenProps> = ({ group, onSave,
   const [note, setNote] = useState(group.note ?? '');
   const [submitted, setSubmitted] = useState(false);
 
-  const iso = joinIso(date, time);
+  const iso = toVenezuelaIso(when);
+  const whenLabels = exchangeLabels(iso);
+  const [now] = useState(() => Date.now());
   const minN = toNumber(min);
   const maxN = toNumber(max);
   const errors = {
     name: name.trim().length < 3 ? 'El nombre debe tener al menos 3 letras.' : null,
-    date: !iso ? 'Usa el formato DD/MM/AAAA y una hora válida (ej. 20:00).' : null,
+    date: when.getTime() < now ? 'La fecha del intercambio ya pasó. Elige una fecha futura.' : null,
     budget:
       (minN != null && (Number.isNaN(minN) || minN < 0)) || (maxN != null && (Number.isNaN(maxN) || maxN < 0))
         ? 'Escribe montos válidos.'
@@ -85,7 +66,7 @@ export const EditGroupScreen: React.FC<EditGroupScreenProps> = ({ group, onSave,
 
   const handleSave = () => {
     setSubmitted(true);
-    if (hasErrors || !iso) return;
+    if (hasErrors) return;
     const labels = exchangeLabels(iso);
     // Al conectar la API: PATCH /api/group/:id (el backend valida con membersVersion)
     onSave({
@@ -158,30 +139,28 @@ export const EditGroupScreen: React.FC<EditGroupScreenProps> = ({ group, onSave,
           <View style={form.card}>
             <Text style={form.label}>Fecha y hora del intercambio</Text>
             <View style={{ flexDirection: 'row', gap: 10 }}>
-              <View style={[form.inputRow, { flex: 3 }, submitted && errors.date ? form.inputError : null]}>
-                <CalendarDays size={20} color={theme.colors.textMuted} strokeWidth={2.2} />
-                <TextInput
-                  style={form.inputFlex}
-                  value={date}
-                  onChangeText={(v) => setDate(maskDate(v))}
-                  placeholder="DD/MM/AAAA"
-                  placeholderTextColor={theme.colors.outline}
-                  keyboardType="number-pad"
-                />
-              </View>
-              <View style={[form.inputRow, { flex: 2 }, submitted && errors.date ? form.inputError : null]}>
-                <Clock size={20} color={theme.colors.textMuted} strokeWidth={2.2} />
-                <TextInput
-                  style={form.inputFlex}
-                  value={time}
-                  onChangeText={(v) => setTime(maskTime(v))}
-                  placeholder="20:00"
-                  placeholderTextColor={theme.colors.outline}
-                  keyboardType="number-pad"
-                />
-              </View>
+              <TouchableOpacity
+                style={[form.inputRow, { flex: 3 }, submitted && errors.date ? form.inputError : null]}
+                onPress={() => setPicker('date')}
+                activeOpacity={0.8}
+                accessibilityLabel="Elegir fecha"
+              >
+                <CalendarDays size={20} color={theme.colors.secondaryDark} strokeWidth={2.2} />
+                <Text style={form.inputFlex}>{whenLabels.dateLabel}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[form.inputRow, { flex: 2 }]}
+                onPress={() => setPicker('time')}
+                activeOpacity={0.8}
+                accessibilityLabel="Elegir hora"
+              >
+                <Clock size={20} color={theme.colors.secondaryDark} strokeWidth={2.2} />
+                <Text style={form.inputFlex}>{whenLabels.timeLabel}</Text>
+              </TouchableOpacity>
             </View>
-            {iso && <Text style={form.tipText}>Será el {exchangeLabels(iso).dateLong} a las {exchangeLabels(iso).timeLabel}.</Text>}
+            <Text style={form.tipText}>
+              Será el {whenLabels.dateLong} a las {whenLabels.timeLabel}.
+            </Text>
             {submitted && errors.date && <Text style={form.errorText}>{errors.date}</Text>}
           </View>
 
@@ -340,6 +319,29 @@ export const EditGroupScreen: React.FC<EditGroupScreenProps> = ({ group, onSave,
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
+      {picker === 'date' && (
+        <CalendarModal
+          visible
+          value={when}
+          onConfirm={(d) => {
+            setWhen((w) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), w.getHours(), w.getMinutes()));
+            setPicker(null);
+          }}
+          onCancel={() => setPicker(null)}
+        />
+      )}
+      {picker === 'time' && (
+        <TimePickerModal
+          visible
+          hours={when.getHours()}
+          minutes={when.getMinutes()}
+          onConfirm={(h, m) => {
+            setWhen((w) => new Date(w.getFullYear(), w.getMonth(), w.getDate(), h, m));
+            setPicker(null);
+          }}
+          onCancel={() => setPicker(null)}
+        />
+      )}
     </SafeAreaView>
   );
 };
