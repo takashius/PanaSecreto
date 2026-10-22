@@ -26,6 +26,7 @@ RUN pnpm install --frozen-lockfile --trust-lockfile
 COPY packages/tsconfig ./packages/tsconfig
 COPY packages/ui-tokens ./packages/ui-tokens
 COPY packages/shared ./packages/shared
+COPY assets ./assets
 COPY apps/admin ./apps/admin
 
 # Compilar paquetes compartidos requeridos

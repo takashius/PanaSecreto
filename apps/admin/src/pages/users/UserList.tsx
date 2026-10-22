@@ -123,7 +123,7 @@ export default function UserList() {
           </div>
         ),
         filterIcon: (filtered: boolean) => (
-          <SearchOutlined style={{ color: filtered ? '#1E1338' : undefined }} />
+          <SearchOutlined style={{ color: filtered ? '#0B2D5B' : undefined }} />
         ),
         render: (_: unknown, record: ManagedUser) => (
           <div className="flex items-center gap-3">

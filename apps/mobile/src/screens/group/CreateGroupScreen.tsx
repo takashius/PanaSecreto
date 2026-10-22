@@ -28,6 +28,7 @@ import { createGroupStyles } from '../../styles/createGroup.styles';
 import { CreateGroupSuccessModal } from '../../components/group/CreateGroupSuccessModal';
 
 import type { CreatedGroupDraft } from '../../types/session';
+import { BRAND_ISOTIPO } from '../../constants/brand';
 
 interface CreateGroupScreenProps {
   onNavigateBack: () => void;
@@ -164,7 +165,7 @@ export const CreateGroupScreen: React.FC<CreateGroupScreenProps> = ({
 
           <View style={createGroupStyles.headerAvatarRing}>
             <Image
-              source={require('../../../assets/icon.png')}
+              source={BRAND_ISOTIPO}
               style={createGroupStyles.headerAvatarImg}
             />
           </View>

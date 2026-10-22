@@ -23,9 +23,9 @@ export const ThemeContext = createContext<ThemeContextType | undefined>(undefine
 
 export const DEFAULT_SYSTEM_CONFIG: SystemConfigData = {
   appName: 'EntrePanas',
-  primaryColor: '#1E1338',
-  secondaryColor: '#F7A800',
-  accentColor: '#1D84B5',
+  primaryColor: '#0B2D5B',
+  secondaryColor: '#FFC107',
+  accentColor: '#00B4D8',
   logoUrl: '',
   faviconUrl: '',
 };

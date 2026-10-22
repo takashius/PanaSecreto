@@ -484,7 +484,7 @@ Navegación: un historial de pantallas hecho a mano en `App.tsx`, con soporte de
   - Esquemas Zod: `CreateGroupSchema`, `UpdateGroupSchema`, `JoinGroupSchema`, `SetExclusionsSchema`, `InviteByEmailSchema`, `CreateWishSchema`, `UpdateWishSchema` (con `removeImage`), `LoginSchema`, chat.
   - Tipos de respuesta: `GroupSummary`, `AssignmentView`, `Wish`…
   - El backend valida con estos mismos esquemas, y mobile podrá usarlos en sus formularios.
-- **`@panasecreto/ui-tokens`:** paleta oficial (Morado Noche, Amarillo Araguaney, Azul Caribe, Rojo Guacamaya…), espaciado, tipografía y radios.
+- **`@panasecreto/ui-tokens`:** paleta oficial de la identidad 2026 (Azul Marino `#0B2D5B`, Amarillo Pana `#FFC107`, Celeste Caribe `#00B4D8`, Coral `#FF5A3D`, Crema `#F8F7F2`), tipografía Fredoka + Nunito, espaciado y radios.
 
 ---
 

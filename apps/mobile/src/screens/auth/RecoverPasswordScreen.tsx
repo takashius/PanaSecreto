@@ -37,6 +37,7 @@ import {
   authStyles,
 } from '../../styles';
 import { InputOTP } from '../../components/common/InputOtp';
+import { BRAND_ISOTIPO } from '../../constants/brand';
 
 interface RecoverPasswordScreenProps {
   onNavigateToLogin?: () => void;
@@ -250,7 +251,7 @@ export default function RecoverPasswordScreen({
               <View style={authStyles.reassuranceCard}>
                 <View style={authStyles.reassuranceMascotWrapper}>
                   <Image
-                    source={require('../../../assets/icon.png')}
+                    source={BRAND_ISOTIPO}
                     style={authStyles.reassuranceMascotImage}
                   />
                 </View>
@@ -377,7 +378,7 @@ export default function RecoverPasswordScreen({
               <View style={authStyles.reassuranceCard}>
                 <View style={authStyles.reassuranceMascotWrapper}>
                   <Image
-                    source={require('../../../assets/icon.png')}
+                    source={BRAND_ISOTIPO}
                     style={authStyles.reassuranceMascotImage}
                   />
                 </View>

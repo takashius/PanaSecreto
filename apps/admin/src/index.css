@@ -6,18 +6,18 @@
   body {
     margin: 0;
     min-height: 100vh;
-    background-color: #F8F9FA;
-    color: #1C1B24;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: #F8F7F2;
+    color: #13213A;
+    font-family: 'Nunito', system-ui, -apple-system, sans-serif;
   }
 
   html.dark body {
-    background-color: #12111A;
-    color: #F8F9FA;
+    background-color: #06152B;
+    color: #F8F7F2;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Outfit', 'Inter', system-ui, sans-serif;
-    letter-spacing: -0.025em;
+    font-family: 'Fredoka', 'Nunito', system-ui, sans-serif;
+    letter-spacing: -0.01em;
   }
 }

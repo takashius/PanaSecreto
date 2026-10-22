@@ -2,50 +2,59 @@ import { spacing, radii } from '@panasecreto/ui-tokens';
 
 /**
  * Paleta y tokens centralizados de EntrePanas Mobile
- * Sincronizados con @panasecreto/ui-tokens y Stitch DESIGN.md
+ * Sincronizados con @panasecreto/ui-tokens (identidad visual en docs/identidad/entrepanas)
  */
 export const theme = {
   colors: {
-    // Colores Principales de Marca
-    primary: '#1E1338',             // Morado Noche
-    primaryLight: '#2D1D54',
-    primaryContainer: '#20153A',
-    onPrimaryContainer: '#8A7DA9',
+    // Colores Principales de Marca (identidad visual 2026)
+    primary: '#0B2D5B',             // Azul Marino
+    primaryLight: '#1A4580',
+    primaryContainer: '#0E3566',
+    onPrimaryContainer: '#9FB8DA',
 
-    secondary: '#F7A800',           // Amarillo Araguaney / Naranja oficial del manual
-    brandOrange: '#F7A800',         // Naranja Marca EntrePanas ("Panas")
-    secondaryLight: '#FFBF33',
-    secondaryDark: '#815600',
-    secondaryContainer: '#FEAE10',
-    onSecondaryContainer: '#1E1338',
+    secondary: '#FFC107',           // Amarillo Pana
+    brandOrange: '#FFC107',         // Amarillo de "Panas" en el logotipo (nombre histórico del token)
+    secondaryLight: '#FFD54F',
+    secondaryDark: '#8A6400',       // Amarillo oscuro para texto sobre fondos claros
+    secondaryContainer: '#FFC93C',
+    onSecondaryContainer: '#0B2D5B',
 
-    accent: '#1D84B5',              // Azul Caribe
-    accentLight: '#35A3D6',
-    tertiaryContainer: '#2B8CBD',
+    accent: '#00B4D8',              // Celeste Caribe
+    accentLight: '#48CAE4',
+    accentDark: '#0090AD',          // Celeste para texto sobre fondos claros
+    accentContainer: '#E0F6FB',
+    tertiaryContainer: '#0096C7',
 
-    danger: '#D62828',              // Rojo Guacamaya / Error
+    coral: '#FF5A3D',               // Coral Guacamaya (realces, badges)
+    coralContainer: '#FFE1DA',
+
+    danger: '#D62828',              // Rojo / Error
     dangerContainer: '#FFDAD6',
     onDangerContainer: '#93000A',
     success: '#2A9D8F',
 
-    // Superficies y Canvas (Stitch DESIGN.md)
-    background: '#FCF8FF',          // Surface base
-    surface: '#FCF8FF',
-    surfaceCard: '#FFFFFF',         // Container lowest
-    surfaceContainerLow: '#F6F1FF',
-    surfaceContainer: '#F0ECF9',
-    surfaceContainerHigh: '#EAE6F3',
-    surfaceContainerHighest: '#E5E0ED',
-    surfaceVariant: '#E5E0ED',
-    secondaryFixed: '#FFDDB1',
+    // Superficies y Canvas (base crema)
+    background: '#F8F7F2',          // Crema
+    surface: '#F8F7F2',
+    surfaceCard: '#FFFFFF',
+    surfaceContainerLow: '#F3F1EA',
+    surfaceContainer: '#EEEBE2',
+    surfaceContainerHigh: '#E8E5DB',
+    surfaceContainerHighest: '#E2DED3',
+    surfaceVariant: '#E2DED3',
+    secondaryFixed: '#FFE8A3',
+    secondarySoft: '#FFF8E1',       // Fondo de notas y avisos cálidos
+    secondaryBorder: '#C79100',     // Borde inferior del botón amarillo
+    whatsapp: '#128C7E',
+    whatsappContainer: '#E6F7EE',
 
     // Textos y Contraste
-    textDark: '#1C1B24',            // On-surface (Carbón Lente)
-    textMuted: '#6C757D',           // On-surface variant
-    textSecondary: '#49454E',
-    outline: '#7A757E',
-    outlineVariant: '#CAC4CE',
-    border: '#E2E8F0',
+    textDark: '#13213A',            // Tinta Marina
+    textMuted: '#5B6B80',
+    textSecondary: '#3E4C61',
+    outline: '#77849A',
+    outlineVariant: '#C9CFD9',
+    border: '#E3E1D8',
     white: '#FFFFFF',
   },
 
@@ -73,6 +82,17 @@ export const theme = {
   },
 
   typography: {
+    // Familias cargadas en App.tsx con @expo-google-fonts (Fredoka para titulares, Nunito para texto)
+    fontFamily: {
+      heading: 'Fredoka_700Bold',
+      headingSemibold: 'Fredoka_600SemiBold',
+      body: 'Nunito_400Regular',
+      bodyMedium: 'Nunito_500Medium',
+      bodySemibold: 'Nunito_600SemiBold',
+      bodyBold: 'Nunito_700Bold',
+      bodyExtrabold: 'Nunito_800ExtraBold',
+      bodyBlack: 'Nunito_900Black',
+    },
     fontSize: {
       xs: 11,
       sm: 13,
@@ -96,21 +116,21 @@ export const theme = {
 
   shadows: {
     card: {
-      shadowColor: '#1E1338',
+      shadowColor: '#0B2D5B',
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.08,
       shadowRadius: 16,
       elevation: 4,
     },
     button: {
-      shadowColor: '#F7A800',
+      shadowColor: '#FFC107',
       shadowOffset: { width: 0, height: 3 },
       shadowOpacity: 0.35,
       shadowRadius: 8,
       elevation: 3,
     },
     subtle: {
-      shadowColor: '#1E1338',
+      shadowColor: '#0B2D5B',
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.04,
       shadowRadius: 6,

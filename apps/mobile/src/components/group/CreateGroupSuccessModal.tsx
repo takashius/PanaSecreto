@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Copy, Check, MessageCircle, Link as LinkIcon } from 'lucide-react-native';
 import { theme } from '../../styles/theme';
 import { createGroupStyles } from '../../styles/createGroup.styles';
+import { BRAND_ISOTIPO } from '../../constants/brand';
 
 interface CreateGroupSuccessModalProps {
   visible: boolean;
@@ -79,7 +80,7 @@ export const CreateGroupSuccessModal: React.FC<CreateGroupSuccessModalProps> = (
 
           {/* Mascota Guaca con sobre */}
           <Image
-            source={require('../../../assets/icon.png')}
+            source={BRAND_ISOTIPO}
             style={createGroupStyles.modalMascotImage}
             accessibilityLabel="Mascota Guaca de EntrePanas"
           />

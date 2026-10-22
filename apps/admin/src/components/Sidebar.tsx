@@ -43,8 +43,8 @@ export default function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
     [location.pathname]
   );
 
-  const sidebarBg = isDarkMode ? '#140C26' : config.primaryColor;
-  const sidebarBorder = isDarkMode ? '#262436' : 'rgba(255, 255, 255, 0.1)';
+  const sidebarBg = isDarkMode ? '#071E3D' : config.primaryColor;
+  const sidebarBorder = isDarkMode ? '#16325A' : 'rgba(255, 255, 255, 0.1)';
 
   return (
     <>

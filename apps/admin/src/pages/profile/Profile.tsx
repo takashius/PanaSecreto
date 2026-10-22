@@ -194,7 +194,7 @@ export default function Profile() {
                   className="border-4 border-white dark:border-gray-900 shadow-md font-bold text-2xl flex items-center justify-center transition-transform group-hover:scale-102"
                   style={{
                     backgroundColor: config.secondaryColor,
-                    color: '#1E1338',
+                    color: '#0B2D5B',
                   }}
                 />
 

@@ -1,0 +1,182 @@
+[
+ {
+  "pieza": "logo-principal",
+  "carpeta": "logos",
+  "tamano": [
+   750,
+   698
+  ],
+  "transparente": [
+   736,
+   685
+  ]
+ },
+ {
+  "pieza": "mascota",
+  "carpeta": "mascota",
+  "tamano": [
+   625,
+   511
+  ],
+  "transparente": [
+   613,
+   496
+  ]
+ },
+ {
+  "pieza": "logotipo-con-lema",
+  "carpeta": "logos",
+  "tamano": [
+   750,
+   204
+  ],
+  "transparente": [
+   736,
+   191
+  ]
+ },
+ {
+  "pieza": "logotipo",
+  "carpeta": "logos",
+  "tamano": [
+   750,
+   167
+  ],
+  "transparente": [
+   736,
+   152
+  ]
+ },
+ {
+  "pieza": "lema",
+  "carpeta": "logos",
+  "tamano": [
+   618,
+   50
+  ],
+  "transparente": [
+   548,
+   35
+  ]
+ },
+ {
+  "pieza": "logo-horizontal",
+  "carpeta": "logos",
+  "tamano": [
+   606,
+   184
+  ],
+  "transparente": [
+   591,
+   170
+  ]
+ },
+ {
+  "pieza": "logo-fondo-oscuro",
+  "carpeta": "logos",
+  "tamano": [
+   651,
+   248
+  ],
+  "transparente": [
+   635,
+   232
+  ]
+ },
+ {
+  "pieza": "isotipo-app",
+  "carpeta": "iconos",
+  "tamano": [
+   205,
+   195
+  ],
+  "transparente": [
+   189,
+   179
+  ]
+ },
+ {
+  "pieza": "isotipo-monocromo",
+  "carpeta": "iconos",
+  "tamano": [
+   205,
+   195
+  ],
+  "transparente": [
+   189,
+   180
+  ]
+ },
+ {
+  "pieza": "favicon",
+  "carpeta": "iconos",
+  "tamano": [
+   147,
+   152
+  ],
+  "transparente": [
+   133,
+   137
+  ]
+ },
+ {
+  "pieza": "tipografia-muestra",
+  "carpeta": "tipografia",
+  "tamano": [
+   367,
+   140
+  ],
+  "transparente": [
+   352,
+   124
+  ]
+ },
+ {
+  "pieza": "aplicacion-icono-app",
+  "carpeta": "aplicaciones",
+  "tamano": [
+   141,
+   141
+  ],
+  "transparente": [
+   127,
+   129
+  ]
+ },
+ {
+  "pieza": "aplicacion-sticker",
+  "carpeta": "aplicaciones",
+  "tamano": [
+   150,
+   152
+  ],
+  "transparente": [
+   135,
+   140
+  ]
+ },
+ {
+  "pieza": "aplicacion-franela",
+  "carpeta": "aplicaciones",
+  "tamano": [
+   206,
+   202
+  ],
+  "transparente": [
+   199,
+   188
+  ]
+ },
+ {
+  "pieza": "aplicacion-taza",
+  "carpeta": "aplicaciones",
+  "tamano": [
+   149,
+   147
+  ],
+  "transparente": [
+   137,
+   133
+  ]
+ }
+]

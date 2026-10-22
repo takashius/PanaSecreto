@@ -59,6 +59,8 @@ const config = {
     fromName: process.env.MAIL_FROM_NAME?.trim() || 'EntrePanas',
     mailjetPublicKey: process.env.MJ_APIKEY_PUBLIC?.trim() || '',
     mailjetPrivateKey: process.env.MJ_APIKEY_PRIVATE?.trim() || '',
+    // URL pública del logo de los correos; por defecto, el que sube `pnpm mail:logo` a Cloudinary
+    logoUrl: process.env.MAIL_LOGO_URL?.trim() || '',
   },
   uploads: {
     // 'cloudinary' sube de verdad; 'mock' simula la subida (tests y desarrollo sin credenciales)

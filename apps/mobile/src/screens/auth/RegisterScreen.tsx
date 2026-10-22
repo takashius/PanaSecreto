@@ -39,6 +39,7 @@ import {
 } from '../../styles';
 
 import type { SessionUser } from '../../types/session';
+import { BRAND_ISOTIPO } from '../../constants/brand';
 
 interface RegisterScreenProps {
   onNavigateToLogin?: () => void;
@@ -183,7 +184,7 @@ export default function RegisterScreen({
           {/* 2. Avatar con Mascota (Guacamaya) y Botón de Foto */}
           <View style={authStyles.registerAvatarWrapper}>
             <Image
-              source={require('../../../assets/icon.png')}
+              source={BRAND_ISOTIPO}
               style={authStyles.registerAvatarImage}
             />
             <TouchableOpacity

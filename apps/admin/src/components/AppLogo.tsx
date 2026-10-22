@@ -1,4 +1,4 @@
-import { Sparkles } from 'lucide-react';
+import isotipo from '../../../../assets/iconos/isotipo-app.png';
 import { useConfigContext } from '../context/useConfigContext';
 
 interface AppLogoProps {
@@ -8,6 +8,7 @@ interface AppLogoProps {
 
 export default function AppLogo({ className, variant = 'dark' }: AppLogoProps) {
   const { config } = useConfigContext();
+  // Sin logo personalizado se usa el isotipo oficial (assets/iconos en la raíz del monorepo)
   const isDarkBg = variant === 'dark';
 
   return (
@@ -19,15 +20,7 @@ export default function AppLogo({ className, variant = 'dark' }: AppLogoProps) {
           className="h-9 w-auto max-w-[130px] object-contain rounded-md"
         />
       ) : (
-        <div
-          className="w-9 h-9 rounded-xl flex items-center justify-center shadow-xs shrink-0 border"
-          style={{
-            backgroundColor: isDarkBg ? 'rgba(255, 255, 255, 0.12)' : config.primaryColor,
-            borderColor: isDarkBg ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
-          }}
-        >
-          <Sparkles className="w-5 h-5" style={{ color: config.secondaryColor }} />
-        </div>
+        <img src={isotipo} alt={config.appName} className="w-9 h-9 shrink-0 object-contain" />
       )}
       <div className="flex flex-col min-w-0">
         <span

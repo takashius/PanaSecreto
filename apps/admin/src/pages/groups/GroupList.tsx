@@ -52,7 +52,7 @@ export default function GroupList() {
             </Space>
           </div>
         ),
-        filterIcon: (filtered: boolean) => <SearchOutlined style={{ color: filtered ? '#1E1338' : undefined }} />,
+        filterIcon: (filtered: boolean) => <SearchOutlined style={{ color: filtered ? '#0B2D5B' : undefined }} />,
         render: (_: unknown, record: AdminGroupRow) => (
           <Link to={`/groups/${record.id}`} className="flex items-center gap-3 group">
             <span className="w-9 h-9 rounded-xl bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center text-lg shrink-0">

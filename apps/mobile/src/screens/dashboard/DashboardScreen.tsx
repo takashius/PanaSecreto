@@ -32,16 +32,27 @@ import { FloatingTabBar, DashboardTab } from '../../components/common/FloatingTa
 
 import type { SessionUser } from '../../types/session';
 
+const TAB_TITLES: Record<DashboardTab, string> = {
+  grupos: 'Grupos',
+  chats: 'Chats',
+  deseos: 'Mis deseos',
+  perfil: 'Perfil',
+};
+import { BRAND_ISOTIPO } from '../../constants/brand';
+
 interface DashboardScreenProps {
   user?: SessionUser | null;
   onLogout?: () => void;
   onNavigateToCreateGroup?: () => void;
+  /** Abre el detalle del grupo; 'sobre' entra directo a la pestaña Mi sobre */
+  onOpenGroup?: (groupId: string, tab?: 'resumen' | 'sobre') => void;
 }
 
 export default function DashboardScreen({
   user,
   onLogout,
   onNavigateToCreateGroup,
+  onOpenGroup,
 }: DashboardScreenProps) {
   const insets = useSafeAreaInsets();
   const [selectedSegment, setSelectedSegment] = useState<'creados' | 'participo'>('creados');
@@ -50,12 +61,8 @@ export default function DashboardScreen({
   const fullName = user?.fullname || user?.identifier || 'Carlos';
   const firstName = fullName.split(' ')[0] || 'Carlos';
 
-  const handleOpenEnvelope = () => {
-    Alert.alert(
-      '🎁 ¡Sobre Secreto Abierto!',
-      'Tu Pana Secreto asignado es:\n\n✨ María Rodríguez ✨\n\nPresupuesto: Máx $15\nFecha de entrega: en 4 días\n\n¡Recuerda mantener el secreto hasta la parranda! 🤫'
-    );
-  };
+  // El sobre se abre dentro del detalle del grupo: el pana asignado nunca se muestra fuera de ahí
+  const handleOpenEnvelope = () => onOpenGroup?.('panas-oficina', 'sobre');
 
   const handleCreateGroup = () => {
     if (onNavigateToCreateGroup) {
@@ -133,7 +140,7 @@ export default function DashboardScreen({
             onPress={handleProfilePress}
           >
             <Image
-              source={require('../../../assets/icon.png')}
+              source={BRAND_ISOTIPO}
               style={dashboardStyles.profileAvatar}
             />
           </TouchableOpacity>
@@ -197,7 +204,7 @@ export default function DashboardScreen({
           <View style={dashboardStyles.mascotBannerContent}>
             <View style={dashboardStyles.mascotAvatarWrapper}>
               <Image
-                source={require('../../../assets/icon.png')}
+                source={BRAND_ISOTIPO}
                 style={dashboardStyles.mascotAvatarImage}
               />
               <View style={dashboardStyles.mascotStarBadge}>
@@ -404,9 +411,7 @@ export default function DashboardScreen({
                 <TouchableOpacity
                   style={dashboardStyles.btnManage}
                   activeOpacity={0.8}
-                  onPress={() =>
-                    Alert.alert('Gestionar Grupo', 'Panel de gestión para La Familia Miranda.')
-                  }
+                  onPress={() => onOpenGroup?.('familia-miranda', 'resumen')}
                 >
                   <Text style={dashboardStyles.btnManageText}>Gestionar</Text>
                   <ChevronRight size={14} color={theme.colors.textDark} />
@@ -605,8 +610,8 @@ export default function DashboardScreen({
           setActiveTab(newTab);
           if (newTab !== 'grupos') {
             Alert.alert(
-              `Sección ${newTab === 'papelitos' ? 'Papelitos' : newTab === 'chat' ? 'Chat Secreto' : 'Mi Pana'}`,
-              `Esta vista de ${newTab} estará disponible en el próximo paso.`
+              TAB_TITLES[newTab],
+              `La sección ${TAB_TITLES[newTab]} estará disponible en el próximo paso.`
             );
           }
         }}

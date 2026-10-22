@@ -38,10 +38,24 @@ panasecreto/
 
 ---
 
-## 🎨 Paleta oficial (`packages/ui-tokens`)
+## 🎨 Identidad visual (`packages/ui-tokens`)
+
+Logo, isotipo e íconos en [`assets/`](assets) (los usan la app y el panel); todas las piezas separadas en [`docs/identidad/entrepanas`](docs/identidad/entrepanas).
 
 | Token | Hex | Uso |
 |---|---|---|
+| `primary` | `#0B2D5B` | Azul Marino: color principal, encabezados, texto sobre amarillo |
+| `secondary` | `#FFC107` | Amarillo Pana: botones principales y realces («Panas» del logotipo) |
+| `accent` | `#00B4D8` | Celeste Caribe: enlaces, chips, información, gráficas |
+| `coral` | `#FF5A3D` | Coral Guacamaya: badges, notificaciones, acentos festivos |
+| `danger` | `#D62828` | Rojo: alertas y errores |
+| `background` | `#F8F7F2` | Crema: fondo general |
+| `textDark` | `#13213A` | Tinta Marina: texto de alto contraste |
+| `surface` | `#FFFFFF` | Blanco Puro: tarjetas y superficies |
+
+Tipografía: **Fredoka** (600/700) para titulares y marca, **Nunito** (400–900) para el texto. En la app se cargan con `@expo-google-fonts`; en el panel y los correos, desde Google Fonts.
+
+---|---|---|
 | `primary` | `#1E1338` | Morado Noche: color principal de marca |
 | `secondary` | `#F7A800` | Amarillo Araguaney: acentos y llamadas a la acción |
 | `accent` | `#1D84B5` | Azul Caribe: enlaces, estados activos, gráficas |
@@ -104,6 +118,7 @@ docker compose up --build
 | `CORS_ORIGIN` | ✅ | Dominios permitidos separados por coma (ej. `https://admin.tudominio.com`) |
 | `MJ_APIKEY_PUBLIC`, `MJ_APIKEY_PRIVATE` | ✅ | Credenciales de Mailjet (correo de recuperación) |
 | `MAIL_FROM_EMAIL`, `MAIL_FROM_NAME` | ✅ | Remitente validado en Mailjet |
+| `MAIL_LOGO_URL` | — | Logo del encabezado de los correos. Por defecto se usa la imagen que sube `pnpm --filter @panasecreto/backend mail:logo` a Cloudinary (`EntrePanas/branding/email-logo-horizontal`) |
 | `MAIL_TRANSPORT` | — | `log` para solo imprimir correos en consola |
 | `APP_PUBLIC_URL` | ✅ | URL pública de la app (enlaces de los correos, invitaciones `…/join/CÓDIGO`) |
 | `ADMIN_PUBLIC_URL` | ✅ | URL del panel (enlace en el correo de cuenta creada) |

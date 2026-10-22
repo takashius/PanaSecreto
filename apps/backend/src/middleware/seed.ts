@@ -1,7 +1,7 @@
 import { User } from '../components/user/model';
 import config from '../config/commons';
 import { ROLES } from '../config/roles';
-import { SystemConfig } from '../components/config/model';
+import { SystemConfig, DEFAULT_CONFIG } from '../components/config/model';
 
 export async function seedAppData(): Promise<void> {
   try {
@@ -45,6 +45,21 @@ export async function migrateBrandName(): Promise<void> {
       { $set: { appName: 'EntrePanas' } }
     );
     if (result.modifiedCount > 0) console.log('[Seed] Nombre de la aplicación actualizado a EntrePanas.');
+
+    // Identidad visual 2026: solo se reemplazan los colores que siguen en los valores por defecto anteriores,
+    // así se respetan los que un administrador haya personalizado.
+    const LEGACY_COLORS: Array<[keyof typeof DEFAULT_CONFIG, string]> = [
+      ['primaryColor', '#1E1338'],
+      ['secondaryColor', '#F7A800'],
+      ['accentColor', '#1D84B5'],
+    ];
+    for (const [field, legacy] of LEGACY_COLORS) {
+      const r = await SystemConfig.updateOne(
+        { key: 'system', [field]: { $regex: `^${legacy}$`, $options: 'i' } },
+        { $set: { [field]: DEFAULT_CONFIG[field] } }
+      );
+      if (r.modifiedCount > 0) console.log(`[Seed] ${field} actualizado a la nueva paleta.`);
+    }
   } catch (error) {
     console.warn('[Seed] No se pudo migrar el nombre de la aplicación:', (error as Error).message);
   }

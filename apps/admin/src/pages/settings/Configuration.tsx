@@ -93,15 +93,15 @@ export default function Configuration() {
 
   const primaryHex = typeof primaryColorValue === 'string'
     ? primaryColorValue
-    : primaryColorValue?.toHexString?.() || '#1E1338';
+    : primaryColorValue?.toHexString?.() || '#0B2D5B';
 
   const secondaryHex = typeof secondaryColorValue === 'string'
     ? secondaryColorValue
-    : secondaryColorValue?.toHexString?.() || '#F7A800';
+    : secondaryColorValue?.toHexString?.() || '#FFC107';
 
   const accentHex = typeof accentColorValue === 'string'
     ? accentColorValue
-    : accentColorValue?.toHexString?.() || '#1D84B5';
+    : accentColorValue?.toHexString?.() || '#00B4D8';
 
   return (
     <div>
@@ -178,7 +178,7 @@ export default function Configuration() {
                         presets={[
                           {
                             label: 'Recomendados',
-                            colors: ['#1E1338', '#0F172A', '#0F766E', '#1E3A8A', '#312E81', '#18181B'],
+                            colors: ['#0B2D5B', '#0F172A', '#0F766E', '#1E3A8A', '#312E81', '#18181B'],
                           },
                         ]}
                       />
@@ -201,7 +201,7 @@ export default function Configuration() {
                         presets={[
                           {
                             label: 'Recomendados',
-                            colors: ['#F7A800', '#F59E0B', '#EAB308', '#F97316', '#10B981', '#EC4899'],
+                            colors: ['#FFC107', '#F59E0B', '#EAB308', '#F97316', '#10B981', '#EC4899'],
                           },
                         ]}
                       />
@@ -224,7 +224,7 @@ export default function Configuration() {
                         presets={[
                           {
                             label: 'Recomendados',
-                            colors: ['#1D84B5', '#0284C7', '#06B6D4', '#6366F1', '#8B5CF6', '#14B8A6'],
+                            colors: ['#00B4D8', '#0284C7', '#06B6D4', '#6366F1', '#8B5CF6', '#14B8A6'],
                           },
                         ]}
                       />

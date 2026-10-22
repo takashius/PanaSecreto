@@ -37,8 +37,8 @@ export default function Header({
   return (
     <AntHeader
       style={{
-        backgroundColor: darkMode ? '#140C26' : config.primaryColor,
-        borderBottom: darkMode ? '1px solid #262436' : '1px solid rgba(255, 255, 255, 0.08)',
+        backgroundColor: darkMode ? '#071E3D' : config.primaryColor,
+        borderBottom: darkMode ? '1px solid #16325A' : '1px solid rgba(255, 255, 255, 0.08)',
       }}
       className={`fixed left-0 right-0 top-0 z-20 flex h-16 items-center justify-between px-4 sm:px-6 shadow-md transition-all duration-300 ${
         sidebarCollapsed ? 'sm:ml-20' : 'sm:ml-64'

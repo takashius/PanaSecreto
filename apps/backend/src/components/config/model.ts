@@ -15,9 +15,9 @@ export interface ISystemConfig extends Document {
 export const DEFAULT_CONFIG = {
   key: 'system',
   appName: 'EntrePanas',
-  primaryColor: '#1E1338', // Morado Noche
-  secondaryColor: '#F7A800', // Amarillo Araguaney
-  accentColor: '#1D84B5', // Azul Caribe
+  primaryColor: '#0B2D5B', // Azul Marino
+  secondaryColor: '#FFC107', // Amarillo Pana
+  accentColor: '#00B4D8', // Celeste Caribe
   logoUrl: '',
   faviconUrl: '',
 };
@@ -40,19 +40,19 @@ const systemConfigSchema = new Schema<ISystemConfig>(
       type: String,
       required: true,
       trim: true,
-      default: '#1E1338',
+      default: '#0B2D5B',
     },
     secondaryColor: {
       type: String,
       required: true,
       trim: true,
-      default: '#F7A800',
+      default: '#FFC107',
     },
     accentColor: {
       type: String,
       required: true,
       trim: true,
-      default: '#1D84B5',
+      default: '#00B4D8',
     },
     logoUrl: {
       type: String,

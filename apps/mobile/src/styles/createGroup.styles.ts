@@ -16,7 +16,7 @@ export const createGroupStyles = StyleSheet.create({
     paddingVertical: theme.spacing.sm,
     backgroundColor: theme.colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(30, 19, 56, 0.04)',
+    borderBottomColor: 'rgba(11, 45, 91, 0.05)',
   },
   headerLeft: {
     flexDirection: 'row',
@@ -31,6 +31,7 @@ export const createGroupStyles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: {
+    fontFamily: theme.typography.fontFamily.heading,
     fontSize: theme.typography.fontSize.xl,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.textDark,
@@ -121,17 +122,20 @@ export const createGroupStyles = StyleSheet.create({
     marginBottom: 6,
   },
   heroBadgeText: {
+    fontFamily: theme.typography.fontFamily.heading,
     fontSize: theme.typography.fontSize.xs,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.textDark,
   },
   heroTitle: {
+    fontFamily: theme.typography.fontFamily.heading,
     fontSize: theme.typography.fontSize['2xl'],
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.textDark,
     lineHeight: 28,
   },
   heroSubtitle: {
+    fontFamily: theme.typography.fontFamily.body,
     fontSize: theme.typography.fontSize.base,
     color: theme.colors.textSecondary,
     marginTop: 4,
@@ -169,11 +173,13 @@ export const createGroupStyles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   cardHeaderTitle: {
+    fontFamily: theme.typography.fontFamily.heading,
     fontSize: theme.typography.fontSize.xl,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.textDark,
   },
   cardHeaderSub: {
+    fontFamily: theme.typography.fontFamily.body,
     fontSize: theme.typography.fontSize.base,
     color: theme.colors.textMuted,
     marginTop: 2,
@@ -185,6 +191,7 @@ export const createGroupStyles = StyleSheet.create({
     borderRadius: theme.radii.full,
   },
   pillBadgeText: {
+    fontFamily: theme.typography.fontFamily.bodySemibold,
     fontSize: theme.typography.fontSize.xs,
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.textSecondary,
@@ -205,6 +212,7 @@ export const createGroupStyles = StyleSheet.create({
     gap: 6,
   },
   fieldLabel: {
+    fontFamily: theme.typography.fontFamily.bodySemibold,
     fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.textDark,
@@ -217,11 +225,13 @@ export const createGroupStyles = StyleSheet.create({
     justifyContent: 'center',
   },
   fieldInput: {
+    fontFamily: theme.typography.fontFamily.body,
     fontSize: theme.typography.fontSize.lg,
     color: theme.colors.textDark,
     padding: 0,
   },
   fieldHint: {
+    fontFamily: theme.typography.fontFamily.body,
     fontSize: theme.typography.fontSize.base,
     color: theme.colors.textMuted,
     paddingLeft: 2,
@@ -243,6 +253,7 @@ export const createGroupStyles = StyleSheet.create({
     gap: 8,
   },
   dateTriggerText: {
+    fontFamily: theme.typography.fontFamily.bodySemibold,
     fontSize: theme.typography.fontSize.base,
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.textDark,
@@ -272,11 +283,13 @@ export const createGroupStyles = StyleSheet.create({
     elevation: 2,
   },
   currencyTabText: {
+    fontFamily: theme.typography.fontFamily.bodySemibold,
     fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.textMuted,
   },
   currencyTabTextActive: {
+    fontFamily: theme.typography.fontFamily.bodyBold,
     color: theme.colors.textDark,
     fontWeight: theme.typography.fontWeight.bold,
   },
@@ -293,6 +306,7 @@ export const createGroupStyles = StyleSheet.create({
     gap: 4,
   },
   budgetInputSubLabel: {
+    fontFamily: theme.typography.fontFamily.body,
     fontSize: theme.typography.fontSize.xs,
     color: theme.colors.textMuted,
   },
@@ -308,12 +322,14 @@ export const createGroupStyles = StyleSheet.create({
     opacity: 0.45,
   },
   budgetSymbol: {
+    fontFamily: theme.typography.fontFamily.bodySemibold,
     fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.textMuted,
     marginRight: 4,
   },
   budgetAmountInput: {
+    fontFamily: theme.typography.fontFamily.bodyBold,
     flex: 1,
     fontSize: theme.typography.fontSize.xl,
     fontWeight: theme.typography.fontWeight.bold,
@@ -326,6 +342,7 @@ export const createGroupStyles = StyleSheet.create({
     justifyContent: 'center',
   },
   budgetDividerText: {
+    fontFamily: theme.typography.fontFamily.bodyBold,
     fontSize: 20,
     fontWeight: '700',
     color: theme.colors.outlineVariant,
@@ -354,6 +371,7 @@ export const createGroupStyles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   rangeTrackLabelText: {
+    fontFamily: theme.typography.fontFamily.body,
     fontSize: theme.typography.fontSize.xs,
     color: theme.colors.textMuted,
   },
@@ -377,6 +395,7 @@ export const createGroupStyles = StyleSheet.create({
     borderColor: theme.colors.secondaryContainer,
   },
   presetChipText: {
+    fontFamily: theme.typography.fontFamily.bodySemibold,
     fontSize: theme.typography.fontSize.xs,
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.textDark,
@@ -394,11 +413,13 @@ export const createGroupStyles = StyleSheet.create({
     paddingRight: 16,
   },
   switchTitle: {
+    fontFamily: theme.typography.fontFamily.headingSemibold,
     fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.textDark,
   },
   switchSub: {
+    fontFamily: theme.typography.fontFamily.body,
     fontSize: theme.typography.fontSize.base,
     color: theme.colors.textMuted,
     marginTop: 2,
@@ -428,6 +449,7 @@ export const createGroupStyles = StyleSheet.create({
     elevation: 1,
   },
   stepperValue: {
+    fontFamily: theme.typography.fontFamily.bodyBold,
     width: 34,
     textAlign: 'center',
     fontSize: theme.typography.fontSize.xl,
@@ -462,6 +484,7 @@ export const createGroupStyles = StyleSheet.create({
     flexShrink: 0,
   },
   mascotTipText: {
+    fontFamily: theme.typography.fontFamily.body,
     flex: 1,
     fontSize: theme.typography.fontSize.base,
     color: theme.colors.textDark,
@@ -489,11 +512,13 @@ export const createGroupStyles = StyleSheet.create({
     elevation: 3,
   },
   btnSubmitText: {
+    fontFamily: theme.typography.fontFamily.bodyBold,
     fontSize: theme.typography.fontSize.lg,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.onSecondaryContainer,
   },
   submitSubtext: {
+    fontFamily: theme.typography.fontFamily.body,
     fontSize: theme.typography.fontSize.xs,
     color: theme.colors.textMuted,
     textAlign: 'center',
@@ -536,6 +561,7 @@ export const createGroupStyles = StyleSheet.create({
     marginBottom: 8,
   },
   modalSubBadge: {
+    fontFamily: theme.typography.fontFamily.bodyExtrabold,
     fontSize: theme.typography.fontSize.xs,
     fontWeight: theme.typography.fontWeight.extrabold,
     color: theme.colors.secondaryDark,
@@ -544,6 +570,7 @@ export const createGroupStyles = StyleSheet.create({
     marginBottom: 4,
   },
   modalTitle: {
+    fontFamily: theme.typography.fontFamily.heading,
     fontSize: theme.typography.fontSize['2xl'],
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.textDark,
@@ -551,6 +578,7 @@ export const createGroupStyles = StyleSheet.create({
     marginBottom: 6,
   },
   modalDescription: {
+    fontFamily: theme.typography.fontFamily.body,
     fontSize: theme.typography.fontSize.sm,
     color: theme.colors.textSecondary,
     textAlign: 'center',
@@ -574,11 +602,13 @@ export const createGroupStyles = StyleSheet.create({
     flex: 1,
   },
   codeCardLabel: {
+    fontFamily: theme.typography.fontFamily.body,
     fontSize: theme.typography.fontSize.xs,
     color: theme.colors.textMuted,
     marginBottom: 3,
   },
   codeCardCode: {
+    fontFamily: theme.typography.fontFamily.bodyExtrabold,
     fontSize: theme.typography.fontSize['2xl'],
     fontWeight: theme.typography.fontWeight.extrabold,
     color: theme.colors.textDark,
@@ -599,6 +629,7 @@ export const createGroupStyles = StyleSheet.create({
     elevation: 2,
   },
   btnCopyCodeText: {
+    fontFamily: theme.typography.fontFamily.bodyBold,
     fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.textDark,
@@ -625,6 +656,7 @@ export const createGroupStyles = StyleSheet.create({
     elevation: 3,
   },
   btnWhatsappText: {
+    fontFamily: theme.typography.fontFamily.bodyBold,
     fontSize: theme.typography.fontSize.md,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.white,
@@ -640,6 +672,7 @@ export const createGroupStyles = StyleSheet.create({
     gap: 8,
   },
   btnCopyLinkText: {
+    fontFamily: theme.typography.fontFamily.bodySemibold,
     fontSize: theme.typography.fontSize.md,
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.textDark,
@@ -652,6 +685,7 @@ export const createGroupStyles = StyleSheet.create({
     marginTop: 4,
   },
   btnDismissModalText: {
+    fontFamily: theme.typography.fontFamily.bodySemibold,
     fontSize: theme.typography.fontSize.base,
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.textSecondary,

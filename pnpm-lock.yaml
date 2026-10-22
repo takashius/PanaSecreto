@@ -196,6 +196,12 @@ importers:
 
   apps/mobile:
     dependencies:
+      '@expo-google-fonts/fredoka':
+        specifier: ^0.4.1
+        version: 0.4.1
+      '@expo-google-fonts/nunito':
+        specifier: ^0.4.2
+        version: 0.4.2
       '@panasecreto/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -211,6 +217,12 @@ importers:
       expo:
         specifier: ~57.0.27
         version: 57.0.27(@babel/core@7.29.7)(@expo/dom-webview@57.0.1)(react-dom@19.2.3(react@19.2.3))(react-native@0.86.3(@babel/core@7.29.7)(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)(typescript@5.9.3)
+      expo-clipboard:
+        specifier: ~57.0.2
+        version: 57.0.2(expo@57.0.27)(react-native@0.86.3(@babel/core@7.29.7)(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)
+      expo-font:
+        specifier: ~57.0.4
+        version: 57.0.4(expo@57.0.27)(react-native@0.86.3(@babel/core@7.29.7)(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)
       expo-modules-core:
         specifier: ~57.0.21
         version: 57.0.21(react-native@0.86.3(@babel/core@7.29.7)(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)
@@ -1057,6 +1069,12 @@ packages:
   '@eslint/plugin-kit@0.7.3':
     resolution: {integrity: sha512-IkO+/KEUvwbVpiURZg+P7zF74z5Jxe0UgJxVni+RtoHQ6IZieXaO02kmadomap/q+l6bc/jdPGGqTjhuZnuz1Q==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
+
+  '@expo-google-fonts/fredoka@0.4.1':
+    resolution: {integrity: sha512-px3uHDidG1RI7mMAjfKQktK9yZoVn/Uvqgp1G/Zkd6ZN9flXFxhUoPDRZdcCj2knFvkKmlvOx96SD3j4fxq7ig==}
+
+  '@expo-google-fonts/nunito@0.4.2':
+    resolution: {integrity: sha512-1KCWphw/I2ugqfs9iRHUCkPTnomNgGPtF4AvqVquoEKxr0EL+mcLNLgeixsslbaSFevRR6/KJAE3sc8g0VaY0Q==}
 
   '@expo/cli@57.0.28':
     resolution: {integrity: sha512-4969gk/B2JyP3kAv2ftpwU1f9dLG2j9TsQuYCTTjfnyRx0O49Jwu1O1mie2c3HmKXbwfNA6QTS+3i3sNetMTag==}
@@ -2485,6 +2503,13 @@ packages:
 
   expo-asset@57.0.19:
     resolution: {integrity: sha512-y9ymKidyPBDUFXljbvo7LNgivQvMhEJEoEXi6aLRugUxRDUvAKoZsy+KB5UXSjLMS7l7JNDwYKk5thovI0MLog==}
+    peerDependencies:
+      expo: '*'
+      react: '*'
+      react-native: '*'
+
+  expo-clipboard@57.0.2:
+    resolution: {integrity: sha512-VB4Au8X/RbvJKUtJk+87vdtveWSNEa5RzY3ooeO6VNF7Rd49RbQXZOu3/TfEW9p7mU8TCfyTvjyCiAUwSoSJ4w==}
     peerDependencies:
       expo: '*'
       react: '*'
@@ -5386,6 +5411,10 @@ snapshots:
       '@eslint/core': 1.2.1
       levn: 0.4.1
 
+  '@expo-google-fonts/fredoka@0.4.1': {}
+
+  '@expo-google-fonts/nunito@0.4.2': {}
+
   '@expo/cli@57.0.28(@expo/dom-webview@57.0.1)(expo-constants@57.0.21(expo@57.0.27)(react-native@0.86.3(@babel/core@7.29.7)(@types/react@19.2.18)(react@19.2.3)))(expo-font@57.0.4(expo@57.0.27)(react-native@0.86.3(@babel/core@7.29.7)(@types/react@19.2.18)(react@19.2.3))(react@19.2.3))(expo@57.0.27)(react-dom@19.2.3(react@19.2.3))(react-native@0.86.3(@babel/core@7.29.7)(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)(typescript@5.9.3)':
     dependencies:
       '@expo/code-signing-certificates': 0.0.6
@@ -7249,6 +7278,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
       - typescript
+
+  expo-clipboard@57.0.2(expo@57.0.27)(react-native@0.86.3(@babel/core@7.29.7)(@types/react@19.2.18)(react@19.2.3))(react@19.2.3):
+    dependencies:
+      expo: 57.0.27(@babel/core@7.29.7)(@expo/dom-webview@57.0.1)(react-dom@19.2.3(react@19.2.3))(react-native@0.86.3(@babel/core@7.29.7)(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)(typescript@5.9.3)
+      react: 19.2.3
+      react-native: 0.86.3(@babel/core@7.29.7)(@types/react@19.2.18)(react@19.2.3)
 
   expo-constants@57.0.21(expo@57.0.27)(react-native@0.86.3(@babel/core@7.29.7)(@types/react@19.2.18)(react@19.2.3)):
     dependencies:

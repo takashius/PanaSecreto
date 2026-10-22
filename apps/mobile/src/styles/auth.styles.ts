@@ -9,6 +9,12 @@ export const authStyles = StyleSheet.create({
     paddingTop: theme.spacing.md,
     paddingBottom: theme.spacing.md,
   },
+  brandLogo: {
+    width: 220,
+    height: 205, // 220 / (750/698)
+    resizeMode: 'contain',
+    marginBottom: 8,
+  },
   mascotWrapper: {
     position: 'relative',
     width: 140,
@@ -38,16 +44,19 @@ export const authStyles = StyleSheet.create({
     gap: 6,
   },
   brandTitle: {
+    fontFamily: theme.typography.fontFamily.heading,
     fontSize: theme.typography.fontSize['3xl'],
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.textDark,
     letterSpacing: -0.5,
   },
   brandTitleAccent: {
+    fontFamily: theme.typography.fontFamily.heading,
     color: theme.colors.brandOrange,
     fontWeight: theme.typography.fontWeight.black,
   },
   tagline: {
+    fontFamily: theme.typography.fontFamily.body,
     fontSize: theme.typography.fontSize.base,
     color: theme.colors.textSecondary,
     textAlign: 'center',
@@ -87,16 +96,19 @@ export const authStyles = StyleSheet.create({
     backgroundColor: theme.colors.surfaceContainer,
   },
   headerNavTitle: {
+    fontFamily: theme.typography.fontFamily.heading,
     fontSize: theme.typography.fontSize.lg,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.textDark,
   },
   headerNavBrand: {
+    fontFamily: theme.typography.fontFamily.heading,
     fontSize: theme.typography.fontSize.base,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.textDark,
   },
   headerNavBrandAccent: {
+    fontFamily: theme.typography.fontFamily.heading,
     color: theme.colors.brandOrange,
     fontWeight: theme.typography.fontWeight.black,
   },
@@ -137,12 +149,14 @@ export const authStyles = StyleSheet.create({
     ...theme.shadows.subtle,
   },
   registerHeading: {
+    fontFamily: theme.typography.fontFamily.heading,
     fontSize: theme.typography.fontSize['2xl'],
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.textDark,
     textAlign: 'center',
   },
   registerSubheading: {
+    fontFamily: theme.typography.fontFamily.body,
     fontSize: theme.typography.fontSize.base,
     color: theme.colors.textSecondary,
     textAlign: 'center',
@@ -160,6 +174,7 @@ export const authStyles = StyleSheet.create({
     marginBottom: 6,
   },
   stepperTextStep: {
+    fontFamily: theme.typography.fontFamily.bodyBold,
     fontSize: theme.typography.fontSize.xs,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.brandOrange,
@@ -167,6 +182,7 @@ export const authStyles = StyleSheet.create({
     letterSpacing: 0.8,
   },
   stepperTextTitle: {
+    fontFamily: theme.typography.fontFamily.body,
     fontSize: theme.typography.fontSize.xs,
     color: theme.colors.textMuted,
   },
@@ -216,6 +232,7 @@ export const authStyles = StyleSheet.create({
     marginBottom: 2,
   },
   reassuranceBadgeText: {
+    fontFamily: theme.typography.fontFamily.bodyBold,
     fontSize: theme.typography.fontSize.xs,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.secondaryDark,
@@ -223,6 +240,7 @@ export const authStyles = StyleSheet.create({
     letterSpacing: 0.6,
   },
   reassuranceTitle: {
+    fontFamily: theme.typography.fontFamily.heading,
     fontSize: theme.typography.fontSize.md,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.textDark,
@@ -238,6 +256,7 @@ export const authStyles = StyleSheet.create({
     paddingHorizontal: 2,
   },
   tipText: {
+    fontFamily: theme.typography.fontFamily.body,
     flex: 1,
     fontSize: theme.typography.fontSize.xs,
     color: theme.colors.textSecondary,
@@ -263,11 +282,13 @@ export const authStyles = StyleSheet.create({
     justifyContent: 'center',
   },
   guaranteeTitle: {
+    fontFamily: theme.typography.fontFamily.heading,
     fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.textDark,
   },
   guaranteeSubtitle: {
+    fontFamily: theme.typography.fontFamily.body,
     fontSize: theme.typography.fontSize.xs,
     color: theme.colors.textSecondary,
     marginTop: 1,
@@ -281,14 +302,17 @@ export const authStyles = StyleSheet.create({
     marginTop: 12,
   },
   timerText: {
+    fontFamily: theme.typography.fontFamily.body,
     fontSize: theme.typography.fontSize.xs,
     color: theme.colors.textSecondary,
   },
   timerHighlight: {
+    fontFamily: theme.typography.fontFamily.bodyBold,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.textDark,
   },
   resendButton: {
+    fontFamily: theme.typography.fontFamily.bodyBold,
     fontSize: theme.typography.fontSize.xs,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.brandOrange,
@@ -302,6 +326,7 @@ export const authStyles = StyleSheet.create({
     marginTop: 6,
   },
   rulesHeader: {
+    fontFamily: theme.typography.fontFamily.body,
     fontSize: theme.typography.fontSize.xs,
     color: theme.colors.textMuted,
     marginBottom: 6,
@@ -326,6 +351,7 @@ export const authStyles = StyleSheet.create({
     borderWidth: 1,
   },
   ruleBadgeText: {
+    fontFamily: theme.typography.fontFamily.body,
     fontSize: theme.typography.fontSize.xs,
     color: theme.colors.textSecondary,
   },

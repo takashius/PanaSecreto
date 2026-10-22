@@ -22,6 +22,7 @@ import {
   buttonStyles,
   authStyles,
 } from '../../styles';
+import { BRAND_LOGO } from '../../constants/brand';
 
 interface LoginScreenProps {
   onNavigateToRegister?: () => void;
@@ -82,21 +83,13 @@ export default function LoginScreen({
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* 1. Header con Mascota (Guacamaya), Logo y Eslogan */}
+          {/* 1. Header con el logo principal de EntrePanas y eslogan */}
           <View style={authStyles.headerSection}>
-            <View style={authStyles.mascotWrapper}>
-              <View style={authStyles.mascotGlow} />
-              <Image
-                source={require('../../../assets/icon.png')}
-                style={authStyles.mascotImage}
-              />
-            </View>
-
-            <View style={authStyles.titleRow}>
-              <Text style={authStyles.brandTitle}>
-                Entre<Text style={authStyles.brandTitleAccent}>Panas</Text>
-              </Text>
-            </View>
+            <Image
+              source={BRAND_LOGO}
+              style={authStyles.brandLogo}
+              accessibilityLabel="EntrePanas · Conecta, comparte, disfruta"
+            />
 
             <Text style={authStyles.tagline}>
               ¡Epa! Inicia sesión para descubrir a tu amigo secreto y armar la parranda.

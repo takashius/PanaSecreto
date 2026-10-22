@@ -277,3 +277,55 @@ Se mantienen colores, tipografías y la paleta (Morado Noche, Amarillo Araguaney
 - Los conceptos del juego: «Amigo Secreto», «tu pana secreto», «Registro de Pana» y los códigos `PANA-XXXX-XX`.
 - `docs/creargrupo*` (exportaciones de diseño) y el manual de marca en PDF.
 - Las imágenes ya subidas siguen en la carpeta `PanaSecreto/` de Cloudinary y funcionan (el borrado usa la URL); las nuevas van a `EntrePanas/`.
+
+### 2026-10-21 — Nueva identidad visual
+
+Reemplaza la paleta anterior (Morado Noche `#1E1338`, Amarillo Araguaney `#F7A800`, Azul Caribe `#1D84B5`, tipografías Inter/Outfit/Epilogue).
+
+- **Recursos:** `assets/logos` y `assets/iconos` en la raíz, con el logo principal y el isotipo. Las 15 piezas del tablero, separadas, están en `docs/identidad/entrepanas`.
+- **Ícono de la app:** se genera a partir de `assets/iconos/isotipo-app.png` en 1024×1024: `icon.png`, `adaptive-icon.png` (primer plano al 72 % sobre el amarillo `#FEC414`) y `favicon.png`. El splash usa el logo principal sobre crema. **El original mide 205 px, así que el ícono se ve suave; para publicar en las tiendas hace falta el isotipo en vector o en ≥1024 px.**
+- **Tokens (`ui-tokens`):** nueva paleta con `coral` y variantes; tipografía Fredoka + Nunito.
+- **App móvil:** `theme.ts` con la nueva paleta y `typography.fontFamily`. Fuentes cargadas en `App.tsx` con `expo-font` y `@expo-google-fonts/{fredoka,nunito}` (funcionan en Expo Go). Se asignó `fontFamily` a los 105 estilos de texto según su peso; los titulares van en Fredoka. El login muestra el logo principal y el resto de pantallas el isotipo (`src/constants/brand.ts` lo toma de `assets/` en la raíz).
+- **Panel admin:** Tailwind, Ant Design (claro y oscuro en azul marino), colores por defecto, favicon e isotipo en `AppLogo` (si no hay logo personalizado). Google Fonts Nunito + Fredoka. El Dockerfile ahora copia `assets/`.
+- **Backend:** colores por defecto de `SystemConfig`. La migración al arrancar reemplaza solo los colores que sigan en los valores anteriores (respeta los personalizados) y tiene su prueba.
+- **Correos:** las 12 plantillas con la nueva paleta y el cuerpo en Nunito (con respaldo Arial). El encabezado es blanco, con el **logo horizontal** (`assets/logos/logo-horizontal-transparente.png`) y una franja amarilla. El logo se sirve desde Cloudinary con un `public_id` fijo (`EntrePanas/branding/email-logo-horizontal`). Se sube con `pnpm --filter @panasecreto/backend mail:logo` (ya está subido; repítelo si cambia el logo) o se reemplaza con `MAIL_LOGO_URL`.
+- **Stitch:** nuevo design system «EntrePanas Mobile» (`assets/5129195134007060397`) y nuevas versiones «(Nueva Identidad)» de las 8 pantallas del flujo: Mis Grupos `d3b05617…`, Detalle del Grupo `941ebb50…`, Mi Sobre Abierto `f18fddd4…`, Detalle del Deseo `ac668a3e…`, Mis Deseos `e4497fdf…`, Chats `a22535c8…`, Notificaciones `6a4ff723…`, Perfil `605bf701…`. Las ilustraciones de la mascota dentro de esas pantallas siguen siendo las anteriores, porque Stitch no tiene el arte nuevo.
+
+**Para hacer en tu máquina:** `pnpm install` (agrega `expo-font`, `@expo-google-fonts/fredoka` y `@expo-google-fonts/nunito`).
+
+### 2026-10-21 — App móvil: menú inferior y Detalle del grupo
+
+- **Menú inferior** (`FloatingTabBar`), igual al diseño: Grupos · Chats · Mis deseos · Perfil. Admite contadores (badge coral). El sobre y «mi pana» viven dentro de cada grupo.
+- **Detalle del grupo** (`screens/group/GroupDetailScreen.tsx`), con datos de ejemplo en `mocks/groupDetail.ts` y el tipo `GroupDetailView` listo para la API:
+  - Encabezado con estado y rol, y pestañas Resumen / Mi sobre / Chat (punto coral si hay mensajes sin leer).
+  - **Resumen:** fecha, presupuesto y cupo; lugar del encuentro con «Ver mapa» (Google Maps) y nota; invitación con código, copiar, WhatsApp, correo y link (`expo-clipboard`, compatible con Expo Go); panas confirmados con barra de cupo, menú para quitar panas (organización, antes del sorteo) y «+N panas más»; exclusiones; botón «Hacer el sorteo» (mínimo 3 panas, con confirmación).
+  - **Variantes por rol y estado:** quien participa no ve exclusiones ni el menú de cada pana, y antes del sorteo ve «esperando el sorteo». Después del sorteo desaparece la invitación y aparece un acceso a «Mi sobre».
+  - Mi sobre y Chat muestran por ahora una tarjeta de «próximo paso».
+- Desde Mis Grupos, «Gestionar» abre el detalle, y «Abrir sobre» entra a la pestaña Mi sobre. Se quitó el `Alert` que mostraba el nombre del pana asignado, porque rompía el anonimato.
+
+**Para hacer en tu máquina:** `pnpm install` (agrega `expo-clipboard`).
+- **Stitch, diseños nuevos con la identidad 2026:** Mi sobre sellado `f5514bb1…`, Agregar deseo `fa979101…`, Exclusiones `006cab37…`, Unirse con código `f2de0b93…`, Editar grupo `894f9923…`, Editar perfil `f7c3b003…`.
+
+### 2026-10-21 — App móvil: pestaña «Mi sobre»
+
+- `components/envelope/EnvelopeTab` decide el estado:
+  - **Bloqueado** (antes del sorteo): explica que el sobre se arma con el sorteo, con un texto según rol.
+  - **Sellado:** sobre amarillo con el sello de la guacamaya, «¡Ya te tocó un pana!» y una animación corta al abrirlo (`Animated`, funciona en Expo Go).
+  - **Abierto:** cuenta regresiva en vivo (`hooks/useCountdown`), «Le regalas a Pana Incógnito #04» con el presupuesto y la lista de deseos del pana (foto o ícono por categoría, precio, «N comentarios» o «Pregúntale algo»), tip y aviso de anonimato.
+  - **Revelado:** «Le regalaste a {nombre}», sin cuenta regresiva.
+  - Las tres variantes con sobre muestran la tarjeta de anonimato, los 3 pasos y el presupuesto.
+- **Tipos nuevos:** `EnvelopeView` y `WishPreview` (el nombre real solo llega en `revealedName`, cuando el grupo está REVEALED). Hay un mock nuevo, «Panas de la Oficina» (sorteo hecho), y desde Mis Grupos «Abrir sobre» entra a ese grupo.
+- **Pendiente en el backend para conectar:** devolver el sobre con alias (no el nombre) antes de REVEALED, registrar que el sobre se abrió y contar los comentarios de cada deseo.
+
+### 2026-10-21 — App móvil: Detalle del deseo con comentarios
+
+- `screens/wish/WishDetailScreen.tsx` (diseño «Detalle del Deseo»):
+  - **Tarjeta del deseo:** foto, o ícono de la categoría si no hay, prioridad alta, categoría, precio estimado, tienda sugerida y «Ver en tienda» si tiene enlace.
+  - **Hilo anónimo:** aviso de privacidad, comentarios con «hace X» (`utils/format.timeAgo`) y caja fija para escribir con «Le avisaremos por notificación». No es tiempo real.
+  - **Sin comentarios:** quien regala ve preguntas rápidas («¿Qué talla usas?», «¿Qué color prefieres?», «¿Alguna marca en especial?»).
+- **Dos puntos de vista** (`viewer`):
+  - **Quien regala:** «Deseo de Pana Incógnito #04», y sus mensajes salen como «Tú · Tu amigo secreto».
+  - **El dueño del deseo:** «Mi deseo», la otra persona aparece como «Tu amigo secreto», y tiene un menú para editar o eliminar (la vista del dueño se usará desde Mis deseos).
+- **Navegación:** desde Mi sobre se toca un deseo y se abre su detalle. `App.tsx` guarda los grupos y los deseos de ejemplo, así que al volver se conserva el sobre abierto, la pestaña activa y los comentarios nuevos (con el contador actualizado en la lista).
+- **Tipos y mocks:** `WishDetailView`, `WishComment`, `mocks/wishes.ts`. Las categorías (ícono y colores) se movieron a `constants/wishCategories.ts`.
+- **Pendiente en el backend:** el modelo y los endpoints de comentarios por deseo, con la notificación al otro lado.

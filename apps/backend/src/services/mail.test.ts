@@ -61,4 +61,12 @@ describe('Servicio de correo (Mailjet)', () => {
     assert.ok(!mail.html.includes('<script>'));
     assert.ok(mail.html.includes('&lt;script&gt;'));
   });
+
+  it('el encabezado muestra el logo horizontal con texto alternativo', async () => {
+    const { mailLogoUrl } = await import('./mailTemplates');
+    const mail = recoveryCodeEmail({ name: 'Ana', code: 123456, minutes: 15 });
+    assert.ok(mail.html.includes(`<img src="${mailLogoUrl()}"`));
+    assert.ok(mail.html.includes('alt="EntrePanas'));
+    assert.match(mailLogoUrl(), /^https:\/\//);
+  });
 });

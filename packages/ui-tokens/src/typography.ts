@@ -3,8 +3,10 @@
  */
 export const typography = {
   fontFamily: {
-    sans: 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-    heading: 'Outfit, Inter, system-ui, sans-serif',
+    // Nunito: cuerpo de texto redondeado y legible
+    sans: 'Nunito, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    // Fredoka: titulares redondos y gruesos, cercanos al logotipo EntrePanas
+    heading: 'Fredoka, Nunito, system-ui, sans-serif',
   },
   fontSize: {
     xs: '0.75rem',     // 12px

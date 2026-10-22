@@ -35,7 +35,7 @@ export async function updateConfig(
   if (input.primaryColor !== undefined) {
     const color = String(input.primaryColor).trim();
     if (!HEX_COLOR_REGEX.test(color)) {
-      return { status: 400, message: 'El color principal debe ser un código HEX válido (ej. #1E1338).' };
+      return { status: 400, message: 'El color principal debe ser un código HEX válido (ej. #0B2D5B).' };
     }
     payload.primaryColor = color;
   }
@@ -43,7 +43,7 @@ export async function updateConfig(
   if (input.secondaryColor !== undefined) {
     const color = String(input.secondaryColor).trim();
     if (!HEX_COLOR_REGEX.test(color)) {
-      return { status: 400, message: 'El color secundario debe ser un código HEX válido (ej. #F7A800).' };
+      return { status: 400, message: 'El color secundario debe ser un código HEX válido (ej. #FFC107).' };
     }
     payload.secondaryColor = color;
   }
@@ -51,7 +51,7 @@ export async function updateConfig(
   if (input.accentColor !== undefined) {
     const color = String(input.accentColor).trim();
     if (!HEX_COLOR_REGEX.test(color)) {
-      return { status: 400, message: 'El color de acento debe ser un código HEX válido (ej. #1D84B5).' };
+      return { status: 400, message: 'El color de acento debe ser un código HEX válido (ej. #00B4D8).' };
     }
     payload.accentColor = color;
   }

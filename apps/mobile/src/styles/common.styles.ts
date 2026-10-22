@@ -40,6 +40,7 @@ export const commonStyles = StyleSheet.create({
     backgroundColor: theme.colors.surfaceVariant,
   },
   dividerText: {
+    fontFamily: theme.typography.fontFamily.bodySemibold,
     paddingHorizontal: 12,
     backgroundColor: theme.colors.surfaceCard,
     fontSize: theme.typography.fontSize.xs,
@@ -63,6 +64,7 @@ export const commonStyles = StyleSheet.create({
     gap: 6,
   },
   badgeText: {
+    fontFamily: theme.typography.fontFamily.bodyMedium,
     fontSize: theme.typography.fontSize.xs,
     color: theme.colors.textSecondary,
     fontWeight: theme.typography.fontWeight.medium,

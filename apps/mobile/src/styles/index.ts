@@ -5,3 +5,6 @@ export { buttonStyles } from './button.styles';
 export { authStyles } from './auth.styles';
 export { dashboardStyles } from './dashboard.styles';
 export { createGroupStyles } from './createGroup.styles';
+export { groupDetailStyles } from './groupDetail.styles';
+export { envelopeStyles } from './envelope.styles';
+export { wishDetailStyles } from './wishDetail.styles';

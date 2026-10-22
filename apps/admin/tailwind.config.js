@@ -9,32 +9,37 @@ export default {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#1E1338', // Morado Noche
-          light: '#2D1D54',
-          dark: '#140C26',
+          DEFAULT: '#0B2D5B', // Azul Marino
+          light: '#1A4580',
+          dark: '#071E3D',
         },
         secondary: {
-          DEFAULT: '#F7A800', // Amarillo Araguaney
-          light: '#FFBF33',
-          dark: '#CC8A00',
+          DEFAULT: '#FFC107', // Amarillo Pana
+          light: '#FFD54F',
+          dark: '#C79100',
         },
         accent: {
-          DEFAULT: '#1D84B5', // Azul Caribe
-          light: '#35A3D6',
-          dark: '#146083',
+          DEFAULT: '#00B4D8', // Celeste Caribe
+          light: '#48CAE4',
+          dark: '#0090AD',
+        },
+        coral: {
+          DEFAULT: '#FF5A3D', // Coral Guacamaya
+          light: '#FF8A73',
+          dark: '#E0442A',
         },
         danger: {
           DEFAULT: '#D62828', // Rojo Guacamaya
           light: '#E64C4C',
           dark: '#B01E1E',
         },
-        background: '#F8F9FA', // Hueso Suave (token background)
-        textDark: '#1C1B24',   // Carbón Lente
+        background: '#F8F7F2', // Crema (token background)
+        textDark: '#13213A',   // Tinta Marina
         surface: '#FFFFFF',    // Blanco Puro
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        heading: ['Outfit', 'Inter', 'sans-serif'],
+        sans: ['Nunito', 'system-ui', 'sans-serif'],
+        heading: ['Fredoka', 'Nunito', 'sans-serif'],
       },
     },
   },

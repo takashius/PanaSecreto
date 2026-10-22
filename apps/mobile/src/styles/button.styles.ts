@@ -14,12 +14,14 @@ export const buttonStyles = StyleSheet.create({
     ...theme.shadows.button,
   },
   btnPrimaryText: {
+    fontFamily: theme.typography.fontFamily.bodyBold,
     fontSize: theme.typography.fontSize.lg,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.onSecondaryContainer,
     marginRight: 6,
   },
   btnPrimaryEmoji: {
+    fontFamily: theme.typography.fontFamily.body,
     fontSize: 20,
     lineHeight: 22,
   },
@@ -40,6 +42,7 @@ export const buttonStyles = StyleSheet.create({
     borderColor: theme.colors.border,
   },
   btnGoogleText: {
+    fontFamily: theme.typography.fontFamily.bodySemibold,
     fontSize: theme.typography.fontSize.md,
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.textDark,
@@ -54,11 +57,13 @@ export const buttonStyles = StyleSheet.create({
     marginTop: theme.spacing.lg,
   },
   footerPrompt: {
+    fontFamily: theme.typography.fontFamily.body,
     fontSize: theme.typography.fontSize.base,
     color: theme.colors.textSecondary,
     marginRight: 6,
   },
   footerLink: {
+    fontFamily: theme.typography.fontFamily.bodyBold,
     fontSize: theme.typography.fontSize.md,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.secondaryDark,

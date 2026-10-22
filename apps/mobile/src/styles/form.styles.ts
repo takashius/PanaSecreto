@@ -15,11 +15,13 @@ export const formStyles = StyleSheet.create({
     marginBottom: 6,
   },
   label: {
+    fontFamily: theme.typography.fontFamily.bodySemibold,
     fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.textDark,
   },
   forgotPasswordLink: {
+    fontFamily: theme.typography.fontFamily.bodySemibold,
     fontSize: theme.typography.fontSize.xs,
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.secondaryDark,
@@ -46,6 +48,7 @@ export const formStyles = StyleSheet.create({
     marginRight: 10,
   },
   inputField: {
+    fontFamily: theme.typography.fontFamily.body,
     flex: 1,
     fontSize: theme.typography.fontSize.base,
     color: theme.colors.textDark,
@@ -57,6 +60,7 @@ export const formStyles = StyleSheet.create({
     marginLeft: 4,
   },
   errorText: {
+    fontFamily: theme.typography.fontFamily.bodyMedium,
     fontSize: theme.typography.fontSize.xs,
     color: theme.colors.danger,
     marginTop: 4,
@@ -64,10 +68,12 @@ export const formStyles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.medium,
   },
   labelHint: {
+    fontFamily: theme.typography.fontFamily.body,
     fontSize: theme.typography.fontSize.xs,
     color: theme.colors.textMuted,
   },
   labelHintHighlight: {
+    fontFamily: theme.typography.fontFamily.bodyBold,
     fontSize: theme.typography.fontSize.xs,
     color: theme.colors.brandOrange,
     fontWeight: theme.typography.fontWeight.bold,
@@ -89,6 +95,7 @@ export const formStyles = StyleSheet.create({
     gap: 4,
   },
   prefixText: {
+    fontFamily: theme.typography.fontFamily.bodyMedium,
     fontSize: theme.typography.fontSize.base,
     fontWeight: theme.typography.fontWeight.medium,
     color: theme.colors.textDark,
@@ -121,6 +128,7 @@ export const formStyles = StyleSheet.create({
     backgroundColor: theme.colors.success,
   },
   strengthLabel: {
+    fontFamily: theme.typography.fontFamily.bodySemibold,
     fontSize: theme.typography.fontSize.xs,
     fontWeight: theme.typography.fontWeight.semibold,
     minWidth: 48,
@@ -146,11 +154,13 @@ export const formStyles = StyleSheet.create({
     justifyContent: 'center',
   },
   confidentialTitle: {
+    fontFamily: theme.typography.fontFamily.heading,
     fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.textDark,
   },
   confidentialSubtitle: {
+    fontFamily: theme.typography.fontFamily.body,
     fontSize: theme.typography.fontSize.xs,
     color: theme.colors.textSecondary,
     marginTop: 2,
@@ -179,12 +189,14 @@ export const formStyles = StyleSheet.create({
     borderColor: theme.colors.secondaryContainer,
   },
   termsText: {
+    fontFamily: theme.typography.fontFamily.body,
     flex: 1,
     fontSize: theme.typography.fontSize.xs,
     color: theme.colors.textSecondary,
     lineHeight: 18,
   },
   termsLink: {
+    fontFamily: theme.typography.fontFamily.bodyBold,
     color: theme.colors.secondaryDark,
     fontWeight: theme.typography.fontWeight.bold,
   },

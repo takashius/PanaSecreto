@@ -76,7 +76,7 @@ export default function Login() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-background dark:bg-[#06152B] p-4">
       {contextHolder}
       <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl border border-gray-100 dark:border-gray-800 dark:bg-gray-800">
         <div className="mb-6 flex justify-center">

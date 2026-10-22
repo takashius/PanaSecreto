@@ -1,27 +1,35 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Gift, Mail, MessageSquare, Sparkles, type LucideIcon } from 'lucide-react-native';
+import { Gift, Heart, MessagesSquare, UserRound, type LucideIcon } from 'lucide-react-native';
 import { theme, dashboardStyles } from '../../styles';
 
-export type DashboardTab = 'grupos' | 'papelitos' | 'chat' | 'mipana';
+/**
+ * Pestañas principales de la app (diseño Stitch «Nueva Identidad»):
+ * Grupos · Chats (un chat grupal anónimo por grupo) · Mis deseos (lista por grupo) · Perfil.
+ * El sobre / papelito y "mi pana" viven dentro del detalle de cada grupo.
+ */
+export type DashboardTab = 'grupos' | 'chats' | 'deseos' | 'perfil';
 
 interface FloatingTabBarProps {
   activeTab: DashboardTab;
   onTabChange: (tab: DashboardTab) => void;
+  /** Contadores opcionales (p. ej. mensajes sin leer en Chats); 0 o ausente no muestra badge */
+  badges?: Partial<Record<DashboardTab, number>>;
 }
 
 export const FloatingTabBar: React.FC<FloatingTabBarProps> = ({
   activeTab,
   onTabChange,
+  badges,
 }) => {
   const insets = useSafeAreaInsets();
 
   const tabs: Array<{ id: DashboardTab; label: string; icon: LucideIcon }> = [
     { id: 'grupos', label: 'Grupos', icon: Gift },
-    { id: 'papelitos', label: 'Papelitos', icon: Mail },
-    { id: 'chat', label: 'Chat Secreto', icon: MessageSquare },
-    { id: 'mipana', label: 'Mi Pana', icon: Sparkles },
+    { id: 'chats', label: 'Chats', icon: MessagesSquare },
+    { id: 'deseos', label: 'Mis deseos', icon: Heart },
+    { id: 'perfil', label: 'Perfil', icon: UserRound },
   ];
 
   return (
@@ -36,6 +44,7 @@ export const FloatingTabBar: React.FC<FloatingTabBarProps> = ({
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
           const IconComponent = tab.icon;
+          const badge = badges?.[tab.id] ?? 0;
 
           return (
             <TouchableOpacity
@@ -43,6 +52,9 @@ export const FloatingTabBar: React.FC<FloatingTabBarProps> = ({
               style={dashboardStyles.tabItem}
               onPress={() => onTabChange(tab.id)}
               activeOpacity={0.7}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: isActive }}
+              accessibilityLabel={badge > 0 ? `${tab.label}, ${badge} sin leer` : tab.label}
             >
               <View style={dashboardStyles.tabIconWrapper}>
                 <IconComponent
@@ -50,6 +62,11 @@ export const FloatingTabBar: React.FC<FloatingTabBarProps> = ({
                   color={isActive ? theme.colors.primary : theme.colors.outline}
                   strokeWidth={isActive ? 2.4 : 1.8}
                 />
+                {badge > 0 && (
+                  <View style={dashboardStyles.tabBadge}>
+                    <Text style={dashboardStyles.tabBadgeText}>{badge > 9 ? '9+' : badge}</Text>
+                  </View>
+                )}
               </View>
               <Text
                 style={[
