@@ -442,3 +442,17 @@ Reemplaza la paleta anterior (Morado Noche `#1E1338`, Amarillo Araguaney `#F7A80
   - Con el sobre abierto muestra el alias de tu pana y su lista; cada deseo abre el detalle con los comentarios anónimos.
   - Así se llega a lo que quiere tu pana sin tener que entrar por el grupo.
 - **Pestaña «Mis deseos» → «Deseos»** (menú inferior, título de la pantalla y textos de la app), porque ahora reúne tu lista y la de tu pana.
+
+### 2026-10-22 — Backend: todo lo pendiente tras la maqueta
+
+- **Anonimato:** el sobre y la lista de tu pana solo devuelven su alias hasta la revelación; los deseos ya no exponen el `userId` del dueño.
+- **Campos nuevos:** lugar y nota del grupo; `myAlias`, `envelopeOpened` en detalle y Mis grupos; vista previa con iniciales; `category` y `storeName` en los deseos; `nickname`, `gender`, `notifyEmail`, `notifyComments` en el usuario (los correos de grupo respetan `notifyEmail`).
+- **Alias** (`components/alias`): catálogo de 300 alias con emoji (100 por género), 5 sugerencias al azar, alias propio con filtro de groserías (`utils/badWords.ts`), único en el grupo, bloqueado tras el sorteo y asignado automáticamente a quien no eligió. Administración del catálogo y de los alias propios.
+- **Tips** (`components/tip`): 42 tips iniciales por pantalla, endpoint público aleatorio ponderado y administración.
+- **Sobre y revelación:** `POST /envelope/open` y `GET /reveal`.
+- **Comentarios anónimos** (`components/comment`): hilo privado dueño ↔ quien regala, contadores en las listas, aviso en la app y correo nuevo (`wishCommentEmail`).
+- **Notificaciones en la app** (`components/notification`): campana con no leídos, marcar leídas, avisos de sorteo, unión, revelación, comentarios y pistas, y recordatorios cada hora (`services/reminders.ts`).
+- **Chat** (`components/chat`, `sockets/`): historial paginado, envío por REST o Socket.io (`chat:join`, `chat:send` con ack, `chat:message`), no leídos, lista de chats, antispam y solo lectura tras revelar. El servidor de sockets ahora se crea con `createSocketServer()` y también se monta en las pruebas.
+- **Limpieza:** comentarios, chat y notificaciones se borran con el grupo; los comentarios, al deshacer el sorteo o borrar el deseo.
+- **Pruebas:** `src/test/engagement.test.ts` (alias, sobre, comentarios, notificaciones, recordatorios, chat REST y sockets, revelación, catálogos) y `utils/badWords.test.ts`; se actualizaron las de grupos y deseos al sobre por alias. Total: 158 pruebas en verde, `tsc` y ESLint sin errores. Se agregó `socket.io-client` como dependencia de desarrollo del backend (ya estaba en el lockfile).
+- **Pendiente para la app y el panel:** conectar estos endpoints (ver `docs/PENDIENTES.md`).

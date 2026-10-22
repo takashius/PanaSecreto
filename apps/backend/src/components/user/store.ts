@@ -611,6 +611,10 @@ export interface ProfileUpdate {
   phone?: unknown;
   photo?: unknown;
   password?: unknown;
+  nickname?: unknown;
+  gender?: unknown;
+  notifyEmail?: unknown;
+  notifyComments?: unknown;
 }
 
 const optionalText = (value: unknown): string | undefined =>
@@ -626,6 +630,22 @@ export async function updateProfile(userId: string, data: ProfileUpdate): Promis
     if (data.name !== undefined) user.name = optionalText(data.name) ?? user.name;
     if (data.lastName !== undefined) user.lastName = optionalText(data.lastName);
     if (data.phone !== undefined) user.phone = optionalText(data.phone);
+    if (data.nickname !== undefined) {
+      const nick = optionalText(data.nickname);
+      if (nick && nick.length > 30) return { status: 400, message: 'El apodo puede tener máximo 30 caracteres.' };
+      user.nickname = nick || undefined;
+    }
+    if (data.gender !== undefined) {
+      if (data.gender !== null && !['M', 'F', 'N'].includes(String(data.gender))) {
+        return { status: 400, message: 'Género inválido (usa M, F o N).' };
+      }
+      user.gender = data.gender === null ? undefined : (String(data.gender) as 'M' | 'F' | 'N');
+    }
+    for (const key of ['notifyEmail', 'notifyComments'] as const) {
+      if (data[key] === undefined) continue;
+      if (typeof data[key] !== 'boolean') return { status: 400, message: `${key} debe ser true o false.` };
+      user[key] = data[key] as boolean;
+    }
     // La foto solo se cambia subiendo una imagen (POST /user/upload), nunca con una URL arbitraria
 
     // La contraseña NO se cambia por esta vía: usar /change-password (requiere la actual)

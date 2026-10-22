@@ -1,10 +1,12 @@
 import { Types } from 'mongoose';
 import { GroupStatusEnum, WISHLIST_MAX_ITEMS, type CreateWishDTO, type UpdateWishDTO } from '@panasecreto/shared';
 import { Wish, IWish } from './model';
-import { findGroupForMember, findReceiverId } from '../group/store';
-import { User } from '../user/model';
+import { aliasOf, findGroupForMember, findReceiverId } from '../group/store';
+import { Group } from '../group/model';
+import { commentStats } from '../comment/store';
 import { StoreResponse, UploadedImage } from '../../types/general';
 import { deleteImage } from '../../services/storage';
+import { deleteCommentsOfWishes } from '../engagement/cleanup';
 
 const fail = (status: number, code: string, message: string): StoreResponse => ({
   status,
@@ -13,13 +15,18 @@ const fail = (status: number, code: string, message: string): StoreResponse => (
 const groupNotFound = () => fail(404, 'GROUP_NOT_FOUND', 'Grupo no encontrado.');
 const wishNotFound = () => fail(404, 'WISH_NOT_FOUND', 'Deseo no encontrado.');
 
-type WishLike = Pick<IWish, '_id' | 'group' | 'user' | 'title' | 'description' | 'estimatedPrice' | 'currency' | 'productUrl' | 'imageUrl' | 'isFavorite' | 'createdAt' | 'updatedAt'>;
+type WishLike = Pick<IWish, '_id' | 'group' | 'user' | 'title' | 'description' | 'estimatedPrice' | 'currency' | 'productUrl' | 'imageUrl' | 'isFavorite' | 'category' | 'storeName' | 'createdAt' | 'updatedAt'>;
 
-function serialize(w: WishLike) {
+type Stats = { commentsCount: number; unansweredCount: number };
+const NO_STATS: Stats = { commentsCount: 0, unansweredCount: 0 };
+
+function serialize(w: WishLike, stats?: Stats) {
   return {
     id: String(w._id),
     groupId: String(w.group),
     userId: String(w.user),
+    category: w.category ?? 'otro',
+    storeName: w.storeName,
     title: w.title,
     description: w.description,
     estimatedPrice: w.estimatedPrice ?? null,
@@ -27,9 +34,17 @@ function serialize(w: WishLike) {
     productUrl: w.productUrl,
     imageUrl: w.imageUrl,
     isFavorite: Boolean(w.isFavorite),
+    ...(stats ? stats : {}),
     createdAt: w.createdAt,
     updatedAt: w.updatedAt,
   };
+}
+
+/** Deseo visto por quien regala: sin el ID del dueño (no rompe el anonimato del alias) */
+function serializeForGiver(w: WishLike, stats?: Stats) {
+  const rest: Partial<ReturnType<typeof serialize>> = serialize(w, stats);
+  delete rest.userId;
+  return rest;
 }
 
 const listFor = (groupId: string, userId: string) =>
@@ -41,7 +56,14 @@ export async function listMine(userId: string, groupId: string): Promise<StoreRe
   try {
     if (!(await findGroupForMember(groupId, userId))) return groupNotFound();
     const wishes = await listFor(groupId, userId);
-    return { status: 200, message: { results: wishes.map(serialize), max: WISHLIST_MAX_ITEMS } };
+    const stats = await commentStats(wishes.map((w) => w._id), 'owner');
+    return {
+      status: 200,
+      message: {
+        results: wishes.map((w) => serialize(w, stats.get(String(w._id)) ?? NO_STATS)),
+        max: WISHLIST_MAX_ITEMS,
+      },
+    };
   } catch (error) {
     return { status: 500, message: 'Error al consultar tu lista de deseos.', detail: error };
   }
@@ -104,7 +126,7 @@ export async function updateWish(
     const unset: Record<string, 1> = {};
     for (const [key, value] of Object.entries(fields)) {
       if (value === undefined) continue;
-      if (value === null && key === 'productUrl') unset[key] = 1;
+      if (value === null && (key === 'productUrl' || key === 'storeName')) unset[key] = 1;
       else set[key] = value;
     }
     const previousImage = wish!.imageUrl;
@@ -128,6 +150,7 @@ export async function deleteWish(userId: string, groupId: string, wishId: string
     const { wish, error } = await loadOwnWish(userId, groupId, wishId);
     if (error) return error;
     await Wish.deleteOne({ _id: wish!._id });
+    await deleteCommentsOfWishes([wish!._id]);
     if (wish!.imageUrl) await deleteImage(wish!.imageUrl);
     return { status: 200, message: { ok: true, message: 'Deseo eliminado.' } };
   } catch (error) {
@@ -135,7 +158,10 @@ export async function deleteWish(userId: string, groupId: string, wishId: string
   }
 }
 
-/** Lista de deseos de la persona a quien le regalo (solo tras el sorteo). */
+/**
+ * Lista de deseos de la persona a quien le regalo (solo tras el sorteo).
+ * Antes de la revelación solo viaja su alias; nombre y foto llegan al revelar.
+ */
 export async function listAssigned(userId: string, groupId: string): Promise<StoreResponse> {
   try {
     const group = await findGroupForMember(groupId, userId);
@@ -145,20 +171,28 @@ export async function listAssigned(userId: string, groupId: string): Promise<Sto
     }
     const receiverId = await findReceiverId(groupId, userId);
     if (!receiverId) return fail(404, 'ASSIGNMENT_NOT_FOUND', 'No tienes una asignación en este grupo.');
-    const [wishes, receiver] = await Promise.all([
+    const revealed = group.status === GroupStatusEnum.REVEALED || group.status === GroupStatusEnum.COMPLETED;
+    const [wishes, populated] = await Promise.all([
       listFor(groupId, receiverId),
-      User.findById(receiverId).select('name lastName photo').lean(),
+      revealed
+        ? Group.findById(group._id).select('members').populate('members.user', 'name lastName photo').lean()
+        : null,
     ]);
+    const member = group.members.find((m) => String(m.user) === receiverId);
+    const user = populated?.members.find((m) => String((m.user as unknown as { _id: unknown })?._id) === receiverId)
+      ?.user as unknown as { name?: string; lastName?: string; photo?: string | null } | undefined;
+    const stats = await commentStats(wishes.map((w) => w._id), 'giver');
     return {
       status: 200,
       message: {
+        revealed,
         receiver: {
-          userId: receiverId,
-          name: receiver?.name ?? 'Usuario',
-          lastName: receiver?.lastName,
-          photo: receiver?.photo ?? null,
+          ...aliasOf(member as { alias?: string; aliasEmoji?: string } | undefined),
+          ...(revealed
+            ? { userId: receiverId, name: user?.name ?? 'Usuario', lastName: user?.lastName, photo: user?.photo ?? null }
+            : {}),
         },
-        results: wishes.map(serialize),
+        results: wishes.map((w) => serializeForGiver(w, stats.get(String(w._id)) ?? NO_STATS)),
       },
     };
   } catch (error) {

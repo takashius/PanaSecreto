@@ -72,13 +72,17 @@ describe('Lista de deseos', () => {
   it('tras el sorteo veo la lista de mi amigo secreto, no la de otros', async () => {
     await ctx.call('POST', base(), { title: 'Café de Mérida' }, B.t);
     assert.equal((await ctx.call('POST', `/group/${G}/draw`, undefined, O.t)).s, 200);
+    const giverOfB: string[] = [];
     for (const p of [O, A, B]) {
       const mine = await ctx.call('GET', `/group/${G}/assignment`, undefined, p.t);
       const r = await ctx.call('GET', `${base()}/assigned`, undefined, p.t);
       assert.equal(r.s, 200);
-      assert.equal(r.d.receiver.userId, mine.d.receiver.userId);
-      assert.ok(r.d.results.every((w: any) => w.userId === mine.d.receiver.userId));
+      assert.equal(r.d.receiver.alias, mine.d.receiver.alias);
+      assert.equal(r.d.receiver.userId, undefined, 'solo el alias antes de revelar');
+      assert.ok(r.d.results.every((w: any) => w.userId === undefined), 'los deseos no exponen al dueño');
+      if (r.d.results.some((w: any) => w.title === 'Café de Mérida')) giverOfB.push(p.id);
     }
+    assert.equal(giverOfB.length, 1, 'solo quien le regala a B ve su lista');
   });
 
   it('al eliminar el grupo se borran sus deseos', async () => {

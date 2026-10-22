@@ -15,6 +15,16 @@ export interface IGroupMember {
   joinedAt: Date;
   /** Miembros a quienes este miembro NO puede regalar */
   exclusions: Types.ObjectId[];
+  /** Alias anónimo en este grupo (sobre, chat y comentarios). Único dentro del grupo */
+  alias?: string;
+  aliasEmoji?: string;
+  /** Cuándo abrió su sobre (después del sorteo) */
+  envelopeOpenedAt?: Date;
+}
+
+export interface IGroupLocation {
+  name: string;
+  address?: string;
 }
 
 export interface IGroup extends Document {
@@ -30,6 +40,8 @@ export interface IGroup extends Document {
   budgetMax?: number | null;
   maxParticipants: number;
   anonymousClues: boolean;
+  location?: IGroupLocation | null;
+  note?: string | null;
   inviteCode: string;
   members: Types.DocumentArray<IGroupMember & Document>;
   /** Se incrementa en cada cambio de miembros/exclusiones; protege el sorteo contra carreras */
@@ -51,6 +63,17 @@ const groupMemberSchema = new Schema<IGroupMember>(
     },
     joinedAt: { type: Date, default: Date.now },
     exclusions: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+    alias: { type: String, trim: true, maxlength: 30 },
+    aliasEmoji: { type: String, trim: true, maxlength: 16 },
+    envelopeOpenedAt: { type: Date },
+  },
+  { _id: false }
+);
+
+const groupLocationSchema = new Schema<IGroupLocation>(
+  {
+    name: { type: String, required: true, trim: true, maxlength: 80 },
+    address: { type: String, trim: true, maxlength: 200, default: '' },
   },
   { _id: false }
 );
@@ -78,6 +101,8 @@ const groupSchema = new Schema<IGroup>(
       default: GROUP_MAX_PARTICIPANTS,
     },
     anonymousClues: { type: Boolean, default: true },
+    location: { type: groupLocationSchema, default: null },
+    note: { type: String, trim: true, maxlength: 300, default: null },
     inviteCode: { type: String, required: true, unique: true, uppercase: true, trim: true },
     members: { type: [groupMemberSchema], default: [] },
     membersVersion: { type: Number, default: 0 },

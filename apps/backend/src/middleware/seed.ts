@@ -2,8 +2,22 @@ import { User } from '../components/user/model';
 import config from '../config/commons';
 import { ROLES } from '../config/roles';
 import { SystemConfig, DEFAULT_CONFIG } from '../components/config/model';
+import { seedAliasSuggestions } from '../components/alias/store';
+import { seedTips } from '../components/tip/store';
+
+/** Catálogos editables desde el panel (alias y tips): se siembran solo si están vacíos */
+export async function seedCatalogs(): Promise<void> {
+  try {
+    const aliases = await seedAliasSuggestions();
+    const tips = await seedTips();
+    if (aliases || tips) console.log(`[Seed] Catálogos iniciales: ${aliases} alias, ${tips} tips.`);
+  } catch (error) {
+    console.warn('[Seed] Advertencia al sembrar alias/tips:', (error as Error).message);
+  }
+}
 
 export async function seedAppData(): Promise<void> {
+  await seedCatalogs();
   try {
     const adminEmail = config.userAdminEmail.trim().toLowerCase();
     const existing = await User.findOne({ email: adminEmail });

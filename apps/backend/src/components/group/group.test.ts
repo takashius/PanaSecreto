@@ -203,16 +203,30 @@ describe('API de grupos', () => {
       assert.equal((await ctx.call('PUT', `/group/${G}/members/${P1.id}/exclusions`, { exclusions: [] }, O.t)).s, 409);
     });
 
-    it('cada miembro abre su sobre: válido, respeta exclusiones y no expone emails', async () => {
+    it('cada miembro abre su sobre: solo ve el alias de su pana, válido y respetando exclusiones', async () => {
+      // El sorteo asigna alias a quien no eligió; cada quien ve el suyo en el detalle
+      const byAlias = new Map<string, string>();
+      for (const p of [O, P1, P2, P3]) {
+        const d = (await ctx.call('GET', `/group/${G}`, undefined, p.t)).d;
+        assert.ok(d.myAlias, 'alias asignado en el sorteo');
+        byAlias.set(d.myAlias, p.id);
+      }
+      assert.equal(byAlias.size, 4, 'alias únicos dentro del grupo');
       const receivers = new Set<string>();
       for (const p of [O, P1, P2, P3]) {
         const a = await ctx.call('GET', `/group/${G}/assignment`, undefined, p.t);
         assert.equal(a.s, 200);
-        assert.notEqual(a.d.receiver.userId, p.id);
+        assert.equal(a.d.opened, false);
+        assert.equal(a.d.revealed, false);
+        assert.equal(a.d.receiver.userId, undefined, 'sin ID antes de revelar');
+        assert.equal(a.d.receiver.name, undefined, 'sin nombre antes de revelar');
         assert.equal(a.d.receiver.email, undefined);
-        if (p === P1) assert.notEqual(a.d.receiver.userId, P2.id);
-        if (p === P2) assert.notEqual(a.d.receiver.userId, P1.id);
-        receivers.add(a.d.receiver.userId);
+        const receiverId = byAlias.get(a.d.receiver.alias)!;
+        assert.ok(receiverId);
+        assert.notEqual(receiverId, p.id);
+        if (p === P1) assert.notEqual(receiverId, P2.id);
+        if (p === P2) assert.notEqual(receiverId, P1.id);
+        receivers.add(receiverId);
       }
       assert.equal(receivers.size, 4);
     });
@@ -247,6 +261,9 @@ describe('API de grupos', () => {
       const list = await ctx.call('GET', `/group/${G}/assignments`, undefined, P3.t);
       assert.equal(list.s, 200);
       assert.equal(list.d.results.length, 4);
+      const env = await ctx.call('GET', `/group/${G}/assignment`, undefined, P3.t);
+      assert.equal(env.d.revealed, true);
+      assert.ok(env.d.receiver.userId && env.d.receiver.name, 'tras revelar se ve la identidad');
       const done = await ctx.call('POST', `/group/${G}/complete`, undefined, O.t);
       assert.equal(done.d.status, 'COMPLETED');
       assert.equal((await ctx.call('PATCH', `/group/${G}`, { name: 'Otro nombre' }, O.t)).s, 409);

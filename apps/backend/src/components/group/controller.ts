@@ -3,10 +3,12 @@ import {
   CreateGroupSchema,
   InviteByEmailSchema,
   JoinGroupSchema,
+  SetAliasSchema,
   SetExclusionsSchema,
   UpdateGroupSchema,
 } from '@panasecreto/shared';
 import * as store from './store';
+import * as aliasStore from '../alias/store';
 import { StoreResponse } from '../../types/general';
 
 type Parsed<T> = { data: T; error?: undefined } | { data?: undefined; error: StoreResponse };
@@ -116,4 +118,22 @@ export function listAssignments(userId: string, id: string) {
 
 export function adminListGroups(query: Record<string, unknown>) {
   return store.adminListGroups(query);
+}
+
+export function openEnvelope(userId: string, id: string) {
+  return store.openEnvelope(userId, id);
+}
+
+export function getReveal(userId: string, id: string) {
+  return store.getReveal(userId, id);
+}
+
+export function aliasSuggestions(userId: string, id: string, query: Record<string, unknown>) {
+  return aliasStore.suggestionsFor(userId, id, query);
+}
+
+export function setMyAlias(userId: string, id: string, body: unknown) {
+  const parsed = parse(SetAliasSchema, body);
+  if (parsed.error) return resolve(parsed.error);
+  return aliasStore.setMyAlias(userId, id, parsed.data);
 }

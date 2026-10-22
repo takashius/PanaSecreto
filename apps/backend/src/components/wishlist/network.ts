@@ -1,7 +1,8 @@
 import { Router, Response, NextFunction } from 'express';
-import { CreateWishSchema, UpdateWishSchema } from '@panasecreto/shared';
+import { CreateCommentSchema, CreateWishSchema, UpdateWishSchema } from '@panasecreto/shared';
 import type { ZodTypeAny, z } from 'zod';
 import * as store from './store';
+import * as comments from '../comment/store';
 import { findGroupForMember } from '../group/store';
 import auth from '../../middleware/auth';
 import controllerError from '../../middleware/controllerError';
@@ -50,7 +51,7 @@ function normalizeMultipart(req: IGetUserAuthInfoRequest): Record<string, unknow
     if (value === 'null') body[key] = null;
     else if (value === 'true' || value === 'false') body[key] = value === 'true';
     else if (key === 'estimatedPrice') body[key] = value.trim() === '' ? null : Number(value);
-    else if (key === 'productUrl' && value.trim() === '') body[key] = null;
+    else if ((key === 'productUrl' || key === 'storeName') && value.trim() === '') body[key] = null;
   }
   return body;
 }
@@ -99,6 +100,22 @@ router.patch(
     const v = validate(UpdateWishSchema, normalizeMultipart(req));
     if ('status' in v) return v;
     return store.updateWish(uid(req), gid(req), req.params.wishId, v.data, req.uploads?.image);
+  })
+);
+
+// Comentarios anónimos del deseo (solo el dueño y quien le regala)
+router.get(
+  '/:wishId/comments',
+  auth(),
+  handle((req) => comments.listComments(uid(req), gid(req), req.params.wishId))
+);
+router.post(
+  '/:wishId/comments',
+  auth(),
+  handle(async (req) => {
+    const v = validate(CreateCommentSchema, req.body);
+    if ('status' in v) return v;
+    return comments.addComment(uid(req), gid(req), req.params.wishId, v.data);
   })
 );
 

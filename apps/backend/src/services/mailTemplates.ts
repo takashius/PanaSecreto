@@ -432,3 +432,38 @@ export function groupDeletedEmail(params: { name: string; groupName: string }): 
   const text = plain(`Hola, ${name}:`, [`El Amigo Secreto "${params.groupName}" fue eliminado.`]);
   return { subject, html, text };
 }
+
+export function wishCommentEmail(params: {
+  name: string;
+  groupName: string;
+  wishTitle: string;
+  fromRole: 'owner' | 'giver';
+  preview: string;
+  groupUrl: string;
+}): MailContent {
+  const name = firstName(params.name);
+  const fromGiver = params.fromRole === 'giver';
+  const subject = fromGiver
+    ? `🤫 Tu pana secreto comentó tu deseo «${params.wishTitle}»`
+    : `💬 Te respondieron en «${params.wishTitle}»`;
+  const intro = fromGiver
+    ? `Alguien de <strong>${e(params.groupName)}</strong> que te va a regalar dejó un comentario en tu deseo <strong>${e(params.wishTitle)}</strong>. ¡Nadie sabrá quién es hasta el destape!`
+    : `Tu pana respondió en su deseo <strong>${e(params.wishTitle)}</strong> del grupo <strong>${e(params.groupName)}</strong>.`;
+  const html = layout({
+    title: subject,
+    greeting: `¡Epa, ${e(name)}!`,
+    paragraphs: [intro],
+    highlight: `«${e(params.preview)}»`,
+    cta: { label: fromGiver ? 'Responder en la app' : 'Ver el comentario', url: params.groupUrl },
+    footerNote: 'Puedes apagar estos correos en tu perfil, en Notificaciones.',
+  });
+  const text = plain(`¡Epa, ${name}!`, [
+    fromGiver
+      ? `Tu pana secreto comentó tu deseo "${params.wishTitle}" (${params.groupName}).`
+      : `Te respondieron en el deseo "${params.wishTitle}" (${params.groupName}).`,
+    `"${params.preview}"`,
+    '',
+    params.groupUrl,
+  ]);
+  return { subject, html, text };
+}

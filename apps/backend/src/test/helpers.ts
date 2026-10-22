@@ -29,6 +29,8 @@ export interface TestServer {
   register: (name: string) => Promise<{ t: string; id: string; name: string; email: string }>;
   login: (email: string, password: string) => Promise<ApiResponse>;
   superAdminToken: () => Promise<string>;
+  /** Puerto del servidor (para conectar sockets) */
+  port: number;
   stop: () => Promise<void>;
 }
 
@@ -68,6 +70,9 @@ export async function startTestServer(): Promise<TestServer> {
     const s = app.listen(0, () => resolve(s));
   });
   const { port } = server.address() as AddressInfo;
+  // WebSockets sobre el mismo servidor (chat en tiempo real)
+  const { createSocketServer } = await import('../sockets');
+  const io = createSocketServer(server);
   const baseUrl = `http://127.0.0.1:${port}`;
 
   const call: TestServer['call'] = async (method, path, body, token) => {
@@ -132,12 +137,13 @@ export async function startTestServer(): Promise<TestServer> {
   };
 
   const stop = async () => {
-    await new Promise<void>((resolve) => server.close(() => resolve()));
+    // io.close() también cierra el servidor HTTP
+    await new Promise<void>((resolve) => io.close(() => resolve()));
     await mongoose.disconnect();
     await mongo.stop();
   };
 
-  return { baseUrl, call, upload, register, login, superAdminToken, stop };
+  return { baseUrl, call, upload, register, login, superAdminToken, port, stop };
 }
 
 export const futureDate = (days = 30) => new Date(Date.now() + days * 864e5).toISOString();

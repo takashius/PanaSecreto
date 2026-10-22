@@ -13,6 +13,10 @@ export interface IUser {
   phone?: string;
   email: string;
   photo?: string;
+  nickname?: string;
+  gender?: 'M' | 'F' | 'N';
+  notifyEmail?: boolean;
+  notifyComments?: boolean;
   role: UserRole | UserRole[];
   password?: string;
   active: boolean;

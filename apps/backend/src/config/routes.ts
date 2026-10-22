@@ -4,6 +4,10 @@ import configRouter from '../components/config/network';
 import groupRouter from '../components/group/network';
 import wishlistRouter from '../components/wishlist/network';
 import statsRouter from '../components/stats/network';
+import aliasRouter from '../components/alias/network';
+import tipRouter from '../components/tip/network';
+import notificationRouter from '../components/notification/network';
+import groupChatRouter, { chatListRouter } from '../components/chat/network';
 import { healthRouter } from '../routes/health.routes';
 
 export default function registerRoutes(app: Express) {
@@ -21,7 +25,17 @@ export default function registerRoutes(app: Express) {
   // Estadísticas para el dashboard administrativo
   app.use('/api/stats', statsRouter);
 
+  // Catálogos editables desde el panel: alias sugeridos y tips rotativos
+  app.use('/api/alias', aliasRouter);
+  app.use('/api/tips', tipRouter);
+
+  // Notificaciones dentro de la app y lista de chats
+  app.use('/api/notifications', notificationRouter);
+  app.use('/api/chat', chatListRouter);
+
   // Módulo de Grupos de Amigo Secreto (sorteo, invitaciones, asignaciones)
+  app.use('/group/:id/chat', groupChatRouter);
+  app.use('/api/group/:id/chat', groupChatRouter);
   app.use('/group/:id/wishlist', wishlistRouter);
   app.use('/api/group/:id/wishlist', wishlistRouter);
   app.use('/group', groupRouter);

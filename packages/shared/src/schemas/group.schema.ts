@@ -58,6 +58,18 @@ export type Group = z.infer<typeof GroupSchema>;
  * DTOs de entrada
  * ------------------------------------------------------------------ */
 
+/** Lugar del encuentro del intercambio */
+export const GroupLocationSchema = z
+  .object({
+    name: z.string().trim().min(2, 'Ponle un nombre al lugar').max(80, 'Nombre del lugar: máximo 80 caracteres'),
+    address: z.string().trim().max(200, 'Dirección: máximo 200 caracteres').default(''),
+  })
+  .strict();
+
+export type GroupLocation = z.infer<typeof GroupLocationSchema>;
+
+export const GROUP_NOTE_MAX_LENGTH = 300;
+
 const groupFields = {
   name: z
     .string({ required_error: 'El nombre es obligatorio' })
@@ -80,6 +92,8 @@ const groupFields = {
     .max(GROUP_MAX_PARTICIPANTS, `Máximo ${GROUP_MAX_PARTICIPANTS} participantes`)
     .default(GROUP_MAX_PARTICIPANTS),
   anonymousClues: z.boolean().default(true),
+  location: GroupLocationSchema.nullable().optional(),
+  note: z.string().trim().max(GROUP_NOTE_MAX_LENGTH, `La nota puede tener máximo ${GROUP_NOTE_MAX_LENGTH} caracteres`).nullable().optional(),
 };
 
 const budgetRangeIsValid = (data: { budgetMin?: number | null; budgetMax?: number | null }) =>
@@ -110,6 +124,8 @@ export const UpdateGroupSchema = z
     budgetMax: groupFields.budgetMax,
     maxParticipants: groupFields.maxParticipants.removeDefault().optional(),
     anonymousClues: z.boolean().optional(),
+    location: groupFields.location,
+    note: groupFields.note,
   })
   .strict()
   .refine(budgetRangeIsValid, budgetRangeError);
@@ -169,14 +185,34 @@ export interface GroupSummary {
   creatorName: string;
   /** true si el sorteo ya se hizo y el usuario tiene asignado */
   hasAssignment: boolean;
+  /** Mi alias en este grupo (null si aún no lo elijo) */
+  myAlias?: string | null;
+  myAliasEmoji?: string | null;
+  envelopeOpened?: boolean;
 }
 
+/**
+ * "Mi sobre": a quién le regalo.
+ * Antes de la revelación solo viaja el alias; nombre, foto e ID llegan cuando el grupo está REVEALED.
+ */
 export interface AssignmentView {
   groupId: string;
+  /** Si ya abrí el sobre (se guarda en el servidor) */
+  opened: boolean;
+  revealed: boolean;
   receiver: {
-    userId: string;
-    name: string;
+    alias: string;
+    aliasEmoji: string;
+    userId?: string;
+    name?: string;
     lastName?: string;
     photo?: string | null;
   };
+}
+
+/** Revelación: a quién le regalé y quién me regaló (solo con el grupo REVEALED o COMPLETED) */
+export interface RevealView {
+  groupId: string;
+  giftedTo: { userId: string; name: string; lastName?: string; photo?: string | null; alias: string; aliasEmoji: string };
+  giftedBy: { userId: string; name: string; lastName?: string; photo?: string | null; alias: string; aliasEmoji: string };
 }

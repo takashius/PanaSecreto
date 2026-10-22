@@ -1,5 +1,5 @@
 import { Schema, model, Types, Document } from 'mongoose';
-import { CurrencyEnum } from '@panasecreto/shared';
+import { CurrencyEnum, WishCategoryEnum } from '@panasecreto/shared';
 
 export interface IWish extends Document {
   _id: Types.ObjectId;
@@ -12,6 +12,8 @@ export interface IWish extends Document {
   productUrl?: string;
   imageUrl?: string;
   isFavorite: boolean;
+  category: string;
+  storeName?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -27,6 +29,8 @@ const wishSchema = new Schema<IWish>(
     productUrl: { type: String, trim: true, maxlength: 2000 },
     imageUrl: { type: String, trim: true, maxlength: 2000 },
     isFavorite: { type: Boolean, default: false },
+    category: { type: String, enum: Object.values(WishCategoryEnum), default: WishCategoryEnum.OTRO },
+    storeName: { type: String, trim: true, maxlength: 80 },
   },
   { timestamps: true }
 );

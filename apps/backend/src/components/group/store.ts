@@ -6,6 +6,7 @@ import {
   MemberRoleEnum,
   type AssignmentView,
   type CreateGroupDTO,
+  type RevealView,
   type GroupStatus,
   type GroupSummary,
   type InviteByEmailDTO,
@@ -16,6 +17,8 @@ import { Assignment, Group, IGroup, IGroupMember } from './model';
 import '../user/model'; // registra el modelo User para populate
 import { deleteWishesOfGroup, deleteWishesOfMember } from '../wishlist/cleanup';
 import { drawSecretFriends } from './draw';
+import { pickAutoAliases } from '../alias/store';
+import { deleteEngagementOfGroup, deleteEngagementOfMember, deleteCommentsOfGroup } from '../engagement/cleanup';
 import { StoreResponse } from '../../types/general';
 import {
   notifyDrawCompleted,
@@ -33,8 +36,8 @@ import {
    ============================================================== */
 
 const INVITE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sin 0/O/1/I para evitar confusiones
-const USER_PUBLIC_FIELDS = 'name lastName photo';
-const USER_CREATOR_FIELDS = 'name lastName photo email active';
+const USER_PUBLIC_FIELDS = 'name lastName nickname photo';
+const USER_CREATOR_FIELDS = 'name lastName nickname photo email active notifyEmail gender';
 const ACTIVE_DRAW_STATUSES: GroupStatus[] = [
   GroupStatusEnum.LOCKED,
   GroupStatusEnum.REVEALED,
@@ -78,6 +81,9 @@ interface PopulatedUser {
   photo?: string | null;
   email?: string;
   active?: boolean;
+  nickname?: string;
+  notifyEmail?: boolean;
+  gender?: 'M' | 'F' | 'N';
 }
 
 type IdLike = Types.ObjectId | string | { _id: Types.ObjectId | string } | null | undefined;
@@ -107,7 +113,19 @@ function plainMembers(group: IGroup): IGroupMember[] {
     role: m.role,
     joinedAt: m.joinedAt,
     exclusions: (m.exclusions || []).map((e) => new Types.ObjectId(idOf(e))),
+    ...(m.alias ? { alias: m.alias, aliasEmoji: m.aliasEmoji } : {}),
+    ...(m.envelopeOpenedAt ? { envelopeOpenedAt: m.envelopeOpenedAt } : {}),
   }));
+}
+
+const DEFAULT_ALIAS_EMOJI = '🎁';
+
+/** Alias visible de un miembro (si aún no eligió uno, un genérico) */
+export function aliasOf(member: Pick<IGroupMember, 'alias' | 'aliasEmoji'> | undefined | null) {
+  return {
+    alias: member?.alias || 'Pana Secreto',
+    aliasEmoji: member?.aliasEmoji || DEFAULT_ALIAS_EMOJI,
+  };
 }
 
 function exclusionMap(members: IGroupMember[]): Map<string, Set<string>> {
@@ -135,9 +153,14 @@ function serializeGroup(group: IGroup, viewerId: string, privileged = false) {
     budgetMax: group.budgetMax ?? null,
     maxParticipants: group.maxParticipants,
     anonymousClues: group.anonymousClues,
+    location: group.location ? { name: group.location.name, address: group.location.address ?? '' } : null,
+    note: group.note ?? null,
     inviteCode: group.inviteCode,
     memberCount: group.members.length,
     myRole: me?.role ?? null,
+    myAlias: me?.alias ?? null,
+    myAliasEmoji: me?.aliasEmoji ?? null,
+    envelopeOpened: Boolean(me?.envelopeOpenedAt),
     isCreator: isCreator(group, viewerId),
     drawnAt: group.drawnAt,
     revealedAt: group.revealedAt,
@@ -148,8 +171,11 @@ function serializeGroup(group: IGroup, viewerId: string, privileged = false) {
         userId: idOf(u),
         name: u?.name ?? 'Usuario',
         lastName: u?.lastName,
+        nickname: u?.nickname,
         photo: u?.photo ?? null,
         role: m.role,
+        // Quién ya eligió alias (sin decir cuál: el alias nunca se asocia a una persona)
+        hasAlias: Boolean(m.alias),
         joinedAt: m.joinedAt,
         ...(creatorView
           ? { email: u?.email, exclusions: (m.exclusions || []).map((e) => idOf(e)) }
@@ -206,6 +232,8 @@ export async function createGroup(userId: string, dto: CreateGroupDTO): Promise<
           budgetMax: dto.budgetMax ?? null,
           maxParticipants: dto.maxParticipants,
           anonymousClues: dto.anonymousClues,
+          location: dto.location ?? null,
+          note: dto.note ?? null,
           inviteCode: generateInviteCode(),
           members: [{ user: creator, role: MemberRoleEnum.CREATOR, joinedAt: new Date(), exclusions: [] }],
         });
@@ -258,6 +286,9 @@ export async function listMyGroups(
         myRole: me?.role ?? MemberRoleEnum.PARTICIPANT,
         creatorName: displayName(g.creator),
         hasAssignment: assignedSet.has(idOf(g._id)),
+        myAlias: me?.alias ?? null,
+        myAliasEmoji: me?.aliasEmoji ?? null,
+        envelopeOpened: Boolean(me?.envelopeOpenedAt),
       };
     });
 
@@ -342,6 +373,7 @@ export async function deleteGroup(actorId: string, id: string, actorIsAdmin = fa
     const audience = await recipientsOfGroup(idOf(group._id));
     await Assignment.deleteMany({ group: group._id });
     await deleteWishesOfGroup(group._id);
+    await deleteEngagementOfGroup(group._id);
     await Group.deleteOne({ _id: group._id });
     if (audience) notifyGroupDeleted(group.name, audience.members.filter((m) => m.id !== actorId));
     return { status: 200, message: { ok: true, message: 'Grupo eliminado.' } };
@@ -356,14 +388,30 @@ export async function deleteGroup(actorId: string, id: string, actorIsAdmin = fa
 
 export async function previewByCode(userId: string, inviteCode: string): Promise<StoreResponse> {
   try {
-    const group = await Group.findOne({ inviteCode }).populate('creator', 'name lastName');
+    const group = await Group.findOne({ inviteCode })
+      .populate('creator', 'name lastName')
+      .populate('members.user', 'name lastName photo');
     if (!group) return fail(404, 'INVALID_INVITE_CODE', 'No existe un grupo con ese código.');
+    const initials = (u?: PopulatedUser) =>
+      [u?.name, u?.lastName]
+        .filter(Boolean)
+        .map((x) => String(x).trim().charAt(0).toUpperCase())
+        .join('')
+        .slice(0, 2) || '?';
     return {
       status: 200,
       message: {
         id: idOf(group._id),
         name: group.name,
+        description: group.description,
         emoji: group.emoji,
+        location: group.location ? { name: group.location.name, address: group.location.address ?? '' } : null,
+        note: group.note ?? null,
+        // Solo iniciales y foto: suficiente para reconocer el grupo sin exponer datos
+        members: group.members.slice(0, 12).map((m) => {
+          const u = asUser(m.user);
+          return { initials: initials(u), photo: u?.photo ?? null };
+        }),
         creatorName: displayName(group.creator),
         status: group.status,
         exchangeDate: group.exchangeDate,
@@ -430,6 +478,7 @@ async function removeMemberInternal(group: IGroup, targetId: string): Promise<bo
   if (result.matchedCount === 1) {
     // Su lista de deseos ya no tiene sentido en el grupo
     await deleteWishesOfMember(group._id, targetId);
+    await deleteEngagementOfMember(group._id, targetId);
   }
   return result.matchedCount === 1;
 }
@@ -464,7 +513,14 @@ export async function removeMember(actorId: string, id: string, targetId: string
     if (!(await removeMemberInternal(group!, targetId))) return concurrentChange();
     if (target?.email) {
       notifyRemovedFromGroup(
-        { id: targetId, name: target.name ?? 'Pana', lastName: target.lastName, email: target.email, active: target.active },
+        {
+          id: targetId,
+          name: target.name ?? 'Pana',
+          lastName: target.lastName,
+          email: target.email,
+          active: target.active,
+          notifyEmail: target.notifyEmail,
+        },
         group!.name,
         displayName(group!.creator)
       );
@@ -630,10 +686,22 @@ export async function drawGroup(actorId: string, id: string): Promise<StoreRespo
       );
     }
 
+    // Quien no eligió alias recibe uno del catálogo (según su género, sin repetir dentro del grupo)
+    const missing = members.filter((m) => !m.alias);
+    if (missing.length > 0) {
+      const used = new Set(members.filter((m) => m.alias).map((m) => m.alias!.toLowerCase()));
+      const genders = missing.map((m) => asUser(findMember(group!, idOf(m.user))?.user)?.gender);
+      const picked = await pickAutoAliases(genders, used);
+      missing.forEach((m, i) => {
+        m.alias = picked[i].alias;
+        m.aliasEmoji = picked[i].emoji;
+      });
+    }
+
     // Bloquea el grupo solo si nadie lo modificó mientras se calculaba
     const locked = await Group.findOneAndUpdate(
       { _id: group!._id, status: GroupStatusEnum.WAITING, membersVersion: group!.membersVersion },
-      { $set: { status: GroupStatusEnum.LOCKED, drawnAt: new Date() } },
+      { $set: { status: GroupStatusEnum.LOCKED, drawnAt: new Date(), members } },
       { new: true }
     );
     if (!locked) return concurrentChange();
@@ -670,10 +738,16 @@ export async function resetDraw(actorId: string, id: string): Promise<StoreRespo
     }
     const result = await Group.updateOne(
       { _id: group!._id, status: GroupStatusEnum.LOCKED },
-      { $set: { status: GroupStatusEnum.WAITING }, $unset: { drawnAt: 1 }, $inc: { membersVersion: 1 } }
+      {
+        $set: { status: GroupStatusEnum.WAITING },
+        $unset: { drawnAt: 1, 'members.$[].envelopeOpenedAt': 1 },
+        $inc: { membersVersion: 1 },
+      }
     );
     if (result.matchedCount === 0) return concurrentChange();
     await Assignment.deleteMany({ group: group!._id });
+    // Los comentarios eran entre parejas del sorteo anterior
+    await deleteCommentsOfGroup(group!._id);
     notifyDrawReset(id);
     return respondWithGroup(id, actorId);
   } catch (error) {
@@ -732,7 +806,13 @@ export async function completeGroup(actorId: string, id: string): Promise<StoreR
   }
 }
 
-/** "Abrir el sobre": a quién le regala el usuario. */
+const isRevealed = (status: GroupStatus) =>
+  status === GroupStatusEnum.REVEALED || status === GroupStatusEnum.COMPLETED;
+
+/**
+ * "Mi sobre": a quién le regala el usuario.
+ * Antes de la revelación solo se entrega el alias de su pana; la identidad real sale al revelar.
+ */
 export async function getMyAssignment(userId: string, id: string): Promise<StoreResponse> {
   try {
     const group = await loadGroup(id);
@@ -740,24 +820,90 @@ export async function getMyAssignment(userId: string, id: string): Promise<Store
     if (!ACTIVE_DRAW_STATUSES.includes(group.status)) {
       return fail(409, 'NOT_DRAWN_YET', 'El sorteo aún no se ha realizado.');
     }
-    const assignment = await Assignment.findOne({ group: group._id, giver: new Types.ObjectId(userId) })
-      .populate('receiver', USER_PUBLIC_FIELDS)
-      .lean();
+    const assignment = await Assignment.findOne({ group: group._id, giver: new Types.ObjectId(userId) }).lean();
     if (!assignment) return fail(404, 'ASSIGNMENT_NOT_FOUND', 'No tienes una asignación en este grupo.');
 
-    const receiver = asUser(assignment.receiver);
+    const receiverId = idOf(assignment.receiver);
+    const receiverMember = findMember(group, receiverId);
+    const revealed = isRevealed(group.status);
+    const receiver = asUser(receiverMember?.user);
     const view: AssignmentView = {
       groupId: idOf(group._id),
+      opened: Boolean(findMember(group, userId)?.envelopeOpenedAt),
+      revealed,
       receiver: {
-        userId: idOf(receiver),
-        name: receiver?.name ?? 'Usuario',
-        lastName: receiver?.lastName,
-        photo: receiver?.photo ?? null,
+        ...aliasOf(receiverMember),
+        ...(revealed
+          ? {
+              userId: receiverId,
+              name: receiver?.name ?? 'Usuario',
+              lastName: receiver?.lastName,
+              photo: receiver?.photo ?? null,
+            }
+          : {}),
       },
     };
     return { status: 200, message: view };
   } catch (error) {
     return { status: 500, message: 'Error al consultar tu asignación.', detail: error };
+  }
+}
+
+/** Marca el sobre como abierto (idempotente: conserva la primera fecha). */
+export async function openEnvelope(userId: string, id: string): Promise<StoreResponse> {
+  try {
+    if (!isValidId(id)) return notFound();
+    const group = await Group.findOne({ _id: id, 'members.user': new Types.ObjectId(userId) }).select('status members');
+    if (!group) return notFound();
+    if (!ACTIVE_DRAW_STATUSES.includes(group.status)) {
+      return fail(409, 'NOT_DRAWN_YET', 'El sorteo aún no se ha realizado.');
+    }
+    const now = new Date();
+    await Group.updateOne(
+      { _id: group._id, members: { $elemMatch: { user: new Types.ObjectId(userId), envelopeOpenedAt: { $exists: false } } } },
+      { $set: { 'members.$.envelopeOpenedAt': now } }
+    );
+    const fresh = await Group.findById(group._id).select('members').lean();
+    const me = fresh?.members.find((m) => idOf(m.user) === userId);
+    return { status: 200, message: { opened: true, openedAt: me?.envelopeOpenedAt ?? now } };
+  } catch (error) {
+    return { status: 500, message: 'Error al abrir el sobre.', detail: error };
+  }
+}
+
+/** El Gran Día: a quién le regalé y quién me regaló (solo con el grupo revelado). */
+export async function getReveal(userId: string, id: string): Promise<StoreResponse> {
+  try {
+    const group = await loadGroup(id);
+    if (!group || !findMember(group, userId)) return notFound();
+    if (!isRevealed(group.status)) {
+      return fail(403, 'NOT_REVEALED', 'Las asignaciones son secretas hasta que el organizador las revele.');
+    }
+    const uid = new Types.ObjectId(userId);
+    const [given, received] = await Promise.all([
+      Assignment.findOne({ group: group._id, giver: uid }).lean(),
+      Assignment.findOne({ group: group._id, receiver: uid }).lean(),
+    ]);
+    if (!given || !received) return fail(404, 'ASSIGNMENT_NOT_FOUND', 'No tienes una asignación en este grupo.');
+    const person = (personId: string) => {
+      const m = findMember(group, personId);
+      const u = asUser(m?.user);
+      return {
+        userId: personId,
+        name: u?.name ?? 'Usuario',
+        lastName: u?.lastName,
+        photo: u?.photo ?? null,
+        ...aliasOf(m),
+      };
+    };
+    const view: RevealView = {
+      groupId: idOf(group._id),
+      giftedTo: person(idOf(given.receiver)),
+      giftedBy: person(idOf(received.giver)),
+    };
+    return { status: 200, message: view };
+  } catch (error) {
+    return { status: 500, message: 'Error al consultar la revelación.', detail: error };
   }
 }
 
@@ -775,7 +921,13 @@ export async function listAssignments(userId: string, id: string): Promise<Store
       .lean();
     const person = (value: unknown) => {
       const u = asUser(value);
-      return { userId: idOf(value), name: u?.name ?? 'Usuario', lastName: u?.lastName, photo: u?.photo ?? null };
+      return {
+        userId: idOf(value),
+        name: u?.name ?? 'Usuario',
+        lastName: u?.lastName,
+        photo: u?.photo ?? null,
+        ...aliasOf(findMember(group, idOf(value))),
+      };
     };
     return {
       status: 200,
@@ -848,11 +1000,19 @@ export async function adminListGroups(filters: {
 export async function findGroupForMember(groupId: string, userId: string) {
   if (!isValidId(groupId) || !Types.ObjectId.isValid(userId)) return null;
   return Group.findOne({ _id: groupId, 'members.user': new Types.ObjectId(userId) })
-    .select('status currency members.user')
+    .select('name status currency anonymousClues members.user members.alias members.aliasEmoji')
     .lean();
 }
 
 /** ID del usuario al que le regala `userId` en el grupo, o null si no hay sorteo. */
+/** ID de quien le regala a `userId` en el grupo, o null si no hay sorteo. */
+export async function findGiverId(groupId: string, userId: string): Promise<string | null> {
+  const a = await Assignment.findOne({ group: new Types.ObjectId(groupId), receiver: new Types.ObjectId(userId) })
+    .select('giver')
+    .lean();
+  return a ? idOf(a.giver) : null;
+}
+
 export async function findReceiverId(groupId: string, userId: string): Promise<string | null> {
   const a = await Assignment.findOne({ group: new Types.ObjectId(groupId), giver: new Types.ObjectId(userId) })
     .select('receiver')

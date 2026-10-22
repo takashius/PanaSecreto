@@ -59,6 +59,14 @@ router.post(
 );
 
 /* ---------- Miembros ---------- */
+// Alias: 5 sugerencias al azar (?gender=M|F|N&exclude=id1,id2) y elegir/escribir el propio
+router.get(
+  '/:id/alias/suggestions',
+  auth(),
+  handle((req) => controller.aliasSuggestions(uid(req), req.params.id, req.query))
+);
+router.put('/:id/members/me/alias', auth(), handle((req) => controller.setMyAlias(uid(req), req.params.id, req.body)));
+
 router.delete('/:id/members/me', auth(), handle((req) => controller.leaveGroup(uid(req), req.params.id)));
 router.delete(
   '/:id/members/:userId',
@@ -80,6 +88,10 @@ router.post('/:id/complete', auth(), handle((req) => controller.completeGroup(ui
 /* ---------- Asignaciones ---------- */
 // "Abrir el sobre": a quién le regalo yo
 router.get('/:id/assignment', auth(), handle((req) => controller.getMyAssignment(uid(req), req.params.id)));
+// Registrar que abrí el sobre
+router.post('/:id/envelope/open', auth(), handle((req) => controller.openEnvelope(uid(req), req.params.id)));
+// El Gran Día: a quién le regalé y quién me regaló (solo tras revelar)
+router.get('/:id/reveal', auth(), handle((req) => controller.getReveal(uid(req), req.params.id)));
 // Lista completa (solo tras revelar)
 router.get('/:id/assignments', auth(), handle((req) => controller.listAssignments(uid(req), req.params.id)));
 

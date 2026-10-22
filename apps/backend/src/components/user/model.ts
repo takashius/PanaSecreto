@@ -17,6 +17,13 @@ const userSchema = new Schema<IUserDocument>(
     middleName: { type: String, trim: true },
     phone: { type: String, trim: true },
     photo: { type: String, trim: true },
+    /** Apodo con el que lo ven sus panas en las listas de miembros */
+    nickname: { type: String, trim: true, maxlength: 30 },
+    /** M, F o N: solo para sugerir alias que correspondan */
+    gender: { type: String, enum: ['M', 'F', 'N'] },
+    /** Preferencias de notificación */
+    notifyEmail: { type: Boolean, default: true },
+    notifyComments: { type: Boolean, default: true },
     email: {
       type: String,
       trim: true,

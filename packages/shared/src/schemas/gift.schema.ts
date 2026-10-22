@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CurrencySchema } from '../enums';
+import { CurrencySchema, WishCategorySchema } from '../enums';
 
 /** Máximo de deseos por persona en un grupo */
 export const WISHLIST_MAX_ITEMS = 20;
@@ -26,6 +26,8 @@ export const WishSchema = z.object({
   /** Imagen del producto (Cloudinary) */
   imageUrl: z.string().optional(),
   isFavorite: z.boolean().default(false),
+  category: WishCategorySchema.optional(),
+  storeName: z.string().optional(),
   createdAt: z.string().or(z.date()),
   updatedAt: z.string().or(z.date()),
 });
@@ -44,6 +46,8 @@ export const CreateWishSchema = z
     currency: CurrencySchema.optional(),
     productUrl: httpUrl.optional(),
     isFavorite: z.boolean().default(false),
+    category: WishCategorySchema.default('otro'),
+    storeName: z.string().trim().max(80, 'Nombre de la tienda: máximo 80 caracteres').optional(),
   })
   .strict();
 
@@ -57,6 +61,8 @@ export const UpdateWishSchema = z
     currency: CurrencySchema.optional(),
     productUrl: httpUrl.nullable().optional(),
     isFavorite: z.boolean().optional(),
+    category: WishCategorySchema.optional(),
+    storeName: z.string().trim().max(80, 'Nombre de la tienda: máximo 80 caracteres').nullable().optional(),
     /** true para quitar la imagen actual sin subir otra */
     removeImage: z.boolean().optional(),
   })
