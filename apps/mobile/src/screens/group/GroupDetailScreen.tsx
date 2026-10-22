@@ -31,6 +31,12 @@ interface GroupDetailScreenProps {
   /** Sala de chat del grupo (para la vista previa de la pestaña Chat) */
   chatRoom?: ChatRoomSummary | null;
   onOpenChat?: () => void;
+  /** Organización: editar grupo, exclusiones y eliminar */
+  onEditGroup?: () => void;
+  onManageExclusions?: () => void;
+  onDeleteGroup?: () => void;
+  onLeaveGroup?: () => void;
+  onOpenReveal?: () => void;
   /** Mensajes sin leer en todos los chats (badge de la barra inferior) */
   chatUnread?: number;
 }
@@ -48,6 +54,11 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
   onOpenWish,
   chatRoom,
   onOpenChat,
+  onEditGroup,
+  onManageExclusions,
+  onDeleteGroup,
+  onLeaveGroup,
+  onOpenReveal,
   chatUnread = 0,
 }) => {
   const insets = useSafeAreaInsets();
@@ -70,14 +81,32 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
   const handleMore = () => {
     if (group.isOrganizer) {
       Alert.alert(group.name, undefined, [
-        { text: 'Editar grupo', onPress: () => soon('Editar grupo') },
-        ...(isWaiting ? [{ text: 'Gestionar exclusiones', onPress: () => soon('Exclusiones') }] : []),
-        { text: 'Eliminar grupo', style: 'destructive' as const, onPress: () => soon('Eliminar grupo') },
+        { text: 'Editar grupo', onPress: () => (onEditGroup ? onEditGroup() : soon('Editar grupo')) },
+        ...(isWaiting ? [{ text: 'Gestionar exclusiones', onPress: () => (onManageExclusions ? onManageExclusions() : soon('Exclusiones')) }] : []),
+        {
+          text: 'Eliminar grupo',
+          style: 'destructive' as const,
+          onPress: () =>
+            Alert.alert('¿Eliminar el grupo?', `Se borrará «${group.name}» con sus sobres, deseos y chat. No se puede deshacer.`, [
+              { text: 'Cancelar', style: 'cancel' },
+              { text: 'Eliminar', style: 'destructive', onPress: () => (onDeleteGroup ? onDeleteGroup() : soon('Eliminar grupo')) },
+            ]),
+        },
         { text: 'Cancelar', style: 'cancel' as const },
       ]);
     } else {
       Alert.alert(group.name, undefined, [
-        ...(isWaiting ? [{ text: 'Salir del grupo', style: 'destructive' as const, onPress: () => soon('Salir del grupo') }] : []),
+        ...(isWaiting
+          ? [{
+              text: 'Salir del grupo',
+              style: 'destructive' as const,
+              onPress: () =>
+                Alert.alert('¿Salir del grupo?', `Dejarás «${group.name}» y se borrará tu lista de deseos de este grupo.`, [
+                  { text: 'Cancelar', style: 'cancel' },
+                  { text: 'Salir', style: 'destructive', onPress: () => (onLeaveGroup ? onLeaveGroup() : soon('Salir del grupo')) },
+                ]),
+            }]
+          : []),
         { text: 'Cancelar', style: 'cancel' as const },
       ]);
     }
@@ -163,7 +192,7 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
               location={group.location}
               note={group.note}
               canEdit={group.isOrganizer}
-              onEdit={() => soon('Editar lugar del encuentro')}
+              onEdit={() => (onEditGroup ? onEditGroup() : soon('Editar lugar del encuentro'))}
             />
             {isWaiting && (
               <InviteCard
@@ -180,7 +209,7 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
               onMemberMenu={handleMemberMenu}
               onSeeAll={() => soon('Todos los panas')}
             />
-            {canManage && <ExclusionsCard exclusions={group.exclusions} onManage={() => soon('Exclusiones')} />}
+            {canManage && <ExclusionsCard exclusions={group.exclusions} onManage={() => (onManageExclusions ? onManageExclusions() : soon('Exclusiones'))} />}
             <DrawSection
               status={group.status}
               isOrganizer={group.isOrganizer}
@@ -198,6 +227,7 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
             opened={!!group.envelopeOpened}
             // Al conectar la API, abrir el sobre se registrará en el servidor
             onOpen={() => setGroup((g) => ({ ...g, envelopeOpened: true }))}
+            onOpenReveal={onOpenReveal}
             onOpenWish={(wish: WishPreview) => (onOpenWish ? onOpenWish(wish) : soon(`Detalle del deseo · ${wish.title}`))}
           />
         )}

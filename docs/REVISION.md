@@ -396,3 +396,29 @@ Reemplaza la paleta anterior (Morado Noche `#1E1338`, Amarillo Araguaney `#F7A80
 - **Reutilizables:** `utils/pickImage.ts` (permisos, cámara o galería, menú de foto, iniciales) y `components/profile/MenuRow` (fila con flecha o interruptor).
 - **Navegación:** la pestaña Perfil y el avatar del encabezado llevan al perfil. Al iniciar sesión, el perfil toma el nombre, el correo y el teléfono de la sesión.
 - **Pendiente en el backend:** campo `nickname` y preferencias de notificación (`notifyEmail`, `notifyComments`) en el usuario; respetar `notifyEmail` antes de enviar correos.
+
+### 2026-10-22 — App móvil: Notificaciones, Unirse con código, Exclusiones, Editar grupo y El Gran Día
+
+- **Notificaciones** (`screens/notifications/NotificationsScreen.tsx`):
+  - Filtros Todas / Comentarios / Grupos (punto coral si hay sin leer), aviso «Tienes N sin leer» y «Marcar todo leído».
+  - Agrupadas en Hoy / Esta semana / Antes, con ícono por tipo (`comment`, `reply`, `chat`, `draw`, `join`, `reminder`, `reveal`) y lo que va entre «» resaltado.
+  - Al tocar una se marca leída y lleva a su destino: mi deseo, deseo de mi pana, sobre, grupo, chat o revelación.
+  - La campana de Mis Grupos, Mis deseos y Chats abre esta pantalla y muestra el punto si hay sin leer.
+- **Unirse con código** (`screens/group/JoinGroupScreen.tsx`):
+  - Campo con formato automático `PANA-XXXX-XX` y búsqueda (código de prueba `PANA-7K2M-QX`). Si no existe, muestra un error claro.
+  - Vista previa del grupo: fecha, presupuesto, lugar, cupos, avatares y aviso de anonimato. Luego «¡Unirme al grupo!» o «No es mi grupo». Si ya eres miembro, ofrece «Ver el grupo».
+  - Se abre desde «¿Te llegó un código? · Ingresar» en Mis Grupos.
+- **Exclusiones** (`screens/group/ExclusionsScreen.tsx`):
+  - Reglas activas con avatares y botón de eliminar. Nueva regla eligiendo dos panas en chips (no deja elegir el mismo ni repetir una regla).
+  - Indicador en vivo de si el sorteo sigue siendo posible (`utils/drawFeasibility.ts`, emparejamiento de Kuhn con el mismo criterio del backend). Avisa antes de agregar una regla que lo rompe y no deja guardar si el sorteo es imposible.
+- **Editar grupo** (`screens/group/EditGroupScreen.tsx`):
+  - Emoji, nombre, fecha DD/MM/AAAA y hora (con máscara y frase de confirmación), presupuesto con moneda, cupo (no baja de los confirmados), lugar con «Revisar en el mapa», nota, y zona de cuidado para eliminar el grupo.
+  - Después del sorteo, presupuesto y cupo quedan fijos.
+  - Al guardar actualiza el detalle, Mis deseos y Chats (`utils/format.exchangeLabels`).
+- **El Gran Día · Revelación** (`screens/group/RevealScreen.tsx`): diseño hecho directamente con la nueva identidad.
+  - Encabezado festivo con confeti y «Le regalaste a» (con animación de entrada, el alias que tenía y su lista de deseos).
+  - «Te regaló» (con acceso al chat para agradecer) y detalles del encuentro.
+  - Se abre desde la notificación o desde «Ver la revelación» en Mi sobre.
+- **Detalle del grupo:** el menú, «Editar» del lugar y «Gestionar» de exclusiones ya navegan. Eliminar y salir piden confirmación y quitan el grupo de todas las listas.
+- **Tipos y mocks:** `AppNotification`, `JoinPreview`, `GroupReveal`, `exchangeAt` en el grupo, IDs en las exclusiones, `mocks/notifications.ts` y el grupo revelado «Los de la Promo UCAB».
+- **Pendiente en el backend:** modelo y endpoints de notificaciones (`GET /api/notifications`, marcar leídas), vista previa por código (`GET /api/group/invite/:code`), exclusiones por ID, revelación (quién me regaló y a quién le regalé) solo cuando el grupo está REVEALED, salir del grupo.

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image } from 'react-native';
+import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { Timer, CalendarDays, MailCheck, VenetianMask, Banknote, Lock, PartyPopper } from 'lucide-react-native';
 import { theme, envelopeStyles as styles } from '../../styles';
 import { BRAND_ISOTIPO } from '../../constants/brand';
@@ -11,12 +11,14 @@ interface Props {
   envelope: EnvelopeView;
   budgetMaxLabel: string;
   onOpenWish: (wish: WishPreview) => void;
+  /** Solo después de la revelación */
+  onOpenReveal?: () => void;
 }
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
 /** Sobre abierto: cuenta regresiva, alias de mi pana y su lista de deseos */
-export const OpenedEnvelope: React.FC<Props> = ({ envelope, budgetMaxLabel, onOpenWish }) => {
+export const OpenedEnvelope: React.FC<Props> = ({ envelope, budgetMaxLabel, onOpenWish, onOpenReveal }) => {
   const t = useCountdown(envelope.exchangeAt);
   const revealed = !!envelope.revealedName;
   const cells = [
@@ -72,6 +74,12 @@ export const OpenedEnvelope: React.FC<Props> = ({ envelope, budgetMaxLabel, onOp
             ? `Era ${envelope.alias}. ¡Ya no hay secretos!`
             : `Su identidad se revelará el ${envelope.exchangeDateLong}. Mientras tanto, guíate por su lista de deseos.`}
         </Text>
+        {revealed && onOpenReveal && (
+          <TouchableOpacity style={[styles.primaryButton, { marginTop: 14 }]} onPress={onOpenReveal} activeOpacity={0.85}>
+            <PartyPopper size={22} color={theme.colors.primary} strokeWidth={2.4} />
+            <Text style={styles.primaryButtonText}>Ver la revelación</Text>
+          </TouchableOpacity>
+        )}
         <View style={styles.budgetPill}>
           <Banknote size={18} color={theme.colors.secondaryDark} strokeWidth={2.2} />
           <Text style={styles.budgetPillText}>Presupuesto {budgetMaxLabel}</Text>

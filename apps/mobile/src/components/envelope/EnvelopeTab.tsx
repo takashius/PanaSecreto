@@ -10,10 +10,11 @@ interface Props {
   opened: boolean;
   onOpen: () => void;
   onOpenWish: (wish: WishPreview) => void;
+  onOpenReveal?: () => void;
 }
 
 /** Pestaña "Mi sobre": bloqueado (antes del sorteo) → sellado → abierto */
-export const EnvelopeTab: React.FC<Props> = ({ group, opened, onOpen, onOpenWish }) => {
+export const EnvelopeTab: React.FC<Props> = ({ group, opened, onOpen, onOpenWish, onOpenReveal }) => {
   const budgetLabel = `${formatBudget(group.currency, group.budgetMin, group.budgetMax)} ${group.currency === 'USD' ? 'USD' : ''}`.trim();
   const exchangeDateLong = group.envelope?.exchangeDateLong ?? group.exchangeDateLong;
 
@@ -40,7 +41,7 @@ export const EnvelopeTab: React.FC<Props> = ({ group, opened, onOpen, onOpenWish
   }
 
   const budgetMaxLabel = formatBudget(group.currency, null, group.budgetMax ?? group.budgetMin).replace('Hasta', 'hasta');
-  return <OpenedEnvelope envelope={group.envelope} budgetMaxLabel={budgetMaxLabel} onOpenWish={onOpenWish} />;
+  return <OpenedEnvelope envelope={group.envelope} budgetMaxLabel={budgetMaxLabel} onOpenWish={onOpenWish} onOpenReveal={onOpenReveal} />;
 };
 
 export default EnvelopeTab;

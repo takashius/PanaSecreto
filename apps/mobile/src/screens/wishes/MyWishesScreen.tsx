@@ -21,6 +21,8 @@ interface MyWishesScreenProps {
   onEditWish: (groupId: string, wish: MyWish) => void;
   onNavigateTab: (tab: DashboardTab) => void;
   onProfilePress: () => void;
+  onOpenNotifications: () => void;
+  hasNotifications?: boolean;
   chatUnread?: number;
 }
 
@@ -35,6 +37,8 @@ export const MyWishesScreen: React.FC<MyWishesScreenProps> = ({
   onEditWish,
   onNavigateTab,
   onProfilePress,
+  onOpenNotifications,
+  hasNotifications = false,
   chatUnread = 0,
 }) => {
   const insets = useSafeAreaInsets();
@@ -46,7 +50,8 @@ export const MyWishesScreen: React.FC<MyWishesScreenProps> = ({
         <MainHeader
           title="Mis deseos"
           icon={Heart}
-          onBellPress={() => Alert.alert('Notificaciones', 'La pantalla de notificaciones se maqueta en un próximo paso.')}
+          onBellPress={onOpenNotifications}
+        hasNotifications={hasNotifications}
           onAvatarPress={onProfilePress}
         />
         <View style={[styles.scrollContent, { flex: 1, justifyContent: 'center' }]}>
@@ -93,7 +98,8 @@ export const MyWishesScreen: React.FC<MyWishesScreenProps> = ({
       <MainHeader
         title="Mis deseos"
         icon={Heart}
-        onBellPress={() => Alert.alert('Notificaciones', 'La pantalla de notificaciones se maqueta en un próximo paso.')}
+        onBellPress={onOpenNotifications}
+        hasNotifications={hasNotifications}
         onAvatarPress={onProfilePress}
       />
 

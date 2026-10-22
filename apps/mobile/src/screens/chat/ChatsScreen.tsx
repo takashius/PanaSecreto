@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, ScrollView, Image, Alert } from 'react-native';
+import { View, Text, TextInput, ScrollView, Image } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MessagesSquare, VenetianMask, Lock, Search, CircleCheck, Lightbulb } from 'lucide-react-native';
 import { theme, chatsStyles as styles } from '../../styles';
@@ -14,10 +14,19 @@ interface ChatsScreenProps {
   onOpenRoom: (groupId: string) => void;
   onNavigateTab: (tab: DashboardTab) => void;
   onProfilePress: () => void;
+  onOpenNotifications: () => void;
+  hasNotifications?: boolean;
 }
 
 /** Pestaña "Chats": una sala anónima por grupo (no hay chats individuales) */
-export const ChatsScreen: React.FC<ChatsScreenProps> = ({ rooms, onOpenRoom, onNavigateTab, onProfilePress }) => {
+export const ChatsScreen: React.FC<ChatsScreenProps> = ({
+  rooms,
+  onOpenRoom,
+  onNavigateTab,
+  onProfilePress,
+  onOpenNotifications,
+  hasNotifications = false,
+}) => {
   const insets = useSafeAreaInsets();
   const [query, setQuery] = useState('');
 
@@ -37,7 +46,8 @@ export const ChatsScreen: React.FC<ChatsScreenProps> = ({ rooms, onOpenRoom, onN
       <MainHeader
         title="Chats"
         icon={MessagesSquare}
-        onBellPress={() => Alert.alert('Notificaciones', 'La pantalla de notificaciones se maqueta en un próximo paso.')}
+        onBellPress={onOpenNotifications}
+        hasNotifications={hasNotifications}
         onAvatarPress={onProfilePress}
       />
 

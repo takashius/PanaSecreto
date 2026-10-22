@@ -37,8 +37,12 @@ export interface GroupMemberPreview {
 
 export interface GroupExclusionPreview {
   id: string;
+  /** Nombres cortos para mostrar */
   a: string;
   b: string;
+  /** IDs de los miembros (para validar y guardar) */
+  aId?: string;
+  bId?: string;
 }
 
 /** Datos que muestra el Detalle del grupo (pestaña Resumen) */
@@ -54,6 +58,8 @@ export interface GroupDetailView {
   exchangeTimeLabel: string;
   /** "jueves 24 de diciembre", para frases completas */
   exchangeDateLong: string;
+  /** ISO 8601 del intercambio (fuente de las etiquetas anteriores al editar) */
+  exchangeAt: string;
   currency: 'USD' | 'VES';
   budgetMin: number | null;
   budgetMax: number | null;
@@ -70,6 +76,16 @@ export interface GroupDetailView {
   envelope?: EnvelopeView | null;
   /** Si ya abrí mi sobre (se recuerda en el servidor) */
   envelopeOpened?: boolean;
+  /** Solo cuando el grupo está REVEALED: quién era quién */
+  reveal?: GroupReveal | null;
+}
+
+/** Resultado de la revelación para mí */
+export interface GroupReveal {
+  /** A quién le regalé (nombre real + el alias que vi) */
+  giftedTo: { fullname: string; alias: string; initials: string };
+  /** Quién me regaló a mí */
+  giftedBy: { fullname: string; initials: string };
 }
 
 export type WishCategory = 'ropa' | 'tecnologia' | 'hogar' | 'libros' | 'dulces' | 'otro';
@@ -190,4 +206,39 @@ export interface ProfileView {
   photoUri?: string | null;
   notifyEmail: boolean;
   notifyComments: boolean;
+}
+
+/** Tipo de notificación (define ícono y a dónde lleva al tocarla) */
+export type NotificationKind = 'comment' | 'reply' | 'draw' | 'join' | 'reminder' | 'reveal' | 'chat';
+
+export interface AppNotification {
+  id: string;
+  kind: NotificationKind;
+  /** Texto principal; lo que va entre «» se resalta */
+  text: string;
+  groupId: string;
+  groupName: string;
+  /** ISO 8601 */
+  at: string;
+  read: boolean;
+  /** Destino al tocarla */
+  target: { screen: 'myWish' | 'wish' | 'envelope' | 'group' | 'chat' | 'reveal'; wishId?: string };
+}
+
+/** Grupo encontrado al buscar un código de invitación */
+export interface JoinPreview {
+  code: string;
+  groupId: string;
+  emoji: string;
+  name: string;
+  organizerName: string;
+  exchangeDateLabel: string;
+  exchangeTimeLabel: string;
+  currency: 'USD' | 'VES';
+  budgetMin: number | null;
+  budgetMax: number | null;
+  location?: { name: string; address: string } | null;
+  membersCount: number;
+  maxMembers: number;
+  memberInitials: string[];
 }

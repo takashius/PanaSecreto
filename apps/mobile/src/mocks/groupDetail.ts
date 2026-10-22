@@ -14,6 +14,7 @@ export const MOCK_GROUP_DETAIL: GroupDetailView = {
   exchangeDateLabel: 'Jue 24 dic',
   exchangeTimeLabel: '8:00 PM',
   exchangeDateLong: 'jueves 24 de diciembre',
+  exchangeAt: '2026-12-24T20:00:00-04:00',
   currency: 'USD',
   budgetMin: 10,
   budgetMax: 25,
@@ -32,7 +33,7 @@ export const MOCK_GROUP_DETAIL: GroupDetailView = {
     { id: 'm7', fullname: 'Elena Pérez', initials: 'EP', subtitle: 'Confirmado · 21 nov' },
     { id: 'm8', fullname: 'Daniel Mora', initials: 'DM', subtitle: 'Confirmado · 20 nov' },
   ],
-  exclusions: [{ id: 'x1', a: 'José', b: 'Andrea' }],
+  exclusions: [{ id: 'x1', a: 'José', b: 'Andrea', aId: 'm4', bId: 'm3' }],
   unreadChat: 1,
 };
 
@@ -47,6 +48,7 @@ export const MOCK_GROUP_OFICINA: GroupDetailView = {
   exchangeDateLabel: 'Jue 24 dic',
   exchangeTimeLabel: '6:00 PM',
   exchangeDateLong: 'jueves 24 de diciembre',
+  exchangeAt: '2026-12-24T18:00:00-04:00',
   currency: 'USD',
   budgetMin: 10,
   budgetMax: 25,
@@ -80,7 +82,54 @@ export const MOCK_GROUP_OFICINA: GroupDetailView = {
   },
 };
 
+/** Grupo ya revelado: sirve para maquetar "El Gran Día" */
+export const MOCK_GROUP_PROMO: GroupDetailView = {
+  id: 'promo-ucab',
+  emoji: '🎓',
+  name: 'Los de la Promo UCAB',
+  status: 'REVEALED',
+  organizerName: 'Gabriela Suárez',
+  isOrganizer: false,
+  exchangeDateLabel: 'Hoy',
+  exchangeTimeLabel: '8:00 PM',
+  exchangeDateLong: 'hoy',
+  exchangeAt: '2026-10-22T20:00:00-04:00',
+  currency: 'USD',
+  budgetMin: 15,
+  budgetMax: 25,
+  maxMembers: 16,
+  inviteCode: 'PANA-UCAB-26',
+  location: { name: 'Cena en casa de Gaby', address: 'Urb. Los Naranjos, Calle 3, Caracas' },
+  note: '¡Puntualidad, panas! Después del intercambio hay hallacas.',
+  membersCount: 16,
+  members: [
+    { id: 'p1', fullname: 'Gabriela Suárez', initials: 'GS', subtitle: 'Organiza', isOrganizer: true },
+    { id: 'p2', fullname: 'Carlos Pérez', initials: 'CP', subtitle: 'Lista de deseos lista ✨', isMe: true, wishlistReady: true },
+    { id: 'p3', fullname: 'Valeria Mendoza', initials: 'VM', subtitle: 'Confirmada' },
+    { id: 'p4', fullname: 'Andrés Rivas', initials: 'AR', subtitle: 'Confirmado' },
+  ],
+  exclusions: [],
+  unreadChat: 0,
+  envelopeOpened: true,
+  envelope: {
+    alias: 'Pana Incógnito #09',
+    revealedName: 'Valeria Mendoza',
+    exchangeAt: '2026-10-22T20:00:00-04:00',
+    exchangeDateLong: 'hoy',
+    wishes: [
+      { id: 'pw1', title: 'Perfume de vainilla', price: 25, currency: 'USD', category: 'otro', commentsCount: 1 },
+      { id: 'pw2', title: 'Taza térmica', price: 12, currency: 'USD', category: 'hogar', commentsCount: 0 },
+      { id: 'pw3', title: 'Libreta de dibujo', price: 10, currency: 'USD', category: 'libros', commentsCount: 0 },
+    ],
+  },
+  reveal: {
+    giftedTo: { fullname: 'Valeria Mendoza', alias: 'Pana Incógnito #09', initials: 'VM' },
+    giftedBy: { fullname: 'Andrés Rivas', initials: 'AR' },
+  },
+};
+
 export const MOCK_GROUPS: Record<string, GroupDetailView> = {
   [MOCK_GROUP_DETAIL.id]: MOCK_GROUP_DETAIL,
   [MOCK_GROUP_OFICINA.id]: MOCK_GROUP_OFICINA,
+  [MOCK_GROUP_PROMO.id]: MOCK_GROUP_PROMO,
 };

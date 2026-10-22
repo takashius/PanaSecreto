@@ -48,6 +48,10 @@ interface DashboardScreenProps {
   onNavigateTab?: (tab: DashboardTab) => void;
   /** Mensajes sin leer en todos los chats (badge de la barra inferior) */
   chatUnread?: number;
+  onOpenNotifications?: () => void;
+  hasNotifications?: boolean;
+  /** Abre "Unirse a un grupo" */
+  onJoinGroup?: () => void;
   /** Abre el detalle del grupo; 'sobre' entra directo a la pestaña Mi sobre */
   onOpenGroup?: (groupId: string, tab?: 'resumen' | 'sobre') => void;
 }
@@ -59,6 +63,9 @@ export default function DashboardScreen({
   onOpenGroup,
   onNavigateTab,
   chatUnread = 0,
+  onOpenNotifications,
+  hasNotifications = false,
+  onJoinGroup,
 }: DashboardScreenProps) {
   const insets = useSafeAreaInsets();
   const [selectedSegment, setSelectedSegment] = useState<'creados' | 'participo'>('creados');
@@ -82,6 +89,10 @@ export default function DashboardScreen({
   };
 
   const handleEnterCode = () => {
+    if (onJoinGroup) {
+      onJoinGroup();
+      return;
+    }
     if (Alert.prompt) {
       Alert.prompt(
           'Código de Invitación',
@@ -124,7 +135,10 @@ export default function DashboardScreen({
       <MainHeader
         title="Mis Grupos"
         icon={PartyPopper}
-        onBellPress={() => Alert.alert('Notificaciones', '¡Todo al día! No tienes notificaciones pendientes.')}
+        onBellPress={() =>
+          onOpenNotifications ? onOpenNotifications() : Alert.alert('Notificaciones', '¡Todo al día! No tienes notificaciones pendientes.')
+        }
+        hasNotifications={hasNotifications}
         onAvatarPress={handleProfilePress}
       />
 

@@ -12,3 +12,7 @@ export { myWishesStyles } from './myWishes.styles';
 export { wishFormStyles } from './wishForm.styles';
 export { chatsStyles } from './chats.styles';
 export { profileStyles } from './profile.styles';
+export { notificationsStyles } from './notifications.styles';
+export { joinGroupStyles } from './joinGroup.styles';
+export { exclusionsStyles } from './exclusions.styles';
+export { revealStyles } from './reveal.styles';

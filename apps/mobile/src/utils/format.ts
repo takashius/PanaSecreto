@@ -43,3 +43,26 @@ export function chatTime(iso: string, now: Date = new Date()): string {
 export function daysUntil(iso: string, now: number = Date.now()): number {
   return Math.max(0, Math.ceil((new Date(iso).getTime() - now) / 86_400_000));
 }
+
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+/** Etiquetas de fecha del intercambio a partir del ISO: "Jue 24 dic", "8:00 PM", "jueves 24 de diciembre" */
+export function exchangeLabels(iso: string): { dateLabel: string; timeLabel: string; dateLong: string } {
+  const d = new Date(iso);
+  const weekday = d.toLocaleDateString('es-VE', { weekday: 'short' }).replace('.', '');
+  const month = d.toLocaleDateString('es-VE', { month: 'short' }).replace('.', '');
+  const h = d.getHours();
+  const timeLabel = `${h % 12 || 12}:${String(d.getMinutes()).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`;
+  return {
+    dateLabel: `${cap(weekday)} ${d.getDate()} ${month}`,
+    timeLabel,
+    dateLong: d.toLocaleDateString('es-VE', { weekday: 'long', day: 'numeric', month: 'long' }),
+  };
+}
+
+/** Normaliza un código de invitación: mayúsculas, sin espacios, con guiones "PANA-XXXX-XX" */
+export function normalizeInviteCode(raw: string): string {
+  const clean = raw.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
+  const parts = [clean.slice(0, 4), clean.slice(4, 8), clean.slice(8, 10)].filter(Boolean);
+  return parts.join('-');
+}
