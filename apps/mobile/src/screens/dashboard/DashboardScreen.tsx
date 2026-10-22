@@ -104,6 +104,10 @@ export default function DashboardScreen({
   };
 
   const handleProfilePress = () => {
+    if (onNavigateTab) {
+      onNavigateTab('perfil');
+      return;
+    }
     Alert.alert(
       `Perfil de Pana`,
       `Sesión activa como ${fullName}.\n¿Deseas cerrar tu sesión?`,

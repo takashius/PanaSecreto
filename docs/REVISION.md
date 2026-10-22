@@ -377,3 +377,22 @@ Reemplaza la paleta anterior (Morado Noche `#1E1338`, Amarillo Araguaney `#F7A80
 - **Navegación y no leídos:** la barra inferior navega a Chats. Al entrar a una sala se marca como leída. El total de no leídos se muestra como badge en la pestaña Chats en todas las pantallas principales.
 - **Tipos y mocks:** `ChatMessage` (con `kind: 'pista'`) y `ChatRoomSummary`, en `mocks/chats.ts`.
 - **Pendiente en el backend:** alias por miembro y grupo (distinto del alias del sobre), historial `GET /api/group/:id/chat`, Socket.io por sala (`chat:message`), contador de no leídos y modo solo lectura después de la revelación.
+
+### 2026-10-22 — App móvil: Perfil, Editar perfil y Cambiar contraseña
+
+- **Perfil** (`screens/profile/ProfileScreen.tsx`, pestaña principal; diseño «Perfil»):
+  - Encabezado azul marino (barra de estado clara) con avatar (foto o iniciales), botón para cambiar la foto, nombre, correo y estadísticas: grupos, deseos e intercambios.
+  - Tarjeta de anonimato.
+  - **Cuenta:** Editar perfil y Cambiar contraseña.
+  - **Notificaciones:** interruptores de correos y de avisos de comentarios; si alguno está apagado aparece un aviso.
+  - **Ayuda:** cómo funciona, términos (`constants/app.TERMS_URL`) y contacto por correo.
+  - Cerrar sesión con confirmación y la versión de la app.
+- **Editar perfil** (`EditProfileScreen.tsx`):
+  - Foto con cámara o galería y recorte 1:1, nombre (obligatorio), apodo, correo de solo lectura y teléfono +58 con formato «412 123 4567» y validación de 10 dígitos.
+  - Tarjeta «Blindaje EntrePanas». «Guardar» solo se activa si hay cambios, y al guardar sale «¡Listo el pollo!».
+- **Cambiar contraseña** (`ChangePasswordScreen.tsx`):
+  - Contraseña actual, nueva con medidor de fuerza (`utils/password.ts`, mínimo 6 como el backend) y confirmación con aviso cuando coinciden. Todos los campos se pueden mostrar u ocultar (`components/profile/PasswordField`).
+  - Aclara que la sesión sigue abierta en este teléfono y se cierra en los demás, como hace `/user/change-password`.
+- **Reutilizables:** `utils/pickImage.ts` (permisos, cámara o galería, menú de foto, iniciales) y `components/profile/MenuRow` (fila con flecha o interruptor).
+- **Navegación:** la pestaña Perfil y el avatar del encabezado llevan al perfil. Al iniciar sesión, el perfil toma el nombre, el correo y el teléfono de la sesión.
+- **Pendiente en el backend:** campo `nickname` y preferencias de notificación (`notifyEmail`, `notifyComments`) en el usuario; respetar `notifyEmail` antes de enviar correos.

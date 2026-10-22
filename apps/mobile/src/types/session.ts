@@ -178,3 +178,16 @@ export interface ChatRoomSummary {
   unread: number;
   messages: ChatMessage[];
 }
+
+/** Datos del perfil propio que muestra y edita la app */
+export interface ProfileView {
+  fullname: string;
+  /** Apodo con el que te ven tus panas fuera del anonimato (lista de miembros, revelación) */
+  nickname?: string | null;
+  email: string;
+  /** Solo los dígitos locales; el prefijo +58 se muestra aparte */
+  phone?: string | null;
+  photoUri?: string | null;
+  notifyEmail: boolean;
+  notifyComments: boolean;
+}

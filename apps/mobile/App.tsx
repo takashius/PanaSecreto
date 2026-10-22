@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StatusBar, Platform, BackHandler, Alert } from 'react-native';
+import { StatusBar, Platform, BackHandler } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as NavigationBar from 'expo-navigation-bar';
 import { useFonts } from 'expo-font';
@@ -27,13 +27,17 @@ import WishFormScreen from './src/screens/wishes/WishFormScreen';
 import ChatsScreen from './src/screens/chat/ChatsScreen';
 import ChatRoomScreen from './src/screens/chat/ChatRoomScreen';
 import { MOCK_CHATS } from './src/mocks/chats';
+import ProfileScreen from './src/screens/profile/ProfileScreen';
+import EditProfileScreen from './src/screens/profile/EditProfileScreen';
+import ChangePasswordScreen from './src/screens/profile/ChangePasswordScreen';
+import { MOCK_PROFILE } from './src/mocks/profile';
 import { MOCK_MY_WISHLISTS } from './src/mocks/myWishes';
 import type { DashboardTab } from './src/components/common/FloatingTabBar';
-import type { ChatMessage, ChatRoomSummary, GroupDetailView, MyWish, MyWishlistGroup, WishComment, WishDetailView } from './src/types/session';
+import type { ProfileView, ChatMessage, ChatRoomSummary, GroupDetailView, MyWish, MyWishlistGroup, WishComment, WishDetailView } from './src/types/session';
 import { theme } from './src/styles/theme';
 import type { SessionUser } from './src/types/session';
 
-type Screen = 'login' | 'register' | 'recover' | 'dashboard' | 'createGroup' | 'groupDetail' | 'wishDetail' | 'myWishes' | 'wishForm' | 'chats' | 'chatRoom';
+type Screen = 'login' | 'register' | 'recover' | 'dashboard' | 'createGroup' | 'groupDetail' | 'wishDetail' | 'myWishes' | 'wishForm' | 'chats' | 'chatRoom' | 'profile' | 'editProfile' | 'changePassword';
 
 export default function App() {
   // Pila de navegación para soportar el botón de atrás nativo de Android
@@ -48,6 +52,9 @@ export default function App() {
   const [myLists, setMyLists] = useState<MyWishlistGroup[]>(MOCK_MY_WISHLISTS);
   const [myListGroupId, setMyListGroupId] = useState<string>(MOCK_MY_WISHLISTS[0]?.groupId ?? '');
   const [wishSource, setWishSource] = useState<'giver' | 'owner'>('giver');
+  // Perfil (maqueta): se completa con los datos de la sesión cuando existen
+  const [profile, setProfile] = useState<ProfileView>(MOCK_PROFILE);
+
   // Chats: una sala por grupo
   const [chats, setChats] = useState<ChatRoomSummary[]>(MOCK_CHATS);
   const [chatRoomId, setChatRoomId] = useState<string | null>(null);
@@ -114,7 +121,7 @@ export default function App() {
     if (tab === 'grupos') setScreenHistory(['dashboard']);
     else if (tab === 'deseos') setScreenHistory(['dashboard', 'myWishes']);
     else if (tab === 'chats') setScreenHistory(['dashboard', 'chats']);
-    else Alert.alert('Perfil', 'Esta sección se maqueta en un próximo paso.');
+    else setScreenHistory(['dashboard', 'profile']);
   };
 
   const handleWishComments = (wishId: string, comments: WishComment[]) => {
@@ -179,6 +186,12 @@ export default function App() {
         onNavigateToRecoverPassword={() => navigateTo('recover')}
         onLoginSuccess={(_token, user) => {
           setSessionUser(user);
+          setProfile((p) => ({
+            ...p,
+            fullname: user?.fullname || p.fullname,
+            email: user?.email || p.email,
+            phone: user?.phone || p.phone,
+          }));
           setScreenHistory(['dashboard']);
         }}
       />
@@ -189,6 +202,12 @@ export default function App() {
         onNavigateToLogin={goBack}
         onRegisterSuccess={(user) => {
           setSessionUser(user);
+          setProfile((p) => ({
+            ...p,
+            fullname: user?.fullname || p.fullname,
+            email: user?.email || p.email,
+            phone: user?.phone || p.phone,
+          }));
           setScreenHistory(['dashboard']);
         }}
       />
@@ -273,6 +292,39 @@ export default function App() {
         onMessagesChange={updateChatMessages}
       />
     );
+  } else if (currentScreen === 'profile') {
+    content = (
+      <ProfileScreen
+        profile={profile}
+        stats={{
+          groups: myLists.length,
+          wishes: myLists.reduce((n, l) => n + l.wishes.length, 0),
+          exchanges: chats.filter((c) => c.status === 'REVEALED' || c.status === 'COMPLETED').length,
+        }}
+        onProfileChange={setProfile}
+        onEditProfile={() => navigateTo('editProfile')}
+        onChangePassword={() => navigateTo('changePassword')}
+        onLogout={() => {
+          setSessionUser(null);
+          setScreenHistory(['login']);
+        }}
+        onNavigateTab={handleNavigateTab}
+        chatUnread={chatUnread}
+      />
+    );
+  } else if (currentScreen === 'editProfile') {
+    content = (
+      <EditProfileScreen
+        profile={profile}
+        onSave={(p) => {
+          setProfile(p);
+          goBack();
+        }}
+        onCancel={goBack}
+      />
+    );
+  } else if (currentScreen === 'changePassword') {
+    content = <ChangePasswordScreen onDone={goBack} onCancel={goBack} />;
   } else if (currentScreen === 'chats') {
     content = (
       <ChatsScreen
