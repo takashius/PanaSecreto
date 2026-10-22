@@ -87,6 +87,9 @@ Lista viva de lo que falta después de maquetar la app móvil (22 de octubre de 
 - [ ] **Perfil:** conectar Editar perfil, foto y Cambiar contraseña (la API ya lo soporta; las cuentas de Google crean su contraseña sin la actual).
 - [ ] **Conectar con la API:**
   - [x] Cliente HTTP (`src/api/client.ts`), sesión guardada en el teléfono y manejo de errores.
+  - [x] Inicio (Mis Grupos): grupos reales, campana y chats con no leídos reales, tips de la pantalla `grupos` (22/10/2026).
+  - [x] Crear grupo, detalle del grupo (Resumen y Mi sobre), editar, exclusiones, sortear, deshacer, revelar, finalizar, quitar panas, salir, eliminar y El Gran Día (22/10/2026).
+  - [ ] Elegir alias (siguiente paso), unirse con código, detalle del deseo con comentarios, Deseos, chat y notificaciones.
   - Reemplazar los datos de ejemplo (`src/mocks`) pantalla por pantalla.
   - Socket del chat.
   - Consultas periódicas de notificaciones.

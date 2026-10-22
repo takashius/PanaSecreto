@@ -1,55 +1,32 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  Image,
-} from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, Image, RefreshControl } from 'react-native';
 import { Alert } from '../../components/common/AppDialog';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, RadialGradient, Stop, Rect } from 'react-native-svg';
-import {
-  PartyPopper,
-  PlusCircle,
-  ArrowRight,
-  Crown,
-  Users,
-  Calendar,
-  Banknote,
-  Wine,
-  ChevronRight,
-  Lock,
-  Gift,
-  Mail,
-  LockOpen,
-  RotateCcw,
-  Smartphone,
-} from 'lucide-react-native';
+import { PartyPopper, PlusCircle, ArrowRight, Crown, Users, Smartphone } from 'lucide-react-native';
 import { theme, dashboardStyles } from '../../styles';
 import { FloatingTabBar, DashboardTab } from '../../components/common/FloatingTabBar';
 import { MainHeader } from '../../components/common/MainHeader';
-
+import { GroupCard } from '../../components/dashboard/GroupCard';
+import { EmptyGroups, GroupCardSkeleton, GroupsError } from '../../components/dashboard/GroupListStates';
+import { BRAND_ISOTIPO } from '../../constants/brand';
+import { useApiQuery } from '../../api/queryStore';
+import { fetchMyGroups, MY_GROUPS_KEY } from '../../api/groups';
+import { CHAT_UNREAD_KEY, fetchChatUnread, fetchNotificationsUnread, NOTIFICATIONS_UNREAD_KEY } from '../../api/badges';
+import { fetchTips, tipsKey } from '../../api/tips';
+import { sortGroups } from '../../utils/groupLabels';
 import type { SessionUser } from '../../types/session';
 
-const TAB_TITLES: Record<DashboardTab, string> = {
-  grupos: 'Grupos',
-  chats: 'Chats',
-  deseos: 'Deseos',
-  perfil: 'Perfil',
-};
-import { BRAND_ISOTIPO } from '../../constants/brand';
+/** Tip de respaldo si el servidor aún no tiene tips para esta pantalla */
+const FALLBACK_TIP = 'Sube qué te cuadra recibir para que tu pana secreto no te regale unas medias aburridas.';
+const fetchGroupTips = () => fetchTips('grupos');
 
 interface DashboardScreenProps {
   user?: SessionUser | null;
-  onLogout?: () => void;
   onNavigateToCreateGroup?: () => void;
   /** Cambia de pestaña principal (Chats, Deseos, Perfil) */
   onNavigateTab?: (tab: DashboardTab) => void;
-  /** Mensajes sin leer en todos los chats (badge de la barra inferior) */
-  chatUnread?: number;
   onOpenNotifications?: () => void;
-  hasNotifications?: boolean;
   /** Abre "Unirse a un grupo" */
   onJoinGroup?: () => void;
   /** Abre el detalle del grupo; 'sobre' entra directo a la pestaña Mi sobre */
@@ -58,58 +35,48 @@ interface DashboardScreenProps {
 
 export default function DashboardScreen({
   user,
-  onLogout,
   onNavigateToCreateGroup,
   onOpenGroup,
   onNavigateTab,
-  chatUnread = 0,
   onOpenNotifications,
-  hasNotifications = false,
   onJoinGroup,
 }: DashboardScreenProps) {
   const insets = useSafeAreaInsets();
   const [selectedSegment, setSelectedSegment] = useState<'creados' | 'participo'>('creados');
-  const [activeTab, setActiveTab] = useState<DashboardTab>('grupos');
+  const [tipIndex, setTipIndex] = useState(0);
+  const [pulling, setPulling] = useState(false);
 
-  const fullName = [user?.name, user?.lastName].filter(Boolean).join(' ') || 'Pana';
+  const groupsQuery = useApiQuery(MY_GROUPS_KEY, fetchMyGroups);
+  const notificationsQuery = useApiQuery(NOTIFICATIONS_UNREAD_KEY, fetchNotificationsUnread);
+  const chatQuery = useApiQuery(CHAT_UNREAD_KEY, fetchChatUnread);
+  const tipsQuery = useApiQuery(tipsKey('grupos'), fetchGroupTips, { staleMs: 30 * 60_000 });
+
+  const { created, joined } = useMemo(() => {
+    const all = sortGroups(groupsQuery.data ?? []);
+    return {
+      created: all.filter((g) => g.myRole === 'CREATOR'),
+      joined: all.filter((g) => g.myRole !== 'CREATOR'),
+    };
+  }, [groupsQuery.data]);
+  const visible = selectedSegment === 'creados' ? created : joined;
+
+  const tips = tipsQuery.data ?? [];
+  const tipText = tips.length > 0 ? tips[tipIndex % tips.length].text : FALLBACK_TIP;
+
   const firstName = user?.nickname || user?.name || 'Pana';
 
-  // El sobre se abre dentro del detalle del grupo: el pana asignado nunca se muestra fuera de ahí
-  const handleOpenEnvelope = () => onOpenGroup?.('panas-oficina', 'sobre');
-
-  const handleCreateGroup = () => {
-    if (onNavigateToCreateGroup) {
-      onNavigateToCreateGroup();
-    } else {
-      Alert.alert(
-        'Nuevo Grupo',
-        '¡Pronto podrás configurar tu grupo, fijar reglas de exclusión y armar el sorteo!'
-      );
-    }
+  const refreshAll = async () => {
+    setPulling(true);
+    await Promise.all([groupsQuery.refetch(), notificationsQuery.refetch(), chatQuery.refetch()]);
+    setPulling(false);
   };
 
-  const handleEnterCode = () => {
-    if (onJoinGroup) {
-      onJoinGroup();
-      return;
-    }
-    Alert.alert('Código de invitación', 'Ingresa el código que te compartieron tus panas para unirte a su intercambio.');
-  };
+  const handleCreateGroup = () => onNavigateToCreateGroup?.();
+  const handleEnterCode = () => onJoinGroup?.();
+  const handleOpenGroup = (groupId: string, tab: 'resumen' | 'sobre' = 'resumen') => onOpenGroup?.(groupId, tab);
 
-  const handleProfilePress = () => {
-    if (onNavigateTab) {
-      onNavigateTab('perfil');
-      return;
-    }
-    Alert.alert(
-      `Perfil de Pana`,
-      `Sesión activa como ${fullName}.\n¿Deseas cerrar tu sesión?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Cerrar Sesión', style: 'destructive', onPress: onLogout },
-      ]
-    );
-  };
+  const segmentCount = (segment: 'creados' | 'participo') =>
+    groupsQuery.data ? (segment === 'creados' ? created.length : joined.length) : '–';
 
   return (
     <SafeAreaView style={dashboardStyles.container} edges={['top']}>
@@ -120,13 +87,21 @@ export default function DashboardScreen({
         onBellPress={() =>
           onOpenNotifications ? onOpenNotifications() : Alert.alert('Notificaciones', '¡Todo al día! No tienes notificaciones pendientes.')
         }
-        hasNotifications={hasNotifications}
-        onAvatarPress={handleProfilePress}
+        hasNotifications={(notificationsQuery.data ?? 0) > 0}
+        onAvatarPress={() => onNavigateTab?.('perfil')}
       />
 
       {/* 2. Scrollable Dashboard Content */}
       <ScrollView
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={pulling}
+            onRefresh={() => void refreshAll()}
+            tintColor={theme.colors.primary}
+            colors={[theme.colors.primary]}
+          />
+        }
         contentContainerStyle={{
           paddingBottom: Math.max(insets.bottom, 16) + 90, // Margen suficiente para el tab flotante
         }}
@@ -193,23 +168,17 @@ export default function DashboardScreen({
               <View style={dashboardStyles.tipBadge}>
                 <Text style={dashboardStyles.tipBadgeText}>Tip del Guaca</Text>
               </View>
-              <Text style={dashboardStyles.mascotBannerTitle}>
-                ¡Ponte las pilas con tu lista!
-              </Text>
-              <Text style={dashboardStyles.mascotBannerSub}>
-                Sube qué te cuadra recibir para que tu Pana Secreto no te regale unas medias aburridas.
+              <Text style={[dashboardStyles.mascotBannerSub, { fontSize: theme.typography.fontSize.base, lineHeight: 20, marginTop: 4 }]}>
+                {tipText}
               </Text>
             </View>
 
             <TouchableOpacity
               style={dashboardStyles.mascotArrowButton}
               activeOpacity={0.8}
-              onPress={() =>
-                Alert.alert(
-                  'Lista de Deseos',
-                  'Pronto podrás armar tu lista de regalos para que tu pana secreto la vea en secreto.'
-                )
-              }
+              onPress={() => setTipIndex((i) => i + 1)}
+              accessibilityLabel="Otro tip"
+              disabled={tips.length < 2}
             >
               <ArrowRight size={18} color={theme.colors.white} />
             </TouchableOpacity>
@@ -254,7 +223,7 @@ export default function DashboardScreen({
                   selectedSegment === 'creados' && dashboardStyles.segmentBadgeTextActive,
                 ]}
               >
-                2
+                {segmentCount('creados')}
               </Text>
             </View>
           </TouchableOpacity>
@@ -295,266 +264,27 @@ export default function DashboardScreen({
                   selectedSegment === 'participo' && dashboardStyles.segmentBadgeTextActive,
                 ]}
               >
-                3
+                {segmentCount('participo')}
               </Text>
             </View>
           </TouchableOpacity>
         </View>
 
         {/* Lista de Grupos */}
-        {selectedSegment === 'creados' ? (
-          <View style={dashboardStyles.cardsList}>
-            {/* TARJETA 1: La Familia Miranda */}
-            <View style={dashboardStyles.groupCard}>
-              <View style={dashboardStyles.cardAccentLine} />
-
-              <View style={dashboardStyles.cardHeaderRow}>
-                <View style={dashboardStyles.cardTitleLeft}>
-                  <View style={dashboardStyles.groupIconBox}>
-                    <Text style={dashboardStyles.groupIconEmoji}>🎄</Text>
-                  </View>
-                  <View>
-                    <View style={dashboardStyles.groupTitleRow}>
-                      <Text style={dashboardStyles.groupTitleText}>La Familia Miranda</Text>
-                      <Text style={{ fontSize: 13 }}>⭐</Text>
-                    </View>
-                    <View style={dashboardStyles.groupDateRow}>
-                      <Calendar size={13} color={theme.colors.textMuted} />
-                      <Text style={dashboardStyles.groupDateText}>Límite: 24 de Diciembre</Text>
-                    </View>
-                  </View>
-                </View>
-
-                <View style={dashboardStyles.statusBadgePending}>
-                  <View style={dashboardStyles.statusDotPending} />
-                  <Text style={dashboardStyles.statusTextPending}>Esperando panas</Text>
-                </View>
-              </View>
-
-              {/* Chips de Presupuesto y Modalidad */}
-              <View style={dashboardStyles.chipsRow}>
-                <View style={dashboardStyles.infoChip}>
-                  <View style={dashboardStyles.chipIconBox}>
-                    <Banknote size={16} color={theme.colors.secondaryDark} />
-                  </View>
-                  <View>
-                    <Text style={dashboardStyles.chipLabel}>Presupuesto</Text>
-                    <Text style={dashboardStyles.chipValue}>Máx $25</Text>
-                  </View>
-                </View>
-
-                <View style={dashboardStyles.infoChip}>
-                  <View style={dashboardStyles.chipIconBoxAlt}>
-                    <Wine size={16} color={theme.colors.primary} />
-                  </View>
-                  <View>
-                    <Text style={dashboardStyles.chipLabel}>Modalidad</Text>
-                    <Text style={dashboardStyles.chipValue}>Parranda & Cena</Text>
-                  </View>
-                </View>
-              </View>
-
-              {/* Barra de Progreso de Integrantes */}
-              <View style={dashboardStyles.progressSection}>
-                <View style={dashboardStyles.progressHeader}>
-                  <Text style={dashboardStyles.progressLabel}>Panas confirmados</Text>
-                  <Text style={dashboardStyles.progressCount}>8 de 10 listos</Text>
-                </View>
-                <View style={dashboardStyles.progressBarTrack}>
-                  <View style={[dashboardStyles.progressBarFill, { width: '80%' }]} />
-                </View>
-              </View>
-
-              {/* Footer con Avatares y Gestionar */}
-              <View style={dashboardStyles.cardFooter}>
-                <View style={dashboardStyles.avatarStack}>
-                  <View style={[dashboardStyles.stackAvatar, { backgroundColor: '#FFD79D', alignItems: 'center', justifyContent: 'center' }]}>
-                    <Text style={{ fontSize: 14 }}>👩</Text>
-                  </View>
-                  <View style={[dashboardStyles.stackAvatar, { backgroundColor: '#B8E1FF', alignItems: 'center', justifyContent: 'center' }]}>
-                    <Text style={{ fontSize: 14 }}>👴</Text>
-                  </View>
-                  <View style={[dashboardStyles.stackAvatar, { backgroundColor: '#D5F2E3', alignItems: 'center', justifyContent: 'center' }]}>
-                    <Text style={{ fontSize: 14 }}>👨</Text>
-                  </View>
-                  <View style={dashboardStyles.stackAvatarEmoji}>
-                    <Text style={{ fontSize: 13 }}>🎭</Text>
-                  </View>
-                  <View style={dashboardStyles.stackBadge}>
-                    <Text style={dashboardStyles.stackBadgeText}>+4</Text>
-                  </View>
-                </View>
-
-                <TouchableOpacity
-                  style={dashboardStyles.btnManage}
-                  activeOpacity={0.8}
-                  onPress={() => onOpenGroup?.('familia-miranda', 'resumen')}
-                >
-                  <Text style={dashboardStyles.btnManageText}>Gestionar</Text>
-                  <ChevronRight size={14} color={theme.colors.textDark} />
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* TARJETA 2: Panas de la Oficina (¡Sorteo Listo!) */}
-            <View style={dashboardStyles.groupCard}>
-              <View style={dashboardStyles.cardHeaderRow}>
-                <View style={dashboardStyles.cardTitleLeft}>
-                  <View style={[dashboardStyles.groupIconBox, { backgroundColor: theme.colors.secondaryFixed }]}>
-                    <Text style={dashboardStyles.groupIconEmoji}>🥂</Text>
-                  </View>
-                  <View>
-                    <Text style={dashboardStyles.groupTitleText}>Panas de la Oficina</Text>
-                    <View style={dashboardStyles.groupDateRow}>
-                      <Lock size={13} color={theme.colors.textMuted} />
-                      <Text style={dashboardStyles.groupDateText}>Papelitos Asignados</Text>
-                    </View>
-                  </View>
-                </View>
-
-                <View style={dashboardStyles.statusBadgeReady}>
-                  <Gift size={13} color={theme.colors.primary} />
-                  <Text style={dashboardStyles.statusTextReady}>¡Sorteo Listo!</Text>
-                </View>
-              </View>
-
-              {/* Tarjeta Destacada: Sacar Papelito CTA */}
-              <View style={dashboardStyles.envelopeHighlightCard}>
-                <View style={dashboardStyles.envelopeLeft}>
-                  <View style={dashboardStyles.envelopeIconPill}>
-                    <Mail size={20} color={theme.colors.primary} />
-                  </View>
-                  <View style={dashboardStyles.envelopeTextContainer}>
-                    <Text style={dashboardStyles.envelopeTitle}>Tienes tu sobre sellado</Text>
-                    <Text style={dashboardStyles.envelopeSub}>El intercambio es en 4 días</Text>
-                  </View>
-                </View>
-
-                <TouchableOpacity
-                  style={dashboardStyles.btnOpenEnvelope}
-                  activeOpacity={0.85}
-                  onPress={handleOpenEnvelope}
-                >
-                  <Text style={dashboardStyles.btnOpenEnvelopeText}>Abrir</Text>
-                  <LockOpen size={13} color={theme.colors.white} />
-                </TouchableOpacity>
-              </View>
-
-              {/* Meta Info */}
-              <View style={dashboardStyles.cardFooter}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: theme.colors.secondaryContainer }} />
-                  <Text style={{ fontSize: 12, color: theme.colors.textSecondary }}>12/12 miembros completos</Text>
-                </View>
-                <Text style={{ fontSize: 13, fontWeight: 'bold', color: theme.colors.textDark }}>
-                  Máx $15
-                </Text>
-              </View>
-            </View>
-
-            {/* TARJETA 3: Los de la Promo (Grupo Histórico) */}
-            <View style={[dashboardStyles.groupCard, { opacity: 0.88 }]}>
-              <View style={dashboardStyles.cardHeaderRow}>
-                <View style={dashboardStyles.cardTitleLeft}>
-                  <View style={[dashboardStyles.groupIconBox, { backgroundColor: theme.colors.surfaceContainer }]}>
-                    <Text style={[dashboardStyles.groupIconEmoji, { opacity: 0.6 }]}>🎓</Text>
-                  </View>
-                  <View>
-                    <Text style={dashboardStyles.groupTitleText}>Los de la Promo UCAB</Text>
-                    <Text style={dashboardStyles.groupDateText}>Finalizado en Dic 2023</Text>
-                  </View>
-                </View>
-
-                <View style={dashboardStyles.statusBadgeHistory}>
-                  <Text style={dashboardStyles.statusTextHistory}>Histórico</Text>
-                </View>
-              </View>
-
-              <View style={dashboardStyles.cardFooter}>
-                <Text style={{ fontSize: 12, color: theme.colors.textMuted }}>16 panas participaron</Text>
-                <TouchableOpacity
-                  style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
-                  activeOpacity={0.7}
-                  onPress={() =>
-                    Alert.alert(
-                      'Revivir Grupo',
-                      '¿Deseas duplicar este grupo con las mismas reglas para el intercambio de este año?'
-                    )
-                  }
-                >
-                  <RotateCcw size={14} color={theme.colors.secondaryDark} />
-                  <Text style={{ fontSize: 12, fontWeight: 'bold', color: theme.colors.secondaryDark }}>
-                    Revivir este año
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        ) : (
-          /* Pestaña "Participo" */
-          <View style={dashboardStyles.cardsList}>
-            <View style={dashboardStyles.groupCard}>
-              <View style={dashboardStyles.cardHeaderRow}>
-                <View style={dashboardStyles.cardTitleLeft}>
-                  <View style={[dashboardStyles.groupIconBox, { backgroundColor: '#E0F4FF' }]}>
-                    <Text style={dashboardStyles.groupIconEmoji}>🎾</Text>
-                  </View>
-                  <View>
-                    <Text style={dashboardStyles.groupTitleText}>Panas del Pádel</Text>
-                    <Text style={dashboardStyles.groupDateText}>Organiza: Juan Pérez</Text>
-                  </View>
-                </View>
-                <View style={dashboardStyles.statusBadgePending}>
-                  <Text style={dashboardStyles.statusTextPending}>Esperando Sorteo</Text>
-                </View>
-              </View>
-
-              <View style={dashboardStyles.cardFooter}>
-                <Text style={{ fontSize: 12, color: theme.colors.textMuted }}>6 de 8 confirmados</Text>
-                <Text style={{ fontSize: 13, fontWeight: 'bold', color: theme.colors.textDark }}>Máx $30</Text>
-              </View>
-            </View>
-
-            <View style={dashboardStyles.groupCard}>
-              <View style={dashboardStyles.cardHeaderRow}>
-                <View style={dashboardStyles.cardTitleLeft}>
-                  <View style={[dashboardStyles.groupIconBox, { backgroundColor: '#FFF0D4' }]}>
-                    <Text style={dashboardStyles.groupIconEmoji}>🏫</Text>
-                  </View>
-                  <View>
-                    <Text style={dashboardStyles.groupTitleText}>Amigos del Colegio</Text>
-                    <Text style={dashboardStyles.groupDateText}>Organiza: Andrea V.</Text>
-                  </View>
-                </View>
-                <View style={dashboardStyles.statusBadgeReady}>
-                  <Gift size={13} color={theme.colors.primary} />
-                  <Text style={dashboardStyles.statusTextReady}>¡Listo!</Text>
-                </View>
-              </View>
-
-              <View style={dashboardStyles.envelopeHighlightCard}>
-                <View style={dashboardStyles.envelopeLeft}>
-                  <View style={dashboardStyles.envelopeIconPill}>
-                    <Mail size={20} color={theme.colors.primary} />
-                  </View>
-                  <View style={dashboardStyles.envelopeTextContainer}>
-                    <Text style={dashboardStyles.envelopeTitle}>Sobre asignado</Text>
-                    <Text style={dashboardStyles.envelopeSub}>Entrega el 21 de Diciembre</Text>
-                  </View>
-                </View>
-
-                <TouchableOpacity
-                  style={dashboardStyles.btnOpenEnvelope}
-                  activeOpacity={0.85}
-                  onPress={handleOpenEnvelope}
-                >
-                  <Text style={dashboardStyles.btnOpenEnvelopeText}>Ver</Text>
-                  <LockOpen size={13} color={theme.colors.white} />
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        )}
+        <View style={dashboardStyles.cardsList}>
+          {groupsQuery.loading ? (
+            <>
+              <GroupCardSkeleton />
+              <GroupCardSkeleton />
+            </>
+          ) : groupsQuery.error && !groupsQuery.data ? (
+            <GroupsError message={groupsQuery.error.message} onRetry={() => void groupsQuery.refetch()} />
+          ) : visible.length === 0 ? (
+            <EmptyGroups segment={selectedSegment} onCreate={handleCreateGroup} onJoin={handleEnterCode} />
+          ) : (
+            visible.map((g) => <GroupCard key={g.id} group={g} onOpen={handleOpenGroup} />)
+          )}
+        </View>
 
         {/* Banner: ¿Te llegó un código? */}
         <View style={dashboardStyles.inviteBanner}>
@@ -582,20 +312,10 @@ export default function DashboardScreen({
 
       {/* 3. Menú Flotante Inferior (Floating Tab Bar) */}
       <FloatingTabBar
-        activeTab={activeTab}
-        badges={{ chats: chatUnread }}
+        activeTab="grupos"
+        badges={{ chats: chatQuery.data ?? 0 }}
         onTabChange={(newTab) => {
-          if (newTab !== 'grupos' && onNavigateTab) {
-            onNavigateTab(newTab);
-            return;
-          }
-          setActiveTab(newTab);
-          if (newTab !== 'grupos') {
-            Alert.alert(
-              TAB_TITLES[newTab],
-              `La sección ${TAB_TITLES[newTab]} estará disponible en el próximo paso.`
-            );
-          }
+          if (newTab !== 'grupos') onNavigateTab?.(newTab);
         }}
       />
     </SafeAreaView>

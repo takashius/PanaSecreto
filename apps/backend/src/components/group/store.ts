@@ -14,7 +14,7 @@ import {
   type UpdateGroupDTO,
 } from '@panasecreto/shared';
 import { Assignment, Group, IGroup, IGroupMember } from './model';
-import '../user/model'; // registra el modelo User para populate
+import { User } from '../user/model'; // también registra el modelo User para populate
 import { deleteWishesOfGroup, deleteWishesOfMember } from '../wishlist/cleanup';
 import { drawSecretFriends } from './draw';
 import { pickAutoAliases } from '../alias/store';
@@ -270,6 +270,20 @@ export async function listMyGroups(
       .lean();
     const assignedSet = new Set(assigned.map((a) => idOf(a.group)));
 
+    // Vista previa de miembros para la tarjeta (iniciales o foto de los primeros 4)
+    const PREVIEW = 4;
+    const previewIds = Array.from(new Set(groups.flatMap((g) => g.members.slice(0, PREVIEW).map((m) => idOf(m.user)))));
+    const previewUsers = await User.find({ _id: { $in: previewIds } })
+      .select('name lastName nickname photo')
+      .lean();
+    const userById = new Map(previewUsers.map((u) => [idOf(u._id), u]));
+    const initialsOf = (u?: { name?: string; lastName?: string }) =>
+      [u?.name, u?.lastName]
+        .filter(Boolean)
+        .map((x) => String(x).trim().charAt(0).toUpperCase())
+        .join('')
+        .slice(0, 2) || '?';
+
     const results: GroupSummary[] = groups.map((g) => {
       const me = g.members.find((m) => idOf(m.user) === userId);
       return {
@@ -289,6 +303,14 @@ export async function listMyGroups(
         myAlias: me?.alias ?? null,
         myAliasEmoji: me?.aliasEmoji ?? null,
         envelopeOpened: Boolean(me?.envelopeOpenedAt),
+        locationName: g.location?.name ?? null,
+        drawnAt: g.drawnAt ?? null,
+        revealedAt: g.revealedAt ?? null,
+        completedAt: g.completedAt ?? null,
+        memberPreview: g.members.slice(0, PREVIEW).map((m) => {
+          const u = userById.get(idOf(m.user));
+          return { initials: initialsOf(u), photo: u?.photo ?? null, isMe: idOf(m.user) === userId };
+        }),
       };
     });
 

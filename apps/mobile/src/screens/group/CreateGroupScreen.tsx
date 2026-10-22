@@ -7,6 +7,7 @@ import {
   ScrollView,
   Switch,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import { Alert } from '../../components/common/AppDialog';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -28,23 +29,41 @@ import { createGroupStyles } from '../../styles/createGroup.styles';
 import { CreateGroupSuccessModal } from '../../components/group/CreateGroupSuccessModal';
 import { CalendarModal } from '../../components/common/CalendarModal';
 
-import type { CreatedGroupDraft } from '../../types/session';
 import { BRAND_ISOTIPO } from '../../constants/brand';
+import { createGroup, type ApiGroup } from '../../api/groupDetail';
+import { ApiError, errorMessage } from '../../api/client';
+import { useAuth } from '../../auth/AuthContext';
 
-/** Código de invitación de ejemplo (mientras no hay API) */
-const mockInviteCode = () => `PANA-${Math.floor(1000 + Math.random() * 9000)}-GO`;
+/** Emojis para identificar el grupo en las listas */
+const GROUP_EMOJIS = ['🎄', '🎁', '🥂', '🫔', '🎉', '💼', '🏠', '⚽', '🎓', '🎾'];
+/** Hora por defecto del intercambio (se puede cambiar luego en Editar grupo) */
+const DEFAULT_HOUR = 19;
+const toAmount = (v: string) => {
+  const clean = v.replace(/\s/g, '').replace(',', '.');
+  if (!clean) return null;
+  const n = Number(clean);
+  return Number.isFinite(n) ? n : NaN;
+};
 
 interface CreateGroupScreenProps {
   onNavigateBack: () => void;
-  onGroupCreated?: (newGroup: CreatedGroupDraft) => void;
+  /** El grupo ya existe en el servidor */
+  onGroupCreated?: (group: ApiGroup) => void;
+  /** Abre el detalle del grupo recién creado */
+  onOpenGroup?: (groupId: string) => void;
 }
 
 export const CreateGroupScreen: React.FC<CreateGroupScreenProps> = ({
   onNavigateBack,
   onGroupCreated,
+  onOpenGroup,
 }) => {
+  const { user } = useAuth();
   // Form States
-  const [groupName, setGroupName] = useState('Hallacas con los Primos 🫔');
+  const [groupName, setGroupName] = useState('');
+  const [emoji, setEmoji] = useState(GROUP_EMOJIS[0]);
+  const [saving, setSaving] = useState(false);
+  const [created, setCreated] = useState<ApiGroup | null>(null);
   // Fecha del intercambio elegida en el calendario
   const [exchangeDate, setExchangeDate] = useState<Date | null>(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -55,9 +74,6 @@ export const CreateGroupScreen: React.FC<CreateGroupScreenProps> = ({
   const [participantsCount, setParticipantsCount] = useState(12);
   const [anonymousClues, setAnonymousClues] = useState(true);
 
-  // Success Modal State
-  const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
-  const [generatedInviteCode, setGeneratedInviteCode] = useState('PANA-7821-GO');
 
   // Change Currency
   const handleSelectCurrency = (curr: 'USD' | 'VES') => {
@@ -88,37 +104,56 @@ export const CreateGroupScreen: React.FC<CreateGroupScreenProps> = ({
     : null;
 
   // Submit Handler
-  const handleCreateGroup = () => {
-    if (!groupName.trim()) {
-      Alert.alert('Nombre requerido', 'Por favor ingresa un nombre para el grupo de panas.');
+  const handleCreateGroup = async () => {
+    const name = groupName.trim();
+    if (name.length < 3) {
+      Alert.alert('Nombre requerido', 'Ponle al grupo un nombre de al menos 3 letras.');
       return;
     }
     if (!exchangeDate) {
       Alert.alert('Falta la fecha', 'Elige en el calendario el día del intercambio.');
       return;
     }
+    const when = new Date(exchangeDate);
+    when.setHours(DEFAULT_HOUR, 0, 0, 0);
+    if (when.getTime() <= Date.now()) {
+      Alert.alert('Fecha pasada', 'El intercambio tiene que ser en una fecha futura.');
+      return;
+    }
+    const budgetMin = noLimit ? null : toAmount(minBudget);
+    const budgetMax = noLimit ? null : toAmount(maxBudget);
+    if ((budgetMin != null && (Number.isNaN(budgetMin) || budgetMin < 0)) || (budgetMax != null && (Number.isNaN(budgetMax) || budgetMax < 0))) {
+      Alert.alert('Presupuesto', 'Escribe montos válidos (solo números).');
+      return;
+    }
+    if (budgetMin != null && budgetMax != null && budgetMin > budgetMax) {
+      Alert.alert('Presupuesto', 'El monto mínimo no puede ser mayor que el máximo.');
+      return;
+    }
 
-    // Código de maqueta; el real lo genera el backend al crear el grupo
-    const newCode = mockInviteCode();
-    setGeneratedInviteCode(newCode);
-
-    onGroupCreated?.({
-      name: groupName,
-      date: exchangeDateLabel ?? '',
-      exchangeAt: exchangeDate.toISOString(),
-      currency,
-      minBudget: noLimit ? null : minBudget,
-      maxBudget: noLimit ? null : maxBudget,
-      participantsLimit: participantsCount,
-      anonymousClues,
-      code: newCode,
-    });
-
-    setIsSuccessModalVisible(true);
+    setSaving(true);
+    try {
+      const group = await createGroup({
+        name,
+        emoji,
+        exchangeDate: when.toISOString(),
+        currency,
+        budgetMin,
+        budgetMax,
+        maxParticipants: participantsCount,
+        anonymousClues,
+      });
+      setCreated(group);
+      onGroupCreated?.(group);
+    } catch (error) {
+      Alert.alert('No pudimos crear el grupo', error instanceof ApiError ? error.message : errorMessage(error));
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleFinishAndReturn = () => {
-    setIsSuccessModalVisible(false);
+    setCreated(null);
     onNavigateBack();
   };
 
@@ -153,7 +188,7 @@ export const CreateGroupScreen: React.FC<CreateGroupScreenProps> = ({
 
           <View style={createGroupStyles.headerAvatarRing}>
             <Image
-              source={BRAND_ISOTIPO}
+              source={user?.photo ? { uri: user.photo } : BRAND_ISOTIPO}
               style={createGroupStyles.headerAvatarImg}
             />
           </View>
@@ -206,11 +241,26 @@ export const CreateGroupScreen: React.FC<CreateGroupScreenProps> = ({
                 onChangeText={setGroupName}
                 placeholder="Ej. Gaitas en la Oficina"
                 placeholderTextColor={theme.colors.outlineVariant}
+                maxLength={80}
               />
             </View>
             <Text style={createGroupStyles.fieldHint}>
               Un nombre con sabor navideño para que todos lo reconozcan rápido.
             </Text>
+            <View style={createGroupStyles.emojiRow} accessibilityRole="radiogroup" accessibilityLabel="Ícono del grupo">
+              {GROUP_EMOJIS.map((e) => (
+                <TouchableOpacity
+                  key={e}
+                  style={[createGroupStyles.emojiChip, emoji === e && createGroupStyles.emojiChipActive]}
+                  onPress={() => setEmoji(e)}
+                  activeOpacity={0.8}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected: emoji === e }}
+                >
+                  <Text style={createGroupStyles.emojiChipText}>{e}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
 
           {/* Fecha del Intercambio */}
@@ -241,6 +291,7 @@ export const CreateGroupScreen: React.FC<CreateGroupScreenProps> = ({
               </View>
               <ChevronDown size={18} color={theme.colors.textSecondary} />
             </TouchableOpacity>
+            <Text style={createGroupStyles.fieldHint}>A las 7:00 PM. La hora y el lugar los ajustas luego en «Editar grupo».</Text>
           </View>
         </View>
 
@@ -529,10 +580,15 @@ export const CreateGroupScreen: React.FC<CreateGroupScreenProps> = ({
           <TouchableOpacity
             style={createGroupStyles.btnSubmit}
             activeOpacity={0.88}
-            onPress={handleCreateGroup}
+            onPress={() => void handleCreateGroup()}
+            disabled={saving}
           >
-            <Mail size={22} color={theme.colors.onSecondaryContainer} />
-            <Text style={createGroupStyles.btnSubmitText}>Crear Grupo y Generar Enlace</Text>
+            {saving ? (
+              <ActivityIndicator color={theme.colors.onSecondaryContainer} />
+            ) : (
+              <Mail size={22} color={theme.colors.onSecondaryContainer} />
+            )}
+            <Text style={createGroupStyles.btnSubmitText}>{saving ? 'Creando el grupo…' : 'Crear Grupo y Generar Enlace'}</Text>
           </TouchableOpacity>
           <Text style={createGroupStyles.submitSubtext}>
             Nadie sabrá quién le tocó a quién hasta el destape final
@@ -542,11 +598,12 @@ export const CreateGroupScreen: React.FC<CreateGroupScreenProps> = ({
 
       {/* Modal de Éxito de Creación del Grupo */}
       <CreateGroupSuccessModal
-        visible={isSuccessModalVisible}
-        groupName={groupName}
-        inviteCode={generatedInviteCode}
-        onClose={() => setIsSuccessModalVisible(false)}
+        visible={!!created}
+        groupName={created?.name}
+        inviteCode={created?.inviteCode}
+        onClose={handleFinishAndReturn}
         onGoToGroups={handleFinishAndReturn}
+        onOpenGroup={created && onOpenGroup ? () => onOpenGroup(created.id) : undefined}
       />
       {calendarOpen && (
         <CalendarModal

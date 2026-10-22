@@ -695,4 +695,28 @@ export const createGroupStyles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.textSecondary,
   },
+  // Selector del ícono del grupo
+  emojiRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 12,
+  },
+  emojiChip: {
+    width: 44,
+    height: 44,
+    borderRadius: theme.radii.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.surfaceContainer,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  emojiChipActive: {
+    backgroundColor: theme.colors.secondaryFixed,
+    borderColor: theme.colors.secondaryContainer,
+  },
+  emojiChipText: {
+    fontSize: 22,
+  },
 });

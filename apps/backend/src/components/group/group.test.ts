@@ -241,6 +241,10 @@ describe('API de grupos', () => {
     it('mis grupos muestra rol y sobre disponible', async () => {
       const joined = await ctx.call('GET', '/group?scope=joined', undefined, P1.t);
       assert.ok(joined.d.results.some((g: any) => g.id === G && g.hasAssignment && g.myRole === 'PARTICIPANT'));
+      const card = joined.d.results.find((g: any) => g.id === G);
+      assert.equal(card.memberPreview.length, 4, 'vista previa de los primeros 4');
+      assert.ok(card.memberPreview.every((m: any) => /^[A-Z?]{1,2}$/.test(m.initials) && !('email' in m) && !('userId' in m)));
+      assert.equal(card.memberPreview.filter((m: any) => m.isMe).length, 1);
       const created = await ctx.call('GET', '/group?scope=created', undefined, O.t);
       assert.ok(created.d.results.every((g: any) => g.myRole === 'CREATOR'));
       assert.equal((await ctx.call('GET', '/group', undefined, X.t)).d.total, 0);

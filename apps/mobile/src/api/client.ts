@@ -6,12 +6,15 @@ export class ApiError extends Error {
   code?: string;
   /** Errores por campo (p. ej. { email: 'Ya existe…' }) */
   fields: Record<string, string>;
+  /** Cuerpo completo de la respuesta (datos extra como blockedMembers) */
+  body: unknown;
 
-  constructor(status: number, message: string, code?: string, fields: Record<string, string> = {}) {
+  constructor(status: number, message: string, code?: string, fields: Record<string, string> = {}, body: unknown = null) {
     super(message);
     this.status = status;
     this.code = code;
     this.fields = fields;
+    this.body = body;
   }
 }
 
@@ -52,7 +55,7 @@ function toApiError(status: number, body: unknown): ApiError {
       (typeof body.error === 'string' && body.error) ||
       Object.values(fields)[0] ||
       defaultMessage(status);
-    return new ApiError(status, message, code, fields);
+    return new ApiError(status, message, code, fields, body);
   }
   return new ApiError(status, defaultMessage(status));
 }

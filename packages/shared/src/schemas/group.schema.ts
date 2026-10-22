@@ -189,6 +189,13 @@ export interface GroupSummary {
   myAlias?: string | null;
   myAliasEmoji?: string | null;
   envelopeOpened?: boolean;
+  /** Nombre del lugar del encuentro (si se definió) */
+  locationName?: string | null;
+  drawnAt?: string | Date | null;
+  revealedAt?: string | Date | null;
+  completedAt?: string | Date | null;
+  /** Primeros miembros (iniciales o foto) para la tarjeta del inicio */
+  memberPreview?: Array<{ initials: string; photo: string | null; isMe: boolean }>;
 }
 
 /**

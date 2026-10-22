@@ -627,6 +627,131 @@ export const dashboardStyles = StyleSheet.create({
   },
 
   // Mini banner "¿Te llegó un código?"
+  // Tarjeta de grupo conectada a la API
+  cardPressed: {
+    opacity: 0.92,
+  },
+  stackInitials: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stackInitialsText: {
+    fontFamily: theme.typography.fontFamily.bodyBold,
+    fontSize: 11,
+    color: theme.colors.primary,
+  },
+  stackPhoto: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 14,
+  },
+  aliasHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: theme.colors.secondaryFixed,
+    borderRadius: theme.radii.lg,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 12,
+  },
+  aliasHintText: {
+    flex: 1,
+    fontFamily: theme.typography.fontFamily.bodySemibold,
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.primary,
+  },
+  footerMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flexShrink: 1,
+  },
+  footerMetaText: {
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: 12,
+    color: theme.colors.textSecondary,
+  },
+  footerBudget: {
+    fontFamily: theme.typography.fontFamily.bodyBold,
+    fontSize: 13,
+    color: theme.colors.textDark,
+  },
+  footerDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: theme.colors.secondaryContainer,
+  },
+  linkAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  linkActionText: {
+    fontFamily: theme.typography.fontFamily.bodyBold,
+    fontSize: 12,
+    color: theme.colors.secondaryDark,
+  },
+
+  // Estados de la lista: cargando, vacía y error
+  skeletonCard: {
+    backgroundColor: theme.colors.surfaceCard,
+    borderRadius: theme.radii['2xl'],
+    padding: 16,
+    gap: 12,
+  },
+  skeletonRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  skeletonBlock: {
+    backgroundColor: theme.colors.surfaceContainerHigh,
+    borderRadius: theme.radii.md,
+  },
+  emptyCard: {
+    backgroundColor: theme.colors.surfaceCard,
+    borderRadius: theme.radii['2xl'],
+    padding: 20,
+    alignItems: 'center',
+    gap: 8,
+  },
+  emptyMascot: {
+    width: 64,
+    height: 64,
+    borderRadius: 16,
+    marginBottom: 4,
+  },
+  emptyTitle: {
+    fontFamily: theme.typography.fontFamily.heading,
+    fontSize: theme.typography.fontSize.lg,
+    color: theme.colors.textDark,
+    textAlign: 'center',
+  },
+  emptyText: {
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 19,
+  },
+  emptyButton: {
+    marginTop: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: theme.colors.secondaryContainer,
+    paddingHorizontal: 18,
+    height: 42,
+    borderRadius: theme.radii.full,
+  },
+  emptyButtonText: {
+    fontFamily: theme.typography.fontFamily.bodyBold,
+    fontSize: theme.typography.fontSize.base,
+    color: theme.colors.primary,
+  },
+
   inviteBanner: {
     marginHorizontal: theme.spacing.margin,
     marginVertical: theme.spacing.md,

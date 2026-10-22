@@ -11,6 +11,64 @@ const card = {
 
 /** Estilos del Detalle del grupo (diseño Stitch «Detalle del Grupo - Nueva Identidad») */
 export const groupDetailStyles = StyleSheet.create({
+  // Estados de carga del detalle conectado a la API
+  stateCenter: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 32,
+    gap: 12,
+  },
+  stateTitle: {
+    fontFamily: theme.typography.fontFamily.heading,
+    fontSize: theme.typography.fontSize.lg,
+    color: theme.colors.textDark,
+    textAlign: 'center',
+  },
+  stateText: {
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 19,
+  },
+  stateButton: {
+    marginTop: 8,
+    backgroundColor: theme.colors.secondaryContainer,
+    paddingHorizontal: 20,
+    height: 42,
+    borderRadius: theme.radii.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stateButtonText: {
+    fontFamily: theme.typography.fontFamily.bodyBold,
+    fontSize: theme.typography.fontSize.base,
+    color: theme.colors.primary,
+  },
+  busyOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(248,247,242,0.6)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  busyCard: {
+    backgroundColor: theme.colors.surfaceCard,
+    borderRadius: theme.radii['2xl'],
+    paddingHorizontal: 24,
+    paddingVertical: 18,
+    alignItems: 'center',
+    gap: 10,
+  },
+  busyText: {
+    fontFamily: theme.typography.fontFamily.bodySemibold,
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.textDark,
+  },
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,

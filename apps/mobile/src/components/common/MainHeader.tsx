@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Bell, type LucideIcon } from 'lucide-react-native';
 import { theme, dashboardStyles } from '../../styles';
 import { BRAND_ISOTIPO } from '../../constants/brand';
+import { useAuth } from '../../auth/AuthContext';
 
 interface Props {
   title: string;
@@ -13,7 +14,9 @@ interface Props {
 }
 
 /** Encabezado de las pestañas principales: marca, título, campana y avatar */
-export const MainHeader: React.FC<Props> = ({ title, icon: Icon, hasNotifications = true, onBellPress, onAvatarPress }) => (
+export const MainHeader: React.FC<Props> = ({ title, icon: Icon, hasNotifications = true, onBellPress, onAvatarPress }) => {
+  const { user } = useAuth();
+  return (
   <View style={dashboardStyles.header}>
     <View style={dashboardStyles.headerBrandRow}>
       <View style={dashboardStyles.headerIconPill}>
@@ -41,10 +44,11 @@ export const MainHeader: React.FC<Props> = ({ title, icon: Icon, hasNotification
         onPress={onAvatarPress}
         accessibilityLabel="Perfil"
       >
-        <Image source={BRAND_ISOTIPO} style={dashboardStyles.profileAvatar} />
+        <Image source={user?.photo ? { uri: user.photo } : BRAND_ISOTIPO} style={dashboardStyles.profileAvatar} />
       </TouchableOpacity>
     </View>
   </View>
-);
+  );
+};
 
 export default MainHeader;

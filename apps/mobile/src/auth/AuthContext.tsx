@@ -4,6 +4,7 @@ import * as authApi from '../api/auth';
 import type { SessionPayload } from '../api/auth';
 import type { SessionUser } from '../types/session';
 import { clearSession, loadSession, saveSession, saveUser } from './storage';
+import { clearQueries } from '../api/queryStore';
 
 export type AuthStatus = 'restoring' | 'signedOut' | 'signedIn';
 
@@ -35,6 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const dropSession = useCallback(async (expired: boolean) => {
     setAuthToken(null);
+    clearQueries();
     await clearSession();
     setUser(null);
     setSessionExpired(expired);
@@ -84,6 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = useCallback(async (session: SessionPayload) => {
     const nextUser = userOf(session);
+    clearQueries();
     setAuthToken(session.token);
     await saveSession(session.token, nextUser);
     setUser(nextUser);

@@ -17,10 +17,9 @@ import RegisterScreen from './src/screens/auth/RegisterScreen';
 import RecoverPasswordScreen from './src/screens/auth/RecoverPasswordScreen';
 import DashboardScreen from './src/screens/dashboard/DashboardScreen';
 import CreateGroupScreen from './src/screens/group/CreateGroupScreen';
-import GroupDetailScreen from './src/screens/group/GroupDetailScreen';
 import type { GroupDetailTab } from './src/components/groupDetail/GroupDetailTabs';
 import WishDetailScreen from './src/screens/wish/WishDetailScreen';
-import { MOCK_GROUPS, MOCK_GROUP_DETAIL } from './src/mocks/groupDetail';
+import { MOCK_GROUPS } from './src/mocks/groupDetail';
 import { MOCK_WISH_DETAILS } from './src/mocks/wishes';
 import MyWishesScreen from './src/screens/wishes/MyWishesScreen';
 import WishFormScreen from './src/screens/wishes/WishFormScreen';
@@ -36,12 +35,14 @@ import type { SessionPayload } from './src/api/auth';
 import { BRAND_LOGO } from './src/constants/brand';
 import { authStyles } from './src/styles';
 import { toLocalPhone } from './src/utils/validation';
+import { useApiQuery } from './src/api/queryStore';
+import { fetchQuery } from './src/api/queryStore';
+import { fetchMyGroups, MY_GROUPS_KEY } from './src/api/groups';
+import { EditGroupContainer, ExclusionsContainer, GroupDetailContainer, RevealContainer } from './src/screens/group/GroupScreens';
+import { CHAT_UNREAD_KEY, fetchChatUnread, fetchNotificationsUnread, NOTIFICATIONS_UNREAD_KEY } from './src/api/badges';
 import LegalScreen from './src/screens/legal/LegalScreen';
 import NotificationsScreen from './src/screens/notifications/NotificationsScreen';
 import JoinGroupScreen from './src/screens/group/JoinGroupScreen';
-import ExclusionsScreen from './src/screens/group/ExclusionsScreen';
-import EditGroupScreen from './src/screens/group/EditGroupScreen';
-import RevealScreen from './src/screens/group/RevealScreen';
 import { MOCK_NOTIFICATIONS, MOCK_JOIN_PREVIEWS } from './src/mocks/notifications';
 import { MOCK_MY_WISHLISTS } from './src/mocks/myWishes';
 import type { DashboardTab } from './src/components/common/FloatingTabBar';
@@ -73,7 +74,7 @@ function AppContent() {
   const [screenHistory, setScreenHistory] = useState<Array<Screen>>(['dashboard']);
   const [authHistory, setAuthHistory] = useState<Array<Screen>>(['login']);
   const [groupDetailTab, setGroupDetailTab] = useState<GroupDetailTab>('resumen');
-  const [groupDetailId, setGroupDetailId] = useState<string>(MOCK_GROUP_DETAIL.id);
+  const [groupDetailId, setGroupDetailId] = useState<string>('');
   // Estado de maqueta: conserva los cambios locales mientras no hay API
   const [groups, setGroups] = useState<Record<string, GroupDetailView>>(MOCK_GROUPS);
   const [wishDetails, setWishDetails] = useState(MOCK_WISH_DETAILS);
@@ -91,12 +92,16 @@ function AppContent() {
 
   // Notificaciones (no son en tiempo real)
   const [notifications, setNotifications] = useState<AppNotification[]>(MOCK_NOTIFICATIONS);
-  const hasNotifications = notifications.some((n) => !n.read);
+  // Campana: no leídas reales (la lista de Notificaciones aún usa la maqueta)
+  const notificationsUnreadQuery = useApiQuery(NOTIFICATIONS_UNREAD_KEY, fetchNotificationsUnread, { enabled: signedIn, staleMs: 60_000 });
+  const hasNotifications = (notificationsUnreadQuery.data ?? 0) > 0;
 
   // Chats: una sala por grupo
   const [chats, setChats] = useState<ChatRoomSummary[]>(MOCK_CHATS);
   const [chatRoomId, setChatRoomId] = useState<string | null>(null);
-  const chatUnread = chats.reduce((n, c) => n + c.unread, 0);
+  // No leídos reales del chat (los comparte la barra inferior de todas las pestañas)
+  const chatUnreadQuery = useApiQuery(CHAT_UNREAD_KEY, fetchChatUnread, { enabled: signedIn, staleMs: 60_000 });
+  const chatUnread = chatUnreadQuery.data ?? 0;
 
   const openChatRoom = (groupId: string) => {
     // Al entrar se marcan como leídos
@@ -180,18 +185,6 @@ function AppContent() {
       setGroupDetailId(n.groupId);
       navigateTo('reveal');
     } else openGroup(n.groupId);
-  };
-
-  /** Quita un grupo de todas las listas de la maqueta (eliminar o salir) */
-  const removeGroup = (groupId: string) => {
-    setGroups((prev) => {
-      const next = { ...prev };
-      delete next[groupId];
-      return next;
-    });
-    setMyLists((prev) => prev.filter((l) => l.groupId !== groupId));
-    setChats((prev) => prev.filter((c) => c.groupId !== groupId));
-    setScreenHistory(['dashboard']);
   };
 
   /** Barra inferior: las pestañas principales no se apilan en el historial */
@@ -313,27 +306,40 @@ function AppContent() {
     content = (
       <CreateGroupScreen
         onNavigateBack={goBack}
+        onGroupCreated={() => void fetchQuery(MY_GROUPS_KEY, fetchMyGroups)}
+        onOpenGroup={(groupId) => {
+          setGroupDetailId(groupId);
+          setGroupDetailTab('resumen');
+          // Reemplaza "Crear grupo" por el detalle: atrás vuelve al inicio
+          setScreenHistory(['dashboard', 'groupDetail']);
+        }}
       />
     );
   } else if (currentScreen === 'groupDetail') {
     content = (
-      <GroupDetailScreen
+      <GroupDetailContainer
         key={groupDetailId}
-        group={groups[groupDetailId] ?? MOCK_GROUP_DETAIL}
+        groupId={groupDetailId}
         initialTab={groupDetailTab}
         onNavigateBack={goBack}
         onTabChange={setGroupDetailTab}
         onNavigateTab={handleNavigateTab}
         chatRoom={chats.find((c) => c.groupId === groupDetailId) ?? null}
-        onOpenChat={() => openChatRoom(groupDetailId)}
+        onOpenChat={() =>
+          chats.some((c) => c.groupId === groupDetailId)
+            ? openChatRoom(groupDetailId)
+            : Alert.alert('Chat del grupo', 'El chat se conecta con la API en uno de los próximos pasos.')
+        }
         onEditGroup={() => navigateTo('editGroup')}
         onManageExclusions={() => navigateTo('exclusions')}
-        onDeleteGroup={() => removeGroup(groupDetailId)}
-        onLeaveGroup={() => removeGroup(groupDetailId)}
+        onGroupGone={() => setScreenHistory(['dashboard'])}
         onOpenReveal={() => navigateTo('reveal')}
         chatUnread={chatUnread}
-        onGroupChange={(g) => setGroups((prev) => ({ ...prev, [g.id]: g }))}
         onOpenWish={(wish) => {
+          if (!wishDetails[wish.id]) {
+            Alert.alert(wish.title, 'El detalle del deseo y sus comentarios se conectan con la API en el siguiente paso.');
+            return;
+          }
           setWishSource('giver');
           setWishDetailId(wish.id);
           navigateTo('wishDetail');
@@ -448,36 +454,21 @@ function AppContent() {
         onNavigateBack={goBack}
       />
     );
-  } else if (currentScreen === 'exclusions' && groups[groupDetailId]) {
+  } else if (currentScreen === 'exclusions') {
+    content = <ExclusionsContainer groupId={groupDetailId} onDone={goBack} onCancel={goBack} />;
+  } else if (currentScreen === 'editGroup') {
     content = (
-      <ExclusionsScreen
-        group={groups[groupDetailId]}
-        onSave={(exclusions) => {
-          setGroups((prev) => ({ ...prev, [groupDetailId]: { ...prev[groupDetailId], exclusions } }));
-          goBack();
-        }}
+      <EditGroupContainer
+        groupId={groupDetailId}
+        onDone={goBack}
         onCancel={goBack}
+        onGroupGone={() => setScreenHistory(['dashboard'])}
       />
     );
-  } else if (currentScreen === 'editGroup' && groups[groupDetailId]) {
+  } else if (currentScreen === 'reveal') {
     content = (
-      <EditGroupScreen
-        group={groups[groupDetailId]}
-        onSave={(g) => {
-          setGroups((prev) => ({ ...prev, [g.id]: g }));
-          // Mantiene coherentes los nombres en Deseos y Chats
-          setMyLists((prev) => prev.map((l) => (l.groupId === g.id ? { ...l, name: g.name, emoji: g.emoji, budgetMax: g.budgetMax, currency: g.currency } : l)));
-          setChats((prev) => prev.map((c) => (c.groupId === g.id ? { ...c, name: g.name, emoji: g.emoji, exchangeAt: g.exchangeAt } : c)));
-          goBack();
-        }}
-        onDelete={() => removeGroup(groupDetailId)}
-        onCancel={goBack}
-      />
-    );
-  } else if (currentScreen === 'reveal' && groups[groupDetailId]) {
-    content = (
-      <RevealScreen
-        group={groups[groupDetailId]}
+      <RevealContainer
+        groupId={groupDetailId}
         onNavigateBack={goBack}
         onOpenWishlist={() => openGroup(groupDetailId, 'sobre')}
         onOpenChat={() => (chats.some((c) => c.groupId === groupDetailId) ? openChatRoom(groupDetailId) : openGroup(groupDetailId, 'chat'))}
@@ -532,16 +523,13 @@ function AppContent() {
         user={user}
         onNavigateToCreateGroup={() => navigateTo('createGroup')}
         onOpenNotifications={() => navigateTo('notifications')}
-        hasNotifications={hasNotifications}
         onJoinGroup={() => navigateTo('joinGroup')}
         onNavigateTab={handleNavigateTab}
-        chatUnread={chatUnread}
         onOpenGroup={(groupId, tab = 'resumen') => {
           setGroupDetailId(groupId);
           setGroupDetailTab(tab);
           navigateTo('groupDetail');
         }}
-        onLogout={handleLogout}
       />
     );
   }

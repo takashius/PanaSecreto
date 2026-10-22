@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, RefreshControl } from 'react-native';
 import { Alert } from '../../components/common/AppDialog';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, MoreVertical } from 'lucide-react-native';
@@ -15,7 +15,6 @@ import { ExclusionsCard } from '../../components/groupDetail/ExclusionsCard';
 import { DrawSection } from '../../components/groupDetail/DrawSection';
 import { EnvelopeTab } from '../../components/envelope/EnvelopeTab';
 import { ChatTabPreview } from '../../components/chat/ChatTabPreview';
-import { MOCK_GROUP_DETAIL } from '../../mocks/groupDetail';
 import type { ChatRoomSummary, GroupDetailView, GroupMemberPreview, WishPreview } from '../../types/session';
 
 interface GroupDetailScreenProps {
@@ -23,11 +22,19 @@ interface GroupDetailScreenProps {
   /** Cambio de pestaña principal desde la barra inferior (Chats, Deseos, Perfil) */
   onNavigateTab?: (tab: DashboardTab) => void;
   initialTab?: GroupDetailTab;
-  /** Datos del grupo; mientras no hay API se usan los de ejemplo */
-  group?: GroupDetailView;
-  /** Avisa cambios locales (sorteo, sobre abierto…) para conservarlos al navegar */
-  onGroupChange?: (group: GroupDetailView) => void;
+  /** Datos del grupo (vienen de la API, adaptados con toGroupDetailView) */
+  group: GroupDetailView;
   onTabChange?: (tab: GroupDetailTab) => void;
+  /** Deslizar para recargar */
+  refreshing?: boolean;
+  onRefresh?: () => void;
+  /** Acciones (cada pantalla contenedora llama a la API y recarga) */
+  onDraw?: () => void;
+  onResetDraw?: () => void;
+  onReveal?: () => void;
+  onComplete?: () => void;
+  onRemoveMember?: (member: GroupMemberPreview) => void;
+  onOpenEnvelope?: () => void;
   onOpenWish?: (wish: WishPreview) => void;
   /** Sala de chat del grupo (para la vista previa de la pestaña Chat) */
   chatRoom?: ChatRoomSummary | null;
@@ -49,9 +56,16 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
   onNavigateBack,
   onNavigateTab,
   initialTab = 'resumen',
-  group: initialGroup = MOCK_GROUP_DETAIL,
-  onGroupChange,
+  group,
   onTabChange,
+  refreshing = false,
+  onRefresh,
+  onDraw,
+  onResetDraw,
+  onReveal,
+  onComplete,
+  onRemoveMember,
+  onOpenEnvelope,
   onOpenWish,
   chatRoom,
   onOpenChat,
@@ -64,16 +78,10 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const [tab, setTabState] = useState<GroupDetailTab>(initialTab);
-  const [group, setGroupState] = useState<GroupDetailView>(initialGroup);
 
   const setTab = (next: GroupDetailTab) => {
     setTabState(next);
     onTabChange?.(next);
-  };
-  const setGroup = (update: (g: GroupDetailView) => GroupDetailView) => {
-    const next = update(group);
-    setGroupState(next);
-    onGroupChange?.(next);
   };
 
   const isWaiting = group.status === 'WAITING';
@@ -84,6 +92,38 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
       Alert.alert(group.name, undefined, [
         { text: 'Editar grupo', onPress: () => (onEditGroup ? onEditGroup() : soon('Editar grupo')) },
         ...(isWaiting ? [{ text: 'Gestionar exclusiones', onPress: () => (onManageExclusions ? onManageExclusions() : soon('Exclusiones')) }] : []),
+        ...(group.status === 'LOCKED'
+          ? [
+              {
+                text: 'Revelar quién era quién',
+                onPress: () =>
+                  Alert.alert('🎉 ¿Hacemos el destape?', 'Todos verán a quién le regaló cada quien y el chat quedará de solo lectura.', [
+                    { text: 'Todavía no', style: 'cancel' },
+                    { text: '¡Revelar!', onPress: () => onReveal?.() },
+                  ]),
+              },
+              {
+                text: 'Deshacer el sorteo',
+                onPress: () =>
+                  Alert.alert('¿Deshacer el sorteo?', 'Los sobres actuales dejan de valer, se borran los comentarios y el grupo vuelve a aceptar panas.', [
+                    { text: 'Cancelar', style: 'cancel' },
+                    { text: 'Deshacer', style: 'destructive', onPress: () => onResetDraw?.() },
+                  ]),
+              },
+            ]
+          : []),
+        ...(group.status === 'LOCKED' || group.status === 'REVEALED'
+          ? [
+              {
+                text: 'Finalizar intercambio',
+                onPress: () =>
+                  Alert.alert('¿Finalizar el intercambio?', 'El grupo pasará al histórico y ya no se podrá editar.', [
+                    { text: 'Cancelar', style: 'cancel' },
+                    { text: 'Finalizar', onPress: () => onComplete?.() },
+                  ]),
+              },
+            ]
+          : []),
         {
           text: 'Eliminar grupo',
           style: 'destructive' as const,
@@ -119,11 +159,10 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
         text: 'Quitar del grupo',
         style: 'destructive',
         onPress: () =>
-          setGroup((g) => ({
-            ...g,
-            members: g.members.filter((m) => m.id !== member.id),
-            membersCount: g.membersCount - 1,
-          })),
+          Alert.alert(`¿Quitar a ${member.fullname}?`, 'Se borrará su lista de deseos de este grupo y le avisaremos por correo.', [
+            { text: 'Cancelar', style: 'cancel' },
+            { text: 'Quitar', style: 'destructive', onPress: () => onRemoveMember?.(member) },
+          ]),
       },
       { text: 'Cancelar', style: 'cancel' },
     ]);
@@ -135,23 +174,7 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
       `Se cerrarán las inscripciones de «${group.name}» y cada pana recibirá su sobre secreto. Nadie sabrá quién le regala a quién hasta el día del intercambio.`,
       [
         { text: 'Todavía no', style: 'cancel' },
-        {
-          text: '¡Dale!',
-          onPress: () => {
-            setGroup((g) => ({
-              ...g,
-              status: 'LOCKED',
-              // Sobre de ejemplo mientras no hay API (el backend lo genera al sortear)
-              envelope: g.envelope ?? {
-                alias: 'Pana Incógnito #07',
-                exchangeAt: '2026-12-24T20:00:00-04:00',
-                exchangeDateLong: 'jueves 24 de diciembre',
-                wishes: [],
-              },
-            }));
-            Alert.alert('¡Sorteo hecho! 🎉', 'Los sobres ya están listos. Abre el tuyo en «Mi sobre».');
-          },
-        },
+        { text: '¡Dale!', onPress: () => onDraw?.() },
       ]
     );
   };
@@ -177,6 +200,11 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
       <ScrollView
         contentContainerStyle={[styles.scrollContent, { paddingBottom: Math.max(insets.bottom, 16) + 96 }]}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          onRefresh ? (
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} colors={[theme.colors.primary]} />
+          ) : undefined
+        }
       >
         <GroupDetailHero group={group} />
         <GroupDetailTabs
@@ -208,7 +236,12 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
               maxMembers={group.maxMembers}
               canManage={canManage}
               onMemberMenu={handleMemberMenu}
-              onSeeAll={() => soon('Todos los panas')}
+              onSeeAll={() =>
+                Alert.alert(
+                  `Panas de ${group.name}`,
+                  group.members.map((m) => `• ${m.fullname}${m.isOrganizer ? ' (organiza)' : ''}${m.isMe ? ' (tú)' : ''}`).join('\n')
+                )
+              }
             />
             {canManage && <ExclusionsCard exclusions={group.exclusions} onManage={() => (onManageExclusions ? onManageExclusions() : soon('Exclusiones'))} />}
             <DrawSection
@@ -226,8 +259,7 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
           <EnvelopeTab
             group={group}
             opened={!!group.envelopeOpened}
-            // Al conectar la API, abrir el sobre se registrará en el servidor
-            onOpen={() => setGroup((g) => ({ ...g, envelopeOpened: true }))}
+            onOpen={() => onOpenEnvelope?.()}
             onOpenReveal={onOpenReveal}
             onOpenWish={(wish: WishPreview) => (onOpenWish ? onOpenWish(wish) : soon(`Detalle del deseo · ${wish.title}`))}
           />

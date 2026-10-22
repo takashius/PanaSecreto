@@ -13,6 +13,8 @@ import { Copy, Check, MessageCircle, Link as LinkIcon } from 'lucide-react-nativ
 import { theme } from '../../styles/theme';
 import { createGroupStyles } from '../../styles/createGroup.styles';
 import { BRAND_ISOTIPO } from '../../constants/brand';
+import * as Clipboard from 'expo-clipboard';
+import { inviteLink } from '../../utils/format';
 
 interface CreateGroupSuccessModalProps {
   visible: boolean;
@@ -20,28 +22,33 @@ interface CreateGroupSuccessModalProps {
   inviteCode?: string;
   onClose: () => void;
   onGoToGroups: () => void;
+  /** Abre el detalle del grupo recién creado */
+  onOpenGroup?: () => void;
 }
 
 export const CreateGroupSuccessModal: React.FC<CreateGroupSuccessModalProps> = ({
   visible,
-  groupName = 'Hallacas con los Primos 🫔',
-  inviteCode = 'PANA-7821-GO',
+  groupName = '',
+  inviteCode = '',
   onClose,
   onGoToGroups,
+  onOpenGroup,
 }) => {
   const insets = useSafeAreaInsets();
   const [codeCopied, setCodeCopied] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
 
-  const shareUrl = `https://entrepanas.app/join/${inviteCode}`;
+  const shareUrl = inviteLink(inviteCode);
   const shareMessage = `¡Pana! Únete a nuestro Amigo Secreto "${groupName}" en EntrePanas. 🎄🎁\nCódigo: ${inviteCode}\nEnlace: ${shareUrl}`;
 
   const handleCopyCode = async () => {
+    await Clipboard.setStringAsync(inviteCode).catch(() => undefined);
     setCodeCopied(true);
     setTimeout(() => setCodeCopied(false), 2000);
   };
 
   const handleCopyLink = async () => {
+    await Clipboard.setStringAsync(shareUrl).catch(() => undefined);
     setLinkCopied(true);
     setTimeout(() => setLinkCopied(false), 2000);
   };
@@ -137,6 +144,11 @@ export const CreateGroupSuccessModal: React.FC<CreateGroupSuccessModalProps> = (
               </Text>
             </TouchableOpacity>
 
+            {onOpenGroup && (
+              <TouchableOpacity style={createGroupStyles.btnCopyLink} activeOpacity={0.85} onPress={onOpenGroup}>
+                <Text style={createGroupStyles.btnCopyLinkText}>Ver mi grupo</Text>
+              </TouchableOpacity>
+            )}
             <TouchableOpacity
               style={createGroupStyles.btnDismissModal}
               activeOpacity={0.7}

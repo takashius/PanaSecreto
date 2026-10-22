@@ -483,3 +483,28 @@ Reemplaza la paleta anterior (Morado Noche `#1E1338`, Amarillo Araguaney `#F7A80
   - `App.tsx`: pila de autenticación separada de la de la app; el perfil y el saludo del inicio salen del usuario real.
   - Dependencias nuevas (solo en el lockfile): `expo-secure-store`, `expo-web-browser`, `expo-linking`, `expo-constants`. `app.json` con `scheme: "entrepanas"`.
   - Verificación: `tsc` y ESLint sin errores; recorrido completo en el navegador con la API simulada (login malo y bueno, sesión restaurada, registro con correo repetido y bueno, recuperación, Google).
+
+### 2026-10-22 — App móvil: inicio (Mis Grupos) conectado a la API
+
+- **Backend:** `GET /api/group` agrega a cada grupo `memberPreview` (iniciales o foto de los primeros 4, sin correo ni ID), `locationName`, `drawnAt`, `revealedAt` y `completedAt`. Prueba nueva en `group.test.ts`.
+- **App:**
+  - `src/api/queryStore.ts`: caché mínima de consultas (`useApiQuery`, sin dependencias): muestra al instante lo último cargado, refresca por detrás, comparte datos entre pantallas y se limpia al cerrar o abrir sesión.
+  - `src/api/{groups,badges,tips}.ts`: mis grupos, no leídos (campana y chats) y tips por pantalla.
+  - `DashboardScreen`: «Mis Grupos» (organizo) y «Participo» con conteos reales, ordenados por fecha del intercambio (finalizados al final); deslizar para refrescar; tarjetas de carga, lista vacía con acción (crear o unirse) y error con «Reintentar».
+  - `components/dashboard/GroupCard.tsx`: una tarjeta por etapa. En espera: presupuesto, lugar o fecha, panas X de Y, avatares y aviso «Elige tu alias». Sorteado: sobre sellado o abierto con cuenta regresiva. Revelado: «¡Llegó el destape!». Finalizado: histórico.
+  - Tip del Guaca: tips reales de la pantalla `grupos` (la flecha pasa al siguiente). Campana y badge de Chats con datos reales en todas las pestañas. El avatar del encabezado usa la foto del usuario.
+  - Se quitaron los datos fijos y el botón «Revivir este año» (no hay función en la API todavía). Tocar un grupo real avisa que el detalle se conecta en el siguiente paso.
+- **Verificación:** `tsc` y ESLint sin errores; pruebas de grupos, deseos e interacción en verde; capturas con la API simulada (listas, carga, vacía y error).
+
+### 2026-10-22 — App móvil: crear grupo y detalle del grupo conectados
+
+- **Crear grupo:** `POST /api/group` con nombre (ya no viene precargado), ícono del grupo (10 emojis), fecha del calendario a las 7:00 PM (la hora se cambia en Editar grupo), moneda, presupuesto (validado: números, mínimo ≤ máximo, o «sin límite»), cupo y pistas anónimas. El modal de éxito muestra el código real, copia de verdad el código y el enlace (`expo-clipboard`) y ofrece «Ver mi grupo».
+- **Detalle del grupo** (`screens/group/GroupScreens.tsx`): contenedores que cargan el grupo con `GET /api/group/:id` y, según la etapa, el sobre (`/assignment`), la lista del pana (`/wishlist/assigned`) y la revelación (`/reveal`). `adapters/groupView.ts` convierte la respuesta a la vista que ya usaban las pantallas, así que el diseño no cambió.
+  - Resumen: datos reales, lugar y nota, código de invitación, panas (organizador primero, «tú», se unió hace…, alias listo / sin alias), exclusiones como parejas y deslizar para recargar.
+  - Acciones con indicador de «trabajando» y mensajes claros: sortear (con aviso si faltan panas o si las exclusiones lo impiden), deshacer el sorteo, revelar, finalizar, quitar a un pana, salir y eliminar. Después de cada acción se recargan el grupo y el inicio.
+  - Mi sobre: sellado → «Abrir mi sobre» lo registra en el servidor → alias del pana y su lista de deseos reales.
+  - Editar grupo: envía solo lo que cambió (presupuesto, moneda y cupo solo antes del sorteo, como exige la API). Exclusiones: cada pareja es mutua y se guarda por miembro; avisa si el sorteo deja de ser posible. El Gran Día: a quién le regalé y quién me regaló.
+  - `GroupDetailScreen` quedó controlado (sin datos de ejemplo); `ApiError` guarda el cuerpo completo (p. ej. `blockedMembers`).
+  - Todavía con maqueta: el chat del grupo y el detalle de un deseo (avisan que se conectan en el siguiente paso).
+- **Verificación:** `tsc` y ESLint sin errores. Recorrido completo en el navegador con respuestas reales del backend (capturadas con un servidor de prueba): crear → ver grupo → sortear → abrir el sobre.
+
