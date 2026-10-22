@@ -46,6 +46,8 @@ interface DashboardScreenProps {
   onNavigateToCreateGroup?: () => void;
   /** Cambia de pestaña principal (Chats, Mis deseos, Perfil) */
   onNavigateTab?: (tab: DashboardTab) => void;
+  /** Mensajes sin leer en todos los chats (badge de la barra inferior) */
+  chatUnread?: number;
   /** Abre el detalle del grupo; 'sobre' entra directo a la pestaña Mi sobre */
   onOpenGroup?: (groupId: string, tab?: 'resumen' | 'sobre') => void;
 }
@@ -56,6 +58,7 @@ export default function DashboardScreen({
   onNavigateToCreateGroup,
   onOpenGroup,
   onNavigateTab,
+  chatUnread = 0,
 }: DashboardScreenProps) {
   const insets = useSafeAreaInsets();
   const [selectedSegment, setSelectedSegment] = useState<'creados' | 'participo'>('creados');
@@ -580,6 +583,7 @@ export default function DashboardScreen({
       {/* 3. Menú Flotante Inferior (Floating Tab Bar) */}
       <FloatingTabBar
         activeTab={activeTab}
+        badges={{ chats: chatUnread }}
         onTabChange={(newTab) => {
           if (newTab !== 'grupos' && onNavigateTab) {
             onNavigateTab(newTab);

@@ -27,3 +27,19 @@ export function timeAgo(iso: string, now: number = Date.now()): string {
   if (d < 7) return d === 1 ? 'hace 1 día' : `hace ${d} días`;
   return new Date(iso).toLocaleDateString('es-VE', { day: 'numeric', month: 'short' });
 }
+
+/** Hora o día corto para listas de chat: "10:45", "Ayer", "dom", "24 dic" */
+export function chatTime(iso: string, now: Date = new Date()): string {
+  const d = new Date(iso);
+  const startOfDay = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const days = Math.round((startOfDay(now) - startOfDay(d)) / 86_400_000);
+  if (days <= 0) return d.toLocaleTimeString('es-VE', { hour: 'numeric', minute: '2-digit' });
+  if (days === 1) return 'Ayer';
+  if (days < 7) return d.toLocaleDateString('es-VE', { weekday: 'short' });
+  return d.toLocaleDateString('es-VE', { day: 'numeric', month: 'short' });
+}
+
+/** Días completos que faltan hasta una fecha (0 si ya pasó) */
+export function daysUntil(iso: string, now: number = Date.now()): number {
+  return Math.max(0, Math.ceil((new Date(iso).getTime() - now) / 86_400_000));
+}

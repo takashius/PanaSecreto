@@ -148,3 +148,33 @@ export interface MyWishlistGroup {
   exchangeYear: number;
   wishes: MyWish[];
 }
+
+/** Mensaje del chat grupal anónimo: siempre se firma con el alias del grupo, nunca con el nombre */
+export interface ChatMessage {
+  id: string;
+  alias: string;
+  /** Emoji del avatar del alias */
+  avatar: string;
+  text: string;
+  /** ISO 8601 */
+  at: string;
+  mine: boolean;
+  /** 'pista' = indirecta para quien me regala (se resalta) */
+  kind?: 'mensaje' | 'pista';
+}
+
+/** Resumen de la sala de chat de un grupo (un solo chat por grupo, sin chats individuales) */
+export interface ChatRoomSummary {
+  groupId: string;
+  emoji: string;
+  name: string;
+  status: GroupStatus;
+  /** Mi alias en este grupo, p. ej. "Pana Llanero" */
+  myAlias: string;
+  myAvatar: string;
+  membersCount: number;
+  /** ISO del intercambio, para "Faltan N días" */
+  exchangeAt: string;
+  unread: number;
+  messages: ChatMessage[];
+}

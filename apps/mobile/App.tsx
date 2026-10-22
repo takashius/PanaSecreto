@@ -24,13 +24,16 @@ import { MOCK_GROUPS, MOCK_GROUP_DETAIL } from './src/mocks/groupDetail';
 import { MOCK_WISH_DETAILS } from './src/mocks/wishes';
 import MyWishesScreen from './src/screens/wishes/MyWishesScreen';
 import WishFormScreen from './src/screens/wishes/WishFormScreen';
+import ChatsScreen from './src/screens/chat/ChatsScreen';
+import ChatRoomScreen from './src/screens/chat/ChatRoomScreen';
+import { MOCK_CHATS } from './src/mocks/chats';
 import { MOCK_MY_WISHLISTS } from './src/mocks/myWishes';
 import type { DashboardTab } from './src/components/common/FloatingTabBar';
-import type { GroupDetailView, MyWish, MyWishlistGroup, WishComment, WishDetailView } from './src/types/session';
+import type { ChatMessage, ChatRoomSummary, GroupDetailView, MyWish, MyWishlistGroup, WishComment, WishDetailView } from './src/types/session';
 import { theme } from './src/styles/theme';
 import type { SessionUser } from './src/types/session';
 
-type Screen = 'login' | 'register' | 'recover' | 'dashboard' | 'createGroup' | 'groupDetail' | 'wishDetail' | 'myWishes' | 'wishForm';
+type Screen = 'login' | 'register' | 'recover' | 'dashboard' | 'createGroup' | 'groupDetail' | 'wishDetail' | 'myWishes' | 'wishForm' | 'chats' | 'chatRoom';
 
 export default function App() {
   // Pila de navegación para soportar el botón de atrás nativo de Android
@@ -45,6 +48,21 @@ export default function App() {
   const [myLists, setMyLists] = useState<MyWishlistGroup[]>(MOCK_MY_WISHLISTS);
   const [myListGroupId, setMyListGroupId] = useState<string>(MOCK_MY_WISHLISTS[0]?.groupId ?? '');
   const [wishSource, setWishSource] = useState<'giver' | 'owner'>('giver');
+  // Chats: una sala por grupo
+  const [chats, setChats] = useState<ChatRoomSummary[]>(MOCK_CHATS);
+  const [chatRoomId, setChatRoomId] = useState<string | null>(null);
+  const chatUnread = chats.reduce((n, c) => n + c.unread, 0);
+
+  const openChatRoom = (groupId: string) => {
+    // Al entrar se marcan como leídos
+    setChats((prev) => prev.map((c) => (c.groupId === groupId ? { ...c, unread: 0 } : c)));
+    setChatRoomId(groupId);
+    navigateTo('chatRoom');
+  };
+
+  const updateChatMessages = (groupId: string, messages: ChatMessage[]) =>
+    setChats((prev) => prev.map((c) => (c.groupId === groupId ? { ...c, messages } : c)));
+
   // Formulario de deseo: null = agregar; id = editar ese deseo
   const [wishFormEditId, setWishFormEditId] = useState<string | null>(null);
 
@@ -95,7 +113,8 @@ export default function App() {
   const handleNavigateTab = (tab: DashboardTab) => {
     if (tab === 'grupos') setScreenHistory(['dashboard']);
     else if (tab === 'deseos') setScreenHistory(['dashboard', 'myWishes']);
-    else Alert.alert(tab === 'chats' ? 'Chats' : 'Perfil', 'Esta sección se maqueta en un próximo paso.');
+    else if (tab === 'chats') setScreenHistory(['dashboard', 'chats']);
+    else Alert.alert('Perfil', 'Esta sección se maqueta en un próximo paso.');
   };
 
   const handleWishComments = (wishId: string, comments: WishComment[]) => {
@@ -196,6 +215,9 @@ export default function App() {
         onNavigateBack={goBack}
         onTabChange={setGroupDetailTab}
         onNavigateTab={handleNavigateTab}
+        chatRoom={chats.find((c) => c.groupId === groupDetailId) ?? null}
+        onOpenChat={() => openChatRoom(groupDetailId)}
+        chatUnread={chatUnread}
         onGroupChange={(g) => setGroups((prev) => ({ ...prev, [g.id]: g }))}
         onOpenWish={(wish) => {
           setWishSource('giver');
@@ -242,6 +264,24 @@ export default function App() {
         onCancel={goBack}
       />
     );
+  } else if (currentScreen === 'chatRoom' && chats.some((c) => c.groupId === chatRoomId)) {
+    content = (
+      <ChatRoomScreen
+        key={chatRoomId as string}
+        room={chats.find((c) => c.groupId === chatRoomId) as ChatRoomSummary}
+        onNavigateBack={goBack}
+        onMessagesChange={updateChatMessages}
+      />
+    );
+  } else if (currentScreen === 'chats') {
+    content = (
+      <ChatsScreen
+        rooms={chats}
+        onOpenRoom={openChatRoom}
+        onNavigateTab={handleNavigateTab}
+        onProfilePress={() => handleNavigateTab('perfil')}
+      />
+    );
   } else if (currentScreen === 'myWishes') {
     content = (
       <MyWishesScreen
@@ -258,6 +298,7 @@ export default function App() {
         onAddWish={(groupId) => openWishForm(groupId, null)}
         onEditWish={(groupId, wish) => openWishForm(groupId, wish.id)}
         onNavigateTab={handleNavigateTab}
+        chatUnread={chatUnread}
         onProfilePress={() => handleNavigateTab('perfil')}
       />
     );
@@ -267,6 +308,7 @@ export default function App() {
         user={sessionUser}
         onNavigateToCreateGroup={() => navigateTo('createGroup')}
         onNavigateTab={handleNavigateTab}
+        chatUnread={chatUnread}
         onOpenGroup={(groupId, tab = 'resumen') => {
           setGroupDetailId(groupId);
           setGroupDetailTab(tab);

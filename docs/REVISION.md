@@ -361,3 +361,19 @@ Reemplaza la paleta anterior (Morado Noche `#1E1338`, Amarillo Araguaney `#F7A80
 - **Pendiente en el backend:** campos `category` y `storeName` en el modelo `Wish` (hoy existen `title`, `description`, `estimatedPrice`, `currency`, `productUrl`, `imageUrl` e `isFavorite`, que equivale a la prioridad alta).
 
 **Para hacer en tu máquina:** `pnpm install` (agrega `expo-image-picker`).
+
+### 2026-10-21 — App móvil: Chats
+
+- **Lista de Chats** (`screens/chat/ChatsScreen.tsx`, pestaña principal; diseño «Chats»):
+  - Contador de grupos activos, tarjeta de anonimato y buscador.
+  - Una fila por grupo (`components/chat/ChatRow`): último mensaje firmado con alias, hora (`utils/format.chatTime`), «Tú: {alias}», no leídos en coral o «Nuevo».
+  - Los grupos revelados van al final como «Chat archivado».
+- **Sala del chat grupal** (`screens/chat/ChatRoomScreen.tsx`):
+  - Encabezado «Tú eres {alias} · N panas», banner de identidades protegidas y «Faltan N días para el destape».
+  - Burbujas (`components/chat/MessageBubble`): los demás a la izquierda con alias y avatar; los míos a la derecha en azul marino, con «Entregado».
+  - «Tirar pista»: el siguiente mensaje sale resaltado como pista para quien te regala.
+  - Atajos de emoji. Los grupos revelados quedan en solo lectura.
+- **Pestaña Chat del detalle del grupo** (`components/chat/ChatTabPreview`): alias propio, últimos 3 mensajes y «Entrar al chat · N nuevos».
+- **Navegación y no leídos:** la barra inferior navega a Chats. Al entrar a una sala se marca como leída. El total de no leídos se muestra como badge en la pestaña Chats en todas las pantallas principales.
+- **Tipos y mocks:** `ChatMessage` (con `kind: 'pista'`) y `ChatRoomSummary`, en `mocks/chats.ts`.
+- **Pendiente en el backend:** alias por miembro y grupo (distinto del alias del sobre), historial `GET /api/group/:id/chat`, Socket.io por sala (`chat:message`), contador de no leídos y modo solo lectura después de la revelación.

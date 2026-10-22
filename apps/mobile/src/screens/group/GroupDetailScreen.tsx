@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, MoreVertical } from 'lucide-react-native';
 import { theme, groupDetailStyles as styles } from '../../styles';
-import { BRAND_ISOTIPO } from '../../constants/brand';
 import { FloatingTabBar, type DashboardTab } from '../../components/common/FloatingTabBar';
 import { GroupDetailHero } from '../../components/groupDetail/GroupDetailHero';
 import { GroupDetailTabs, type GroupDetailTab } from '../../components/groupDetail/GroupDetailTabs';
@@ -14,8 +13,9 @@ import { MembersCard } from '../../components/groupDetail/MembersCard';
 import { ExclusionsCard } from '../../components/groupDetail/ExclusionsCard';
 import { DrawSection } from '../../components/groupDetail/DrawSection';
 import { EnvelopeTab } from '../../components/envelope/EnvelopeTab';
+import { ChatTabPreview } from '../../components/chat/ChatTabPreview';
 import { MOCK_GROUP_DETAIL } from '../../mocks/groupDetail';
-import type { GroupDetailView, GroupMemberPreview, WishPreview } from '../../types/session';
+import type { ChatRoomSummary, GroupDetailView, GroupMemberPreview, WishPreview } from '../../types/session';
 
 interface GroupDetailScreenProps {
   onNavigateBack: () => void;
@@ -28,6 +28,11 @@ interface GroupDetailScreenProps {
   onGroupChange?: (group: GroupDetailView) => void;
   onTabChange?: (tab: GroupDetailTab) => void;
   onOpenWish?: (wish: WishPreview) => void;
+  /** Sala de chat del grupo (para la vista previa de la pestaña Chat) */
+  chatRoom?: ChatRoomSummary | null;
+  onOpenChat?: () => void;
+  /** Mensajes sin leer en todos los chats (badge de la barra inferior) */
+  chatUnread?: number;
 }
 
 const soon = (title: string) => Alert.alert(title, 'Esta pantalla se maqueta en el próximo paso.');
@@ -41,6 +46,9 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
   onGroupChange,
   onTabChange,
   onOpenWish,
+  chatRoom,
+  onOpenChat,
+  chatUnread = 0,
 }) => {
   const insets = useSafeAreaInsets();
   const [tab, setTabState] = useState<GroupDetailTab>(initialTab);
@@ -141,7 +149,12 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
         showsVerticalScrollIndicator={false}
       >
         <GroupDetailHero group={group} />
-        <GroupDetailTabs active={tab} onChange={setTab} envelopeLocked={isWaiting} unreadChat={group.unreadChat} />
+        <GroupDetailTabs
+          active={tab}
+          onChange={setTab}
+          envelopeLocked={isWaiting}
+          unreadChat={chatRoom ? chatRoom.unread : group.unreadChat}
+        />
 
         {tab === 'resumen' && (
           <>
@@ -190,17 +203,11 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
         )}
 
         {tab === 'chat' && (
-          <View style={styles.placeholderCard}>
-            <Image source={BRAND_ISOTIPO} style={styles.placeholderImage} />
-            <Text style={styles.placeholderTitle}>Chat anónimo del grupo</Text>
-            <Text style={[styles.bodyText, { textAlign: 'center' }]}>
-              Un solo chat por grupo, con alias anónimos hasta la revelación. Se maqueta en el próximo paso.
-            </Text>
-          </View>
+          <ChatTabPreview room={chatRoom} onOpen={() => (onOpenChat ? onOpenChat() : soon('Chat del grupo'))} />
         )}
       </ScrollView>
 
-      <FloatingTabBar activeTab="grupos" onTabChange={handleBottomTab} />
+      <FloatingTabBar activeTab="grupos" onTabChange={handleBottomTab} badges={{ chats: chatUnread }} />
     </SafeAreaView>
   );
 };

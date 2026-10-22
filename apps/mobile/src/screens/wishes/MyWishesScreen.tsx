@@ -21,6 +21,7 @@ interface MyWishesScreenProps {
   onEditWish: (groupId: string, wish: MyWish) => void;
   onNavigateTab: (tab: DashboardTab) => void;
   onProfilePress: () => void;
+  chatUnread?: number;
 }
 
 /** Pestaña "Mis deseos": una lista por grupo, con estado de los comentarios de cada deseo */
@@ -34,6 +35,7 @@ export const MyWishesScreen: React.FC<MyWishesScreenProps> = ({
   onEditWish,
   onNavigateTab,
   onProfilePress,
+  chatUnread = 0,
 }) => {
   const insets = useSafeAreaInsets();
   const list = lists.find((l) => l.groupId === selectedGroupId) ?? lists[0];
@@ -54,7 +56,7 @@ export const MyWishesScreen: React.FC<MyWishesScreenProps> = ({
             <Text style={styles.emptyText}>Crea un grupo o únete con un código para armar tu lista de deseos.</Text>
           </View>
         </View>
-        <FloatingTabBar activeTab="deseos" onTabChange={onNavigateTab} />
+        <FloatingTabBar activeTab="deseos" onTabChange={onNavigateTab} badges={{ chats: chatUnread }} />
       </SafeAreaView>
     );
   }
@@ -207,7 +209,7 @@ export const MyWishesScreen: React.FC<MyWishesScreenProps> = ({
         </View>
       </ScrollView>
 
-      <FloatingTabBar activeTab="deseos" onTabChange={onNavigateTab} />
+      <FloatingTabBar activeTab="deseos" onTabChange={onNavigateTab} badges={{ chats: chatUnread }} />
     </SafeAreaView>
   );
 };

@@ -10,3 +10,4 @@ export { envelopeStyles } from './envelope.styles';
 export { wishDetailStyles } from './wishDetail.styles';
 export { myWishesStyles } from './myWishes.styles';
 export { wishFormStyles } from './wishForm.styles';
+export { chatsStyles } from './chats.styles';
