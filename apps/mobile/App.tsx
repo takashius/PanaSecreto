@@ -56,7 +56,7 @@ export default function App() {
   const [groups, setGroups] = useState<Record<string, GroupDetailView>>(MOCK_GROUPS);
   const [wishDetails, setWishDetails] = useState(MOCK_WISH_DETAILS);
   const [wishDetailId, setWishDetailId] = useState<string | null>(null);
-  // Mis deseos: listas por grupo y de qué lado se abrió el detalle del deseo
+  // Deseos: listas por grupo y de qué lado se abrió el detalle del deseo
   const [myLists, setMyLists] = useState<MyWishlistGroup[]>(MOCK_MY_WISHLISTS);
   const [myListGroupId, setMyListGroupId] = useState<string>(MOCK_MY_WISHLISTS[0]?.groupId ?? '');
   const [wishSource, setWishSource] = useState<'giver' | 'owner'>('giver');
@@ -111,7 +111,7 @@ export default function App() {
   const updateMyList = (list: MyWishlistGroup) =>
     setMyLists((prev) => prev.map((l) => (l.groupId === list.groupId ? list : l)));
 
-  /** Detalle del deseo propio (vista del dueño) a partir de Mis deseos */
+  /** Detalle del deseo propio (vista del dueño) a partir de Deseos */
   const ownerWishDetail = (): WishDetailView | null => {
     const list = myLists.find((l) => l.groupId === myListGroupId);
     const wish = list?.wishes.find((w) => w.id === wishDetailId);
@@ -431,7 +431,7 @@ export default function App() {
         group={groups[groupDetailId]}
         onSave={(g) => {
           setGroups((prev) => ({ ...prev, [g.id]: g }));
-          // Mantiene coherentes los nombres en Mis deseos y Chats
+          // Mantiene coherentes los nombres en Deseos y Chats
           setMyLists((prev) => prev.map((l) => (l.groupId === g.id ? { ...l, name: g.name, emoji: g.emoji, budgetMax: g.budgetMax, currency: g.currency } : l)));
           setChats((prev) => prev.map((c) => (c.groupId === g.id ? { ...c, name: g.name, emoji: g.emoji, exchangeAt: g.exchangeAt } : c)));
           goBack();
@@ -475,6 +475,16 @@ export default function App() {
         }}
         onAddWish={(groupId) => openWishForm(groupId, null)}
         onEditWish={(groupId, wish) => openWishForm(groupId, wish.id)}
+        envelopes={Object.fromEntries(
+          Object.values(groups).map((g) => [g.id, { envelope: g.envelope, opened: !!g.envelopeOpened }])
+        )}
+        onOpenEnvelope={(groupId) => openGroup(groupId, 'sobre')}
+        onOpenPanaWish={(groupId, wish) => {
+          setGroupDetailId(groupId);
+          setWishSource('giver');
+          setWishDetailId(wish.id);
+          navigateTo('wishDetail');
+        }}
         onOpenNotifications={() => navigateTo('notifications')}
         hasNotifications={hasNotifications}
         onNavigateTab={handleNavigateTab}

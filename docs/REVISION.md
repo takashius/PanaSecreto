@@ -435,3 +435,10 @@ Reemplaza la paleta anterior (Morado Noche `#1E1338`, Amarillo Araguaney `#F7A80
   - Las 17 pantallas y componentes que usaban el `Alert` nativo ahora importan este. Se quitó el `Alert.prompt` (solo iOS) de Mis Grupos.
 - **Términos y condiciones** y **Política de privacidad**, por separado y dentro de la app (`screens/legal/LegalScreen.tsx`, textos en `constants/legal.ts`). Son un borrador base que conviene revisar con un abogado antes de publicar.
 - **Contáctanos:** hoja inferior (`components/profile/ContactModal.tsx`) con nombre, correo y teléfono del contacto (`constants/app.CONTACT`); toca para escribir, llamar o abrir WhatsApp. El teléfono queda vacío hasta que se complete.
+- **Contacto:** teléfono 0414-316 8556 (`+584143168556`), con opciones para llamar y abrir WhatsApp en Contáctanos.
+- **Mis deseos › «Lista de mi pana»:** selector «Mi lista / Lista de mi pana» en cada grupo (`components/myWishes/PanaWishlistPanel.tsx`):
+  - Antes del sorteo explica que la lista aparecerá después.
+  - Con el sobre cerrado ofrece «Abrir mi sobre».
+  - Con el sobre abierto muestra el alias de tu pana y su lista; cada deseo abre el detalle con los comentarios anónimos.
+  - Así se llega a lo que quiere tu pana sin tener que entrar por el grupo.
+- **Pestaña «Mis deseos» → «Deseos»** (menú inferior, título de la pantalla y textos de la app), porque ahora reúne tu lista y la de tu pana.

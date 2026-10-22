@@ -35,7 +35,7 @@ import type { SessionUser } from '../../types/session';
 const TAB_TITLES: Record<DashboardTab, string> = {
   grupos: 'Grupos',
   chats: 'Chats',
-  deseos: 'Mis deseos',
+  deseos: 'Deseos',
   perfil: 'Perfil',
 };
 import { BRAND_ISOTIPO } from '../../constants/brand';
@@ -44,7 +44,7 @@ interface DashboardScreenProps {
   user?: SessionUser | null;
   onLogout?: () => void;
   onNavigateToCreateGroup?: () => void;
-  /** Cambia de pestaña principal (Chats, Mis deseos, Perfil) */
+  /** Cambia de pestaña principal (Chats, Deseos, Perfil) */
   onNavigateTab?: (tab: DashboardTab) => void;
   /** Mensajes sin leer en todos los chats (badge de la barra inferior) */
   chatUnread?: number;

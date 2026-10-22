@@ -9,7 +9,7 @@ const card = {
   ...theme.shadows.subtle,
 };
 
-/** Estilos de "Mis deseos" (diseño Stitch «Mis Deseos - Nueva Identidad») */
+/** Estilos de "Deseos" (diseño Stitch «Mis Deseos - Nueva Identidad», ahora pestaña «Deseos») */
 export const myWishesStyles = StyleSheet.create({
   container: {
     flex: 1,
@@ -62,6 +62,65 @@ export const myWishesStyles = StyleSheet.create({
     height: 7,
     borderRadius: 4,
     backgroundColor: theme.colors.secondary,
+  },
+
+  // Selector "Mi lista / Lista de mi pana"
+  segment: {
+    flexDirection: 'row',
+    padding: 4,
+    borderRadius: 20,
+    backgroundColor: theme.colors.surfaceContainerHigh,
+  },
+  segmentItem: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    height: 42,
+    borderRadius: 16,
+  },
+  segmentItemActive: {
+    backgroundColor: theme.colors.primary,
+  },
+  segmentText: {
+    fontFamily: theme.typography.fontFamily.bodyBold,
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.outline,
+  },
+  segmentTextActive: {
+    color: theme.colors.white,
+  },
+  panaCard: {
+    ...card,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    padding: 16,
+    borderColor: theme.colors.secondaryFixed,
+    backgroundColor: theme.colors.secondarySoft,
+  },
+  panaIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.primary,
+  },
+  panaEyebrow: {
+    fontFamily: theme.typography.fontFamily.bodyExtrabold,
+    fontSize: 11,
+    fontWeight: theme.typography.fontWeight.extrabold,
+    letterSpacing: 1.5,
+    color: theme.colors.textMuted,
+  },
+  panaAlias: {
+    fontFamily: theme.typography.fontFamily.heading,
+    fontSize: theme.typography.fontSize.xl,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.primary,
   },
 
   // Reglas del grupo

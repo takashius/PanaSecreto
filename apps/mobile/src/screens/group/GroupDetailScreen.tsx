@@ -20,7 +20,7 @@ import type { ChatRoomSummary, GroupDetailView, GroupMemberPreview, WishPreview 
 
 interface GroupDetailScreenProps {
   onNavigateBack: () => void;
-  /** Cambio de pestaña principal desde la barra inferior (Chats, Mis deseos, Perfil) */
+  /** Cambio de pestaña principal desde la barra inferior (Chats, Deseos, Perfil) */
   onNavigateTab?: (tab: DashboardTab) => void;
   initialTab?: GroupDetailTab;
   /** Datos del grupo; mientras no hay API se usan los de ejemplo */
@@ -159,7 +159,7 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
   const handleBottomTab = (next: DashboardTab) => {
     if (next === 'grupos') onNavigateBack();
     else if (onNavigateTab) onNavigateTab(next);
-    else soon(next === 'chats' ? 'Chats' : next === 'deseos' ? 'Mis deseos' : 'Perfil');
+    else soon(next === 'chats' ? 'Chats' : next === 'deseos' ? 'Deseos' : 'Perfil');
   };
 
   return (

@@ -7,7 +7,7 @@ export const CONTACT = {
   role: 'Equipo EntrePanas · Erdesarrollo',
   email: 'erick.h.recalde@gmail.com',
   /** Formato internacional sin espacios para los enlaces (tel:, WhatsApp). Vacío = no se muestra */
-  phone: '',
+  phone: '+584143168556',
   /** Cómo se muestra el teléfono */
-  phoneLabel: '',
+  phoneLabel: '0414-316 8556',
 };

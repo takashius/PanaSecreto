@@ -142,7 +142,7 @@ export interface WishDetailView extends WishPreview {
   comments: WishComment[];
 }
 
-/** Un deseo propio, visto desde "Mis deseos" */
+/** Un deseo propio, visto desde "Deseos" */
 export interface MyWish extends WishPreview {
   priority: 'normal' | 'alta';
   subtitle?: string | null;

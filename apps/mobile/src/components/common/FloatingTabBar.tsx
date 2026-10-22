@@ -6,7 +6,7 @@ import { theme, dashboardStyles } from '../../styles';
 
 /**
  * Pestañas principales de la app (diseño Stitch «Nueva Identidad»):
- * Grupos · Chats (un chat grupal anónimo por grupo) · Mis deseos (lista por grupo) · Perfil.
+ * Grupos · Chats (un chat grupal anónimo por grupo) · Deseos (lista por grupo) · Perfil.
  * El sobre / papelito y "mi pana" viven dentro del detalle de cada grupo.
  */
 export type DashboardTab = 'grupos' | 'chats' | 'deseos' | 'perfil';
@@ -28,7 +28,7 @@ export const FloatingTabBar: React.FC<FloatingTabBarProps> = ({
   const tabs: Array<{ id: DashboardTab; label: string; icon: LucideIcon }> = [
     { id: 'grupos', label: 'Grupos', icon: Gift },
     { id: 'chats', label: 'Chats', icon: MessagesSquare },
-    { id: 'deseos', label: 'Mis deseos', icon: Heart },
+    { id: 'deseos', label: 'Deseos', icon: Heart },
     { id: 'perfil', label: 'Perfil', icon: UserRound },
   ];
 

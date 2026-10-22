@@ -1,15 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { Alert } from '../../components/common/AppDialog';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Heart, Camera, Lock } from 'lucide-react-native';
+import { Heart, Camera, Lock, Gift } from 'lucide-react-native';
 import { theme, myWishesStyles as styles } from '../../styles';
 import { BRAND_ISOTIPO } from '../../constants/brand';
 import { MainHeader } from '../../components/common/MainHeader';
 import { FloatingTabBar, type DashboardTab } from '../../components/common/FloatingTabBar';
 import { MyWishCard } from '../../components/myWishes/MyWishCard';
+import { PanaWishlistPanel } from '../../components/myWishes/PanaWishlistPanel';
 import { formatBudget } from '../../utils/format';
-import type { MyWish, MyWishlistGroup } from '../../types/session';
+import type { EnvelopeView, MyWish, MyWishlistGroup, WishPreview } from '../../types/session';
 
 interface MyWishesScreenProps {
   lists: MyWishlistGroup[];
@@ -23,11 +24,15 @@ interface MyWishesScreenProps {
   onNavigateTab: (tab: DashboardTab) => void;
   onProfilePress: () => void;
   onOpenNotifications: () => void;
+  /** Sobre de cada grupo (a quién le regalo), para la pestaña "Lista de mi pana" */
+  envelopes?: Record<string, { envelope?: EnvelopeView | null; opened: boolean }>;
+  onOpenPanaWish?: (groupId: string, wish: WishPreview) => void;
+  onOpenEnvelope?: (groupId: string) => void;
   hasNotifications?: boolean;
   chatUnread?: number;
 }
 
-/** Pestaña "Mis deseos": una lista por grupo, con estado de los comentarios de cada deseo */
+/** Pestaña "Deseos": una lista por grupo, con estado de los comentarios de cada deseo */
 export const MyWishesScreen: React.FC<MyWishesScreenProps> = ({
   lists,
   selectedGroupId,
@@ -41,15 +46,19 @@ export const MyWishesScreen: React.FC<MyWishesScreenProps> = ({
   onOpenNotifications,
   hasNotifications = false,
   chatUnread = 0,
+  envelopes = {},
+  onOpenPanaWish,
+  onOpenEnvelope,
 }) => {
   const insets = useSafeAreaInsets();
+  const [view, setView] = useState<'mia' | 'pana'>('mia');
   const list = lists.find((l) => l.groupId === selectedGroupId) ?? lists[0];
 
   if (!list) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <MainHeader
-          title="Mis deseos"
+          title="Deseos"
           icon={Heart}
           onBellPress={onOpenNotifications}
         hasNotifications={hasNotifications}
@@ -97,7 +106,7 @@ export const MyWishesScreen: React.FC<MyWishesScreenProps> = ({
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <MainHeader
-        title="Mis deseos"
+        title="Deseos"
         icon={Heart}
         onBellPress={onOpenNotifications}
         hasNotifications={hasNotifications}
@@ -134,75 +143,112 @@ export const MyWishesScreen: React.FC<MyWishesScreenProps> = ({
           })}
         </ScrollView>
 
-        {/* Reglas y cupo de la lista */}
-        <View style={styles.rulesCard}>
-          <View style={styles.rulesGlow} />
-          <View style={styles.rulesRow}>
-            <Image source={BRAND_ISOTIPO} style={styles.rulesMascot} />
-            <View style={{ flex: 1 }}>
-              <View style={styles.rulesTop}>
-                <View style={styles.rulesChip}>
-                  <Text style={styles.rulesChipText}>Reglas del sorteo</Text>
-                </View>
-                <Text style={styles.rulesLimit}>{limitLabel}</Text>
-              </View>
-              <Text style={styles.rulesText}>
-                {isWaiting ? 'Cuando se haga el sorteo, tu pana secreto en ' : 'Tu pana secreto en '}
-                <Text style={styles.strong}>{list.name}</Text>
-                {isWaiting ? ' verá esta lista sin saber quién eres.' : ' ve esta lista sin saber quién eres.'}
-              </Text>
-            </View>
-          </View>
-          <View style={styles.progressRow}>
-            <View style={styles.progressTrack}>
-              <View style={[styles.progressFill, { width: `${fill}%` }]} />
-            </View>
-            <Text style={styles.progressText}>
-              {count} de {list.maxWishes} deseos
-            </Text>
-          </View>
+        {/* Mi lista / Lista de mi pana */}
+        <View style={styles.segment} accessibilityRole="tablist">
+          {(
+            [
+              { id: 'mia', label: 'Mi lista', icon: Heart },
+              { id: 'pana', label: 'Lista de mi pana', icon: Gift },
+            ] as const
+          ).map(({ id, label, icon: Icon }) => {
+            const active = view === id;
+            return (
+              <TouchableOpacity
+                key={id}
+                style={[styles.segmentItem, active && styles.segmentItemActive]}
+                onPress={() => setView(id)}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: active }}
+              >
+                <Icon size={17} color={active ? theme.colors.white : theme.colors.outline} strokeWidth={2.2} />
+                <Text style={[styles.segmentText, active && styles.segmentTextActive]}>{label}</Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
-        <TouchableOpacity
-          style={[styles.addButton, full && styles.addButtonDisabled]}
-          onPress={() => onAddWish(list.groupId)}
-          disabled={full}
-          activeOpacity={0.85}
-        >
-          <Camera size={26} color={theme.colors.primary} strokeWidth={2.4} />
-          <Text style={styles.addButtonText}>{full ? 'Lista completa' : '+ Agregar deseo'}</Text>
-        </TouchableOpacity>
-
-        <View style={styles.listHeader}>
-          <Text style={styles.listTitle}>Mi lista en este grupo</Text>
-          <View style={styles.listCount}>
-            <Text style={styles.listCountText}>
-              {count} {count === 1 ? 'agregado' : 'agregados'}
-            </Text>
-          </View>
-        </View>
-
-        {count === 0 ? (
-          <View style={styles.emptyCard}>
-            <Image source={BRAND_ISOTIPO} style={styles.emptyMascot} />
-            <Text style={styles.emptyTitle}>Tu lista está vacía</Text>
-            <Text style={styles.emptyText}>
-              Agrega lo que te gustaría recibir, con foto y precio aproximado. Así tu pana secreto no tiene que adivinar.
-            </Text>
-          </View>
+        {view === 'pana' ? (
+          <PanaWishlistPanel
+            groupName={list.name}
+            status={list.status}
+            envelope={envelopes[list.groupId]?.envelope}
+            opened={!!envelopes[list.groupId]?.opened}
+            onOpenEnvelope={() => onOpenEnvelope?.(list.groupId)}
+            onOpenWish={(wish) => onOpenPanaWish?.(list.groupId, wish)}
+          />
         ) : (
-          list.wishes.map((w) => (
-            <MyWishCard
-              key={w.id}
-              wish={w}
-              visibleToFriend={!isWaiting}
-              onOpen={(wish) => onOpenWish(list.groupId, wish)}
-              onTogglePriority={(wish) =>
-                updateWish(wish.id, (x) => ({ ...x, priority: x.priority === 'alta' ? 'normal' : 'alta' }))
-              }
-              onMenu={handleMenu}
-            />
-          ))
+          <>
+        {/* Reglas y cupo de la lista */}
+            <View style={styles.rulesCard}>
+              <View style={styles.rulesGlow} />
+              <View style={styles.rulesRow}>
+                <Image source={BRAND_ISOTIPO} style={styles.rulesMascot} />
+                <View style={{ flex: 1 }}>
+                  <View style={styles.rulesTop}>
+                    <View style={styles.rulesChip}>
+                      <Text style={styles.rulesChipText}>Reglas del sorteo</Text>
+                    </View>
+                    <Text style={styles.rulesLimit}>{limitLabel}</Text>
+                  </View>
+                  <Text style={styles.rulesText}>
+                    {isWaiting ? 'Cuando se haga el sorteo, tu pana secreto en ' : 'Tu pana secreto en '}
+                    <Text style={styles.strong}>{list.name}</Text>
+                    {isWaiting ? ' verá esta lista sin saber quién eres.' : ' ve esta lista sin saber quién eres.'}
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.progressRow}>
+                <View style={styles.progressTrack}>
+                  <View style={[styles.progressFill, { width: `${fill}%` }]} />
+                </View>
+                <Text style={styles.progressText}>
+                  {count} de {list.maxWishes} deseos
+                </Text>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.addButton, full && styles.addButtonDisabled]}
+              onPress={() => onAddWish(list.groupId)}
+              disabled={full}
+              activeOpacity={0.85}
+            >
+              <Camera size={26} color={theme.colors.primary} strokeWidth={2.4} />
+              <Text style={styles.addButtonText}>{full ? 'Lista completa' : '+ Agregar deseo'}</Text>
+            </TouchableOpacity>
+
+            <View style={styles.listHeader}>
+              <Text style={styles.listTitle}>Mi lista en este grupo</Text>
+              <View style={styles.listCount}>
+                <Text style={styles.listCountText}>
+                  {count} {count === 1 ? 'agregado' : 'agregados'}
+                </Text>
+              </View>
+            </View>
+
+            {count === 0 ? (
+              <View style={styles.emptyCard}>
+                <Image source={BRAND_ISOTIPO} style={styles.emptyMascot} />
+                <Text style={styles.emptyTitle}>Tu lista está vacía</Text>
+                <Text style={styles.emptyText}>
+                  Agrega lo que te gustaría recibir, con foto y precio aproximado. Así tu pana secreto no tiene que adivinar.
+                </Text>
+              </View>
+            ) : (
+              list.wishes.map((w) => (
+                <MyWishCard
+                  key={w.id}
+                  wish={w}
+                  visibleToFriend={!isWaiting}
+                  onOpen={(wish) => onOpenWish(list.groupId, wish)}
+                  onTogglePriority={(wish) =>
+                    updateWish(wish.id, (x) => ({ ...x, priority: x.priority === 'alta' ? 'normal' : 'alta' }))
+                  }
+                  onMenu={handleMenu}
+                />
+              ))
+            )}
+          </>
         )}
 
         <View style={styles.noteCard}>
