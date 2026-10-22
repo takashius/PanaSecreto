@@ -45,10 +45,13 @@ interface WishDetailScreenProps {
   onNavigateBack: () => void;
   /** Avisa los comentarios actualizados (para conservarlos al volver y actualizar contadores) */
   onCommentsChange?: (wishId: string, comments: WishComment[]) => void;
+  /** Solo el dueño: editar o eliminar el deseo */
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 /** Detalle de un deseo con su hilo de comentarios anónimos (sin tiempo real: se notifica al otro lado) */
-export const WishDetailScreen: React.FC<WishDetailScreenProps> = ({ wish, onNavigateBack, onCommentsChange }) => {
+export const WishDetailScreen: React.FC<WishDetailScreenProps> = ({ wish, onNavigateBack, onCommentsChange, onEdit, onDelete }) => {
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
   const [comments, setComments] = useState<WishComment[]>(wish.comments);
@@ -73,8 +76,16 @@ export const WishDetailScreen: React.FC<WishDetailScreenProps> = ({ wish, onNavi
 
   const handleMore = () => {
     Alert.alert(wish.title, undefined, [
-      { text: 'Editar deseo', onPress: () => Alert.alert('Editar deseo', 'Esta pantalla se maqueta en el próximo paso.') },
-      { text: 'Eliminar deseo', style: 'destructive', onPress: () => Alert.alert('Eliminar deseo', 'Disponible al conectar la API.') },
+      { text: 'Editar deseo', onPress: () => onEdit?.() },
+      {
+        text: 'Eliminar deseo',
+        style: 'destructive',
+        onPress: () =>
+          Alert.alert('¿Eliminar este deseo?', 'Se borrarán también sus comentarios.', [
+            { text: 'Cancelar', style: 'cancel' },
+            { text: 'Eliminar', style: 'destructive', onPress: () => onDelete?.() },
+          ]),
+      },
       { text: 'Cancelar', style: 'cancel' },
     ]);
   };

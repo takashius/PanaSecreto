@@ -8,3 +8,5 @@ export { createGroupStyles } from './createGroup.styles';
 export { groupDetailStyles } from './groupDetail.styles';
 export { envelopeStyles } from './envelope.styles';
 export { wishDetailStyles } from './wishDetail.styles';
+export { myWishesStyles } from './myWishes.styles';
+export { wishFormStyles } from './wishForm.styles';

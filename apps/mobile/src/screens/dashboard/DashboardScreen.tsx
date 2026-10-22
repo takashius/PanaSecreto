@@ -11,7 +11,6 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Svg, { Defs, RadialGradient, Stop, Rect } from 'react-native-svg';
 import {
   PartyPopper,
-  Bell,
   PlusCircle,
   ArrowRight,
   Crown,
@@ -29,6 +28,7 @@ import {
 } from 'lucide-react-native';
 import { theme, dashboardStyles } from '../../styles';
 import { FloatingTabBar, DashboardTab } from '../../components/common/FloatingTabBar';
+import { MainHeader } from '../../components/common/MainHeader';
 
 import type { SessionUser } from '../../types/session';
 
@@ -44,6 +44,8 @@ interface DashboardScreenProps {
   user?: SessionUser | null;
   onLogout?: () => void;
   onNavigateToCreateGroup?: () => void;
+  /** Cambia de pestaña principal (Chats, Mis deseos, Perfil) */
+  onNavigateTab?: (tab: DashboardTab) => void;
   /** Abre el detalle del grupo; 'sobre' entra directo a la pestaña Mi sobre */
   onOpenGroup?: (groupId: string, tab?: 'resumen' | 'sobre') => void;
 }
@@ -53,6 +55,7 @@ export default function DashboardScreen({
   onLogout,
   onNavigateToCreateGroup,
   onOpenGroup,
+  onNavigateTab,
 }: DashboardScreenProps) {
   const insets = useSafeAreaInsets();
   const [selectedSegment, setSelectedSegment] = useState<'creados' | 'participo'>('creados');
@@ -111,41 +114,12 @@ export default function DashboardScreen({
   return (
     <SafeAreaView style={dashboardStyles.container} edges={['top']}>
       {/* 1. Top Bar / App Header */}
-      <View style={dashboardStyles.header}>
-        <View style={dashboardStyles.headerBrandRow}>
-          <View style={dashboardStyles.headerIconPill}>
-            <PartyPopper size={20} color={theme.colors.primary} />
-          </View>
-          <View>
-            <Text style={dashboardStyles.headerBrandSub}>EntrePanas</Text>
-            <Text style={dashboardStyles.headerTitle}>Mis Grupos</Text>
-          </View>
-        </View>
-
-        <View style={dashboardStyles.headerActions}>
-          <TouchableOpacity
-            style={dashboardStyles.bellButton}
-            activeOpacity={0.7}
-            onPress={() =>
-              Alert.alert('Notificaciones', '¡Todo al día! No tienes notificaciones pendientes.')
-            }
-          >
-            <Bell size={20} color={theme.colors.textDark} />
-            <View style={dashboardStyles.bellBadge} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={dashboardStyles.profileAvatarButton}
-            activeOpacity={0.8}
-            onPress={handleProfilePress}
-          >
-            <Image
-              source={BRAND_ISOTIPO}
-              style={dashboardStyles.profileAvatar}
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
+      <MainHeader
+        title="Mis Grupos"
+        icon={PartyPopper}
+        onBellPress={() => Alert.alert('Notificaciones', '¡Todo al día! No tienes notificaciones pendientes.')}
+        onAvatarPress={handleProfilePress}
+      />
 
       {/* 2. Scrollable Dashboard Content */}
       <ScrollView
@@ -607,6 +581,10 @@ export default function DashboardScreen({
       <FloatingTabBar
         activeTab={activeTab}
         onTabChange={(newTab) => {
+          if (newTab !== 'grupos' && onNavigateTab) {
+            onNavigateTab(newTab);
+            return;
+          }
           setActiveTab(newTab);
           if (newTab !== 'grupos') {
             Alert.alert(

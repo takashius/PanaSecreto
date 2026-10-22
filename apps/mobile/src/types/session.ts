@@ -122,3 +122,29 @@ export interface WishDetailView extends WishPreview {
   url?: string | null;
   comments: WishComment[];
 }
+
+/** Un deseo propio, visto desde "Mis deseos" */
+export interface MyWish extends WishPreview {
+  priority: 'normal' | 'alta';
+  subtitle?: string | null;
+  store?: { name: string; detail?: string | null } | null;
+  url?: string | null;
+  /** Preguntas de mi amigo secreto que aún no respondo */
+  unansweredCount: number;
+  comments: WishComment[];
+}
+
+/** Mi lista de deseos en un grupo (la lista es por grupo) */
+export interface MyWishlistGroup {
+  groupId: string;
+  emoji: string;
+  name: string;
+  status: GroupStatus;
+  currency: 'USD' | 'VES';
+  budgetMax: number | null;
+  /** Tope de deseos por lista */
+  maxWishes: number;
+  /** Año del intercambio, para el subtítulo "Amigo Secreto 2026" */
+  exchangeYear: number;
+  wishes: MyWish[];
+}

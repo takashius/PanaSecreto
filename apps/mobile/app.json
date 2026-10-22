@@ -43,6 +43,13 @@
         {
           "enforceContrast": false
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "EntrePanas usa tus fotos para que agregues imágenes a tu lista de deseos.",
+          "cameraPermission": "EntrePanas usa la cámara para que tomes fotos de los regalos que deseas."
+        }
       ]
     ],
     "web": {

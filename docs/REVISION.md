@@ -329,3 +329,35 @@ Reemplaza la paleta anterior (Morado Noche `#1E1338`, Amarillo Araguaney `#F7A80
 - **Navegación:** desde Mi sobre se toca un deseo y se abre su detalle. `App.tsx` guarda los grupos y los deseos de ejemplo, así que al volver se conserva el sobre abierto, la pestaña activa y los comentarios nuevos (con el contador actualizado en la lista).
 - **Tipos y mocks:** `WishDetailView`, `WishComment`, `mocks/wishes.ts`. Las categorías (ícono y colores) se movieron a `constants/wishCategories.ts`.
 - **Pendiente en el backend:** el modelo y los endpoints de comentarios por deseo, con la notificación al otro lado.
+
+### 2026-10-21 — App móvil: Mis deseos
+
+- `screens/wishes/MyWishesScreen.tsx` (diseño «Mis Deseos»), en la pestaña principal «Mis deseos»:
+  - Selector de grupo en chips (punto amarillo si hay preguntas pendientes).
+  - Tarjeta de reglas: límite de presupuesto, texto según el estado (antes o después del sorteo) y cupo de 20 deseos con barra de progreso.
+  - Botón «+ Agregar deseo» (pasa a «Lista completa» al llegar al tope) y lista vacía con la mascota.
+- **Tarjeta de deseo** (`components/myWishes/MyWishCard.tsx`): foto o ícono, «Prioridad», categoría, estrella para marcar prioridad, menú editar/eliminar (con confirmación), precio y tienda. El pie cambia según el caso:
+  - **Preguntas sin responder:** franja amarilla con «Responder».
+  - **Ya tiene comentarios:** «N comentarios anónimos · Ver comentarios».
+  - **Sin comentarios:** «Visible para tu amigo», o «Lista lista para el sorteo» antes del sorteo.
+- Al tocar un deseo se abre el Detalle del deseo en la vista del dueño. Al responder, las preguntas pendientes quedan en 0.
+- **Navegación:** la barra inferior ya cambia entre Grupos y Mis deseos sin apilar el historial. Chats y Perfil siguen con aviso.
+- `components/common/MainHeader.tsx`: el encabezado de las pestañas principales ahora es un componente, compartido por Mis Grupos y Mis deseos.
+- **Tipos y mocks:** `MyWish`, `MyWishlistGroup`, `mocks/myWishes.ts` (tres listas: con preguntas, antes del sorteo y vacía).
+- **Pendiente en el backend:** `unansweredCount` por deseo (preguntas del amigo secreto sin respuesta del dueño) y el tope de 20 deseos por lista.
+
+### 2026-10-21 — App móvil: Agregar / Editar deseo
+
+- `screens/wishes/WishFormScreen.tsx` (diseño «Agregar deseo»), el mismo formulario para agregar y editar:
+  - **Foto obligatoria:** con la cámara o desde la galería (`expo-image-picker`, compatible con Expo Go; pide permisos y tiene recorte 4:3), con vista previa y botones Cambiar/Quitar.
+  - **Campos:** nombre (obligatorio, 120 caracteres como en el backend); precio con selector USD/Bs. y aviso en coral si se pasa del presupuesto del grupo; categoría en chips; «¿Dónde se consigue?» (si es un enlace se guarda como URL, si no como tienda); notas de talla y color (500 caracteres, con contador); prioridad Normal o Alta.
+  - **Validación al guardar:** errores en los campos y un aviso. «Cancelar» pide confirmación si hay cambios sin guardar.
+- **Navegación:**
+  - «+ Agregar deseo» en Mis deseos.
+  - «Editar deseo» desde el menú de la tarjeta o desde el detalle del deseo (vista del dueño).
+  - Eliminar desde el detalle vuelve a la lista.
+  - Lo guardado aparece de inmediato en Mis deseos (estado de maqueta en `App.tsx`).
+- `app.json`: plugin `expo-image-picker` con los textos de permisos en español (solo aplica a builds; Expo Go ya trae los permisos).
+- **Pendiente en el backend:** campos `category` y `storeName` en el modelo `Wish` (hoy existen `title`, `description`, `estimatedPrice`, `currency`, `productUrl`, `imageUrl` e `isFavorite`, que equivale a la prioridad alta).
+
+**Para hacer en tu máquina:** `pnpm install` (agrega `expo-image-picker`).
