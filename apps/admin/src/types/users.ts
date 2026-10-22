@@ -12,6 +12,10 @@ export interface ManagedUser {
   active: boolean;
   date?: string;
   forcePasswordChangeOnNextLogin?: boolean;
+  nickname?: string;
+  gender?: 'M' | 'F' | 'N';
+  notifyEmail?: boolean;
+  notifyComments?: boolean;
 }
 
 export interface UserListResponse {

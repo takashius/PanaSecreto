@@ -58,20 +58,21 @@ Lista viva de lo que falta después de maquetar la app móvil (22 de octubre de 
 
 ## Panel administrativo (web)
 
-- El backend ya expone todo lo de esta sección (ver `docs/API_GRUPOS.md`); falta construir las pantallas.
-- [ ] **Alias:**
-  - Listado con búsqueda y filtro por género y estado.
-  - Crear, editar, activar/desactivar y eliminar sugerencias.
-  - Importación masiva opcional.
-  - Ver qué alias propios escribieron los usuarios, para moderarlos.
-- [ ] **Tips:**
-  - Listado con búsqueda y filtro por pantalla, tipo y estado.
-  - Crear, editar, activar/desactivar y eliminar.
-  - Asignar en qué pantallas puede aparecer cada tip y en cuáles no.
-  - Vista previa de cómo se verá en la app.
-- [ ] **Grupos:** mostrar lugar del encuentro y nota en el detalle del grupo.
-- [ ] **Usuarios:** mostrar apodo, género y preferencias de notificación.
-- [ ] **Opcional:** moderación de comentarios y mensajes del chat reportados.
+**Completado el 22/10/2026** (menú lateral: «Alias» y «Tips»).
+
+- [x] **Alias** (`pages/aliases`):
+  - Tarjetas por género (total y activos) que también filtran.
+  - Catálogo con búsqueda, filtro por género y estado, activar/desactivar en la misma fila, crear, editar y eliminar.
+  - Importación masiva: un alias por línea (`Texto|emoji`), con el género elegido; muestra cuáles se omiten y cuáles ya existían.
+  - Pestaña «Alias propios»: lo que escribieron los usuarios, con usuario, grupo y estado; los que parecen ofensivos salen marcados y se pueden quitar.
+- [x] **Tips** (`pages/tips`):
+  - Listado con búsqueda y filtro por pantalla (con cuántos tips activos tiene cada una) y estado; aviso de las pantallas que no tienen tips propios.
+  - Crear y editar con vista previa en vivo del globo «¡Tip del pana!», pantallas por casillas, peso de 1 a 5 y activo.
+  - Panel «Vista previa en la app»: elige una pantalla y muestra lo mismo que recibirá la app, con un botón «Otro».
+  - El «tipo» se resolvió con la pantalla `general`: un tip es general si tiene esa pantalla.
+- [x] **Grupos:** lugar del encuentro (con enlace al mapa) y nota en el detalle; columna «Alias» con elegido/pendiente (sin mostrar cuál, por anonimato) y apodo junto al nombre.
+- [x] **Usuarios:** apodo y género en el detalle, y tarjeta «Preferencias en la app» con los correos encendidos o apagados (solo lectura: las cambia la persona).
+- [ ] **Opcional:** moderación de comentarios y mensajes del chat reportados (falta también en el backend).
 
 ---
 
@@ -81,8 +82,11 @@ Lista viva de lo que falta después de maquetar la app móvil (22 de octubre de 
 - [ ] **Tips:**
   - Componente de tip que pida los tips de su pantalla y muestre uno al azar.
   - Reemplazar los tips fijos de Mi sobre, Detalle del deseo, Agregar deseo, Deseos, Chats y Notificaciones.
+- [x] **Autenticación conectada (22/10/2026):** registro, inicio de sesión, recuperar contraseña, sesión guardada en el teléfono (`expo-secure-store`), cierre de sesión y «Continuar con Google» (ver `docs/AUTENTICACION.md`).
+- [ ] **Google:** crear el cliente OAuth en Google Cloud y llenar `GOOGLE_WEB_CLIENT_ID`, `GOOGLE_WEB_CLIENT_SECRET` y `API_PUBLIC_URL` (https o túnel).
+- [ ] **Perfil:** conectar Editar perfil, foto y Cambiar contraseña (la API ya lo soporta; las cuentas de Google crean su contraseña sin la actual).
 - [ ] **Conectar con la API:**
-  - Cliente HTTP, sesión guardada en el teléfono y manejo de errores.
+  - [x] Cliente HTTP (`src/api/client.ts`), sesión guardada en el teléfono y manejo de errores.
   - Reemplazar los datos de ejemplo (`src/mocks`) pantalla por pantalla.
   - Socket del chat.
   - Consultas periódicas de notificaciones.

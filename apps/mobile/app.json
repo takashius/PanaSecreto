@@ -2,6 +2,7 @@
   "expo": {
     "name": "EntrePanas",
     "slug": "panasecreto",
+    "scheme": "entrepanas",
     "owner": "erdesarrollo",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -50,7 +51,9 @@
           "photosPermission": "EntrePanas usa tus fotos para que agregues imágenes a tu lista de deseos.",
           "cameraPermission": "EntrePanas usa la cámara para que tomes fotos de los regalos que deseas."
         }
-      ]
+      ],
+      "expo-secure-store",
+      "expo-web-browser"
     ],
     "web": {
       "favicon": "./assets/favicon.png"

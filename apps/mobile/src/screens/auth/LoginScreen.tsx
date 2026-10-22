@@ -14,7 +14,11 @@ import { Alert } from '../../components/common/AppDialog';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Mail, Lock, Eye, EyeOff, ShieldCheck } from 'lucide-react-native';
 import { GoogleIcon } from '../../components/common/GoogleIcon';
-import type { SessionUser } from '../../types/session';
+import * as authApi from '../../api/auth';
+import type { SessionPayload } from '../../api/auth';
+import { ApiError, errorMessage } from '../../api/client';
+import { signInWithGoogle } from '../../auth/google';
+import { isValidEmail } from '../../utils/validation';
 import {
   theme,
   commonStyles,
@@ -27,13 +31,16 @@ import { BRAND_LOGO } from '../../constants/brand';
 interface LoginScreenProps {
   onNavigateToRegister?: () => void;
   onNavigateToRecoverPassword?: () => void;
-  onLoginSuccess?: (token: string, user: SessionUser) => void;
+  onLoginSuccess?: (session: SessionPayload) => void | Promise<void>;
+  /** Aviso arriba del formulario (p. ej. "Tu sesión expiró") */
+  notice?: string | null;
 }
 
 export default function LoginScreen({
   onNavigateToRegister,
   onNavigateToRecoverPassword,
   onLoginSuccess,
+  notice,
 }: LoginScreenProps) {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -41,13 +48,18 @@ export default function LoginScreen({
   const [isFocusedIdentifier, setIsFocusedIdentifier] = useState(false);
   const [isFocusedPassword, setIsFocusedPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const busy = loading || googleLoading;
   const [errors, setErrors] = useState<{ identifier?: string; password?: string }>({});
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     const newErrors: { identifier?: string; password?: string } = {};
+    const email = identifier.trim().toLowerCase();
 
-    if (!identifier.trim()) {
-      newErrors.identifier = 'Por favor ingresa tu correo o usuario.';
+    if (!email) {
+      newErrors.identifier = 'Por favor ingresa tu correo.';
+    } else if (!isValidEmail(email)) {
+      newErrors.identifier = 'Ese correo no se ve bien. Revísalo.';
     }
     if (!password) {
       newErrors.password = 'Por favor ingresa tu contraseña.';
@@ -60,15 +72,32 @@ export default function LoginScreen({
 
     setErrors({});
     setLoading(true);
-
-    // Simulación de autenticación exitosa
-    setTimeout(() => {
-      setLoading(false);
-      Alert.alert('¡Bienvenido, Pana!', `Sesión iniciada correctamente.`);
-      if (onLoginSuccess) {
-        onLoginSuccess('mock-jwt-token', { identifier });
+    try {
+      const session = await authApi.login(email, password);
+      await onLoginSuccess?.(session);
+    } catch (error) {
+      if (error instanceof ApiError && error.code === 'INVALID_CREDENTIALS') {
+        setErrors({ password: 'Correo o contraseña incorrectos.' });
+      } else if (error instanceof ApiError && error.status === 400 && !error.code) {
+        setErrors({ password: error.message });
+      } else {
+        Alert.alert('No pudimos iniciar sesión', errorMessage(error));
       }
-    }, 1200);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogle = async () => {
+    setGoogleLoading(true);
+    try {
+      const session = await signInWithGoogle();
+      if (session) await onLoginSuccess?.(session);
+    } catch (error) {
+      Alert.alert('Google', errorMessage(error));
+    } finally {
+      setGoogleLoading(false);
+    }
   };
 
   return (
@@ -98,10 +127,15 @@ export default function LoginScreen({
 
           {/* 2. Tarjeta Blanca del Formulario */}
           <View style={authStyles.card}>
+            {notice ? (
+              <View style={authStyles.noticeBanner} accessibilityRole="alert">
+                <Text style={authStyles.noticeText}>{notice}</Text>
+              </View>
+            ) : null}
             {/* Campo: Correo o Usuario */}
             <View style={formStyles.formGroup}>
               <View style={formStyles.labelRow}>
-                <Text style={formStyles.label}>Correo o Usuario</Text>
+                <Text style={formStyles.label}>Correo electrónico</Text>
               </View>
 
               <View
@@ -119,7 +153,7 @@ export default function LoginScreen({
                 />
                 <TextInput
                   style={formStyles.inputField}
-                  placeholder="ej. pana@correo.com o @carlos"
+                  placeholder="ej. pana@correo.com"
                   placeholderTextColor={theme.colors.outline}
                   value={identifier}
                   onChangeText={(val) => {
@@ -131,6 +165,10 @@ export default function LoginScreen({
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoCorrect={false}
+                  autoComplete="email"
+                  textContentType="emailAddress"
+                  returnKeyType="next"
+                  editable={!busy}
                 />
               </View>
               {errors.identifier && (
@@ -179,6 +217,11 @@ export default function LoginScreen({
                   onBlur={() => setIsFocusedPassword(false)}
                   secureTextEntry={!showPassword}
                   autoCapitalize="none"
+                  autoComplete="password"
+                  textContentType="password"
+                  returnKeyType="go"
+                  onSubmitEditing={() => void handleLogin()}
+                  editable={!busy}
                 />
                 <TouchableOpacity
                   style={formStyles.toggleEyeButton}
@@ -200,8 +243,8 @@ export default function LoginScreen({
             {/* Botón Principal: Entrar al Intercambio */}
             <TouchableOpacity
               style={buttonStyles.btnPrimary}
-              onPress={handleLogin}
-              disabled={loading}
+              onPress={() => void handleLogin()}
+              disabled={busy}
               activeOpacity={0.85}
             >
               {loading ? (
@@ -226,12 +269,17 @@ export default function LoginScreen({
             {/* Botones de Inicio de Sesión Social */}
             <View style={buttonStyles.socialButtonContainer}>
               <TouchableOpacity
-                style={buttonStyles.btnGoogle}
-                onPress={() => Alert.alert('Google Auth', 'Próximamente disponible')}
+                style={[buttonStyles.btnGoogle, busy && { opacity: 0.6 }]}
+                onPress={() => void handleGoogle()}
+                disabled={busy}
                 activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityLabel="Continuar con Google"
               >
-                <GoogleIcon size={20} />
-                <Text style={buttonStyles.btnGoogleText}>Continuar con Google</Text>
+                {googleLoading ? <ActivityIndicator color={theme.colors.primary} size="small" /> : <GoogleIcon size={20} />}
+                <Text style={buttonStyles.btnGoogleText}>
+                  {googleLoading ? 'Conectando con Google…' : 'Continuar con Google'}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>

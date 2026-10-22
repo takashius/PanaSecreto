@@ -71,8 +71,8 @@ export default function DashboardScreen({
   const [selectedSegment, setSelectedSegment] = useState<'creados' | 'participo'>('creados');
   const [activeTab, setActiveTab] = useState<DashboardTab>('grupos');
 
-  const fullName = user?.fullname || user?.identifier || 'Carlos';
-  const firstName = fullName.split(' ')[0] || 'Carlos';
+  const fullName = [user?.name, user?.lastName].filter(Boolean).join(' ') || 'Pana';
+  const firstName = user?.nickname || user?.name || 'Pana';
 
   // El sobre se abre dentro del detalle del grupo: el pana asignado nunca se muestra fuera de ahí
   const handleOpenEnvelope = () => onOpenGroup?.('panas-oficina', 'sobre');

@@ -80,6 +80,27 @@ const config = {
     CLOUDINARY_SECRET: process.env.CLOUDINARY_SECRET || '',
     FOLDER_NAME: process.env.FOLDER_NAME || 'EntrePanas',
   },
+  /** URL pública de esta API (la usa Google para volver después de iniciar sesión) */
+  apiPublicUrl: (process.env.API_PUBLIC_URL || `http://localhost:${process.env.PORT || '4000'}`).replace(/\/$/, ''),
+  google: {
+    /** Cliente OAuth de tipo "Aplicación web" (lo usa el flujo por navegador de la app) */
+    webClientId: process.env.GOOGLE_WEB_CLIENT_ID?.trim() || '',
+    webClientSecret: process.env.GOOGLE_WEB_CLIENT_SECRET?.trim() || '',
+    /** Otros clientes cuyos ID token se aceptan (Android, iOS), separados por coma */
+    extraClientIds: (process.env.GOOGLE_EXTRA_CLIENT_IDS || '')
+      .split(',')
+      .map((x) => x.trim())
+      .filter(Boolean),
+    /** Esquemas de la app a los que se puede volver tras iniciar sesión */
+    appRedirectSchemes: (process.env.GOOGLE_APP_REDIRECT_SCHEMES || 'entrepanas,exp,exps')
+      .split(',')
+      .map((x) => x.trim().toLowerCase())
+      .filter(Boolean),
+    // Sobrescribibles solo para pruebas automáticas
+    authUrl: process.env.GOOGLE_AUTH_URL || 'https://accounts.google.com/o/oauth2/v2/auth',
+    tokenUrl: process.env.GOOGLE_TOKEN_URL || 'https://oauth2.googleapis.com/token',
+    jwksUrl: process.env.GOOGLE_JWKS_URL || 'https://www.googleapis.com/oauth2/v3/certs',
+  },
 };
 
 export default config;

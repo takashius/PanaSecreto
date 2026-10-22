@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StatusBar, Platform, BackHandler } from 'react-native';
+import { StatusBar, Platform, BackHandler, View, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as NavigationBar from 'expo-navigation-bar';
 import { useFonts } from 'expo-font';
@@ -30,8 +30,12 @@ import { MOCK_CHATS } from './src/mocks/chats';
 import ProfileScreen from './src/screens/profile/ProfileScreen';
 import EditProfileScreen from './src/screens/profile/EditProfileScreen';
 import ChangePasswordScreen from './src/screens/profile/ChangePasswordScreen';
-import { MOCK_PROFILE } from './src/mocks/profile';
-import { AppDialogHost } from './src/components/common/AppDialog';
+import { Alert, AppDialogHost } from './src/components/common/AppDialog';
+import { AuthProvider, useAuth } from './src/auth/AuthContext';
+import type { SessionPayload } from './src/api/auth';
+import { BRAND_LOGO } from './src/constants/brand';
+import { authStyles } from './src/styles';
+import { toLocalPhone } from './src/utils/validation';
 import LegalScreen from './src/screens/legal/LegalScreen';
 import NotificationsScreen from './src/screens/notifications/NotificationsScreen';
 import JoinGroupScreen from './src/screens/group/JoinGroupScreen';
@@ -45,11 +49,29 @@ import type { AppNotification, ProfileView, ChatMessage, ChatRoomSummary, GroupD
 import { theme } from './src/styles/theme';
 import type { SessionUser } from './src/types/session';
 
+/** Perfil que muestra la app a partir del usuario de la sesión */
+function profileFromUser(user: SessionUser | null): ProfileView {
+  return {
+    fullname: [user?.name, user?.lastName].filter(Boolean).join(' '),
+    nickname: user?.nickname ?? null,
+    email: user?.email ?? '',
+    phone: toLocalPhone(user?.phone) || null,
+    photoUri: user?.photo ?? null,
+    notifyEmail: user?.notifyEmail !== false,
+    notifyComments: user?.notifyComments !== false,
+  };
+}
+
+
 type Screen = 'login' | 'register' | 'recover' | 'dashboard' | 'createGroup' | 'groupDetail' | 'wishDetail' | 'myWishes' | 'wishForm' | 'chats' | 'chatRoom' | 'profile' | 'editProfile' | 'changePassword' | 'notifications' | 'joinGroup' | 'exclusions' | 'editGroup' | 'reveal' | 'legal';
 
-export default function App() {
+function AppContent() {
   // Pila de navegación para soportar el botón de atrás nativo de Android
-  const [screenHistory, setScreenHistory] = useState<Array<Screen>>(['login']);
+  const { status, user, sessionExpired, signIn, signOut } = useAuth();
+  const signedIn = status === 'signedIn';
+  // Dos pilas: la de la app (con sesión) y la de autenticación (sin sesión)
+  const [screenHistory, setScreenHistory] = useState<Array<Screen>>(['dashboard']);
+  const [authHistory, setAuthHistory] = useState<Array<Screen>>(['login']);
   const [groupDetailTab, setGroupDetailTab] = useState<GroupDetailTab>('resumen');
   const [groupDetailId, setGroupDetailId] = useState<string>(MOCK_GROUP_DETAIL.id);
   // Estado de maqueta: conserva los cambios locales mientras no hay API
@@ -61,7 +83,10 @@ export default function App() {
   const [myListGroupId, setMyListGroupId] = useState<string>(MOCK_MY_WISHLISTS[0]?.groupId ?? '');
   const [wishSource, setWishSource] = useState<'giver' | 'owner'>('giver');
   // Perfil (maqueta): se completa con los datos de la sesión cuando existen
-  const [profile, setProfile] = useState<ProfileView>(MOCK_PROFILE);
+  // Perfil: datos de la sesión + cambios locales de la maqueta (hasta conectar la edición de perfil)
+  const [profileEdits, setProfileEdits] = useState<ProfileView | null>(null);
+  const profile: ProfileView = profileEdits ?? profileFromUser(user);
+  const setProfile = (p: ProfileView) => setProfileEdits(p);
   const [legalDoc, setLegalDoc] = useState<'terminos' | 'privacidad'>('terminos');
 
   // Notificaciones (no son en tiempo real)
@@ -186,9 +211,26 @@ export default function App() {
       return { ...prev, [g.id]: { ...g, envelope: { ...g.envelope, wishes } } };
     });
   };
-  const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
+  const activeHistory = signedIn ? screenHistory : authHistory;
+  const currentScreen = activeHistory[activeHistory.length - 1];
 
-  const currentScreen = screenHistory[screenHistory.length - 1];
+  /** Entra con la sesión que devolvió la API (correo, registro, Google o recuperación) */
+  const startSession = async (session: SessionPayload, welcome = false) => {
+    await signIn(session);
+    setProfileEdits(null);
+    setScreenHistory(['dashboard']);
+    setAuthHistory(['login']);
+    if (welcome || session.isNew) {
+      Alert.alert('¡Bienvenido al bonche! 🎉', `Pana ${session.nickname || session.name}, tu cuenta quedó lista.`);
+    }
+  };
+
+  const handleLogout = () => {
+    void signOut();
+    setProfileEdits(null);
+    setScreenHistory(['dashboard']);
+    setAuthHistory(['login']);
+  };
 
   // Tipografía de marca: Fredoka (titulares) + Nunito (texto)
   const [fontsLoaded, fontError] = useFonts({
@@ -203,11 +245,15 @@ export default function App() {
   });
 
   const navigateTo = (screen: Screen) => {
-    setScreenHistory((prev) => [...prev, screen]);
+    const push = (prev: Screen[]) => [...prev, screen];
+    if (signedIn) setScreenHistory(push);
+    else setAuthHistory(push);
   };
 
   const goBack = () => {
-    setScreenHistory((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev));
+    const pop = (prev: Screen[]) => (prev.length > 1 ? prev.slice(0, -1) : prev);
+    if (signedIn) setScreenHistory(pop);
+    else setAuthHistory(pop);
   };
 
   // Configura la barra de navegación de Android una sola vez al montar la aplicación
@@ -220,56 +266,47 @@ export default function App() {
   // Intercepta el botón de atrás nativo de Android
   useEffect(() => {
     const onBackPress = () => {
-      if (screenHistory.length > 1) {
-        setScreenHistory((prev) => prev.slice(0, -1));
+      if (activeHistory.length > 1) {
+        const pop = (prev: Screen[]) => prev.slice(0, -1);
+        if (signedIn) setScreenHistory(pop);
+        else setAuthHistory(pop);
         return true; // No cierra la app, retrocede a la pantalla previa
       }
-      return false; // En Login (raíz), permite el comportamiento normal de salida
+      return false; // En la raíz (Login o Grupos), permite el comportamiento normal de salida
     };
 
     const backSub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
     return () => backSub.remove();
-  }, [screenHistory]);
+  }, [activeHistory, signedIn]);
 
   let content: React.ReactNode;
-  if (currentScreen === 'login') {
+  if (!signedIn && currentScreen === 'register') {
+    content = (
+      <RegisterScreen
+        onNavigateToLogin={goBack}
+        onRegisterSuccess={(session) => startSession(session, true)}
+        onOpenLegal={(doc) => {
+          setLegalDoc(doc);
+          navigateTo('legal');
+        }}
+      />
+    );
+  } else if (!signedIn && currentScreen === 'recover') {
+    content = (
+      <RecoverPasswordScreen
+        onNavigateToLogin={goBack}
+        onRecoverySuccess={(session) => (session ? startSession(session) : setAuthHistory(['login']))}
+      />
+    );
+  } else if (!signedIn && currentScreen === 'legal') {
+    content = <LegalScreen document={legalDoc} onNavigateBack={goBack} />;
+  } else if (!signedIn) {
     content = (
       <LoginScreen
         onNavigateToRegister={() => navigateTo('register')}
         onNavigateToRecoverPassword={() => navigateTo('recover')}
-        onLoginSuccess={(_token, user) => {
-          setSessionUser(user);
-          setProfile((p) => ({
-            ...p,
-            fullname: user?.fullname || p.fullname,
-            email: user?.email || p.email,
-            phone: user?.phone || p.phone,
-          }));
-          setScreenHistory(['dashboard']);
-        }}
-      />
-    );
-  } else if (currentScreen === 'register') {
-    content = (
-      <RegisterScreen
-        onNavigateToLogin={goBack}
-        onRegisterSuccess={(user) => {
-          setSessionUser(user);
-          setProfile((p) => ({
-            ...p,
-            fullname: user?.fullname || p.fullname,
-            email: user?.email || p.email,
-            phone: user?.phone || p.phone,
-          }));
-          setScreenHistory(['dashboard']);
-        }}
-      />
-    );
-  } else if (currentScreen === 'recover') {
-    content = (
-      <RecoverPasswordScreen
-        onNavigateToLogin={goBack}
-        onRecoverySuccess={() => setScreenHistory(['login'])}
+        onLoginSuccess={(session) => startSession(session)}
+        notice={sessionExpired ? 'Tu sesión expiró o se cerró en otro dispositivo. Vuelve a entrar, pana.' : null}
       />
     );
   } else if (currentScreen === 'createGroup') {
@@ -366,10 +403,7 @@ export default function App() {
           setLegalDoc(doc);
           navigateTo('legal');
         }}
-        onLogout={() => {
-          setSessionUser(null);
-          setScreenHistory(['login']);
-        }}
+        onLogout={handleLogout}
         onNavigateTab={handleNavigateTab}
         chatUnread={chatUnread}
       />
@@ -495,7 +529,7 @@ export default function App() {
   } else {
     content = (
       <DashboardScreen
-        user={sessionUser}
+        user={user}
         onNavigateToCreateGroup={() => navigateTo('createGroup')}
         onOpenNotifications={() => navigateTo('notifications')}
         hasNotifications={hasNotifications}
@@ -507,10 +541,7 @@ export default function App() {
           setGroupDetailTab(tab);
           navigateTo('groupDetail');
         }}
-        onLogout={() => {
-          setSessionUser(null);
-          setScreenHistory(['login']);
-        }}
+        onLogout={handleLogout}
       />
     );
   }
@@ -520,11 +551,32 @@ export default function App() {
     return <SafeAreaProvider style={{ flex: 1, backgroundColor: theme.colors.surface }} />;
   }
 
+  // Restaurando la sesión guardada (token en el almacenamiento seguro)
+  if (status === 'restoring') {
+    return (
+      <SafeAreaProvider style={{ flex: 1, backgroundColor: theme.colors.surface }}>
+        <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
+        <View style={authStyles.splash} accessibilityLabel="Cargando EntrePanas">
+          <Image source={BRAND_LOGO} style={authStyles.splashLogo} />
+          <ActivityIndicator color={theme.colors.primary} size="large" />
+        </View>
+      </SafeAreaProvider>
+    );
+  }
+
   return (
     <SafeAreaProvider style={{ flex: 1, backgroundColor: theme.colors.surface }}>
       <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
       {content}
       <AppDialogHost />
     </SafeAreaProvider>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }

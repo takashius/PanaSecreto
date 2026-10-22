@@ -38,10 +38,19 @@ import {
 } from '../../styles';
 import { InputOTP } from '../../components/common/InputOtp';
 import { BRAND_ISOTIPO } from '../../constants/brand';
+import * as authApi from '../../api/auth';
+import type { SessionPayload } from '../../api/auth';
+import { ApiError, errorMessage } from '../../api/client';
+import { MIN_PASSWORD } from '../../utils/password';
+import { isValidEmail, newPasswordError } from '../../utils/validation';
+
+/** El backend no envía otro código antes de 60 s */
+const RESEND_SECONDS = 60;
 
 interface RecoverPasswordScreenProps {
   onNavigateToLogin?: () => void;
-  onRecoverySuccess?: () => void;
+  /** Recibe la sesión: tras restablecer, la app entra sola con la nueva contraseña */
+  onRecoverySuccess?: (session: SessionPayload | null) => void | Promise<void>;
 }
 
 export default function RecoverPasswordScreen({
@@ -66,7 +75,7 @@ export default function RecoverPasswordScreen({
   const [step2Errors, setStep2Errors] = useState<Record<string, string>>({});
 
   // Temporizador para Reenvío de Código en Paso 2
-  const [resendTimer, setResendTimer] = useState(45);
+  const [resendTimer, setResendTimer] = useState(RESEND_SECONDS);
   const [loading, setLoading] = useState(false);
 
   // Manejo del botón de atrás nativo de Android
@@ -107,47 +116,67 @@ export default function RecoverPasswordScreen({
   };
 
   // Validación de reglas de contraseña en Paso 2
-  const hasMinLength = newPassword.length >= 8;
+  const hasMinLength = newPassword.length >= MIN_PASSWORD;
   const hasNumber = /\d/.test(newPassword);
 
+  /** En desarrollo el backend devuelve el código para probar sin correo */
+  const showDevCode = (devCode?: number) => {
+    if (__DEV__ && devCode) {
+      setOtpCode(String(devCode));
+      Alert.alert('Modo desarrollo', `Código de prueba: ${devCode}\n(En producción solo llega por correo).`);
+    }
+  };
+
   // Manejador del Paso 1: Enviar Código
-  const handleSendCode = () => {
-    const trimmed = email.trim();
-    if (!trimmed || !trimmed.includes('@') || !trimmed.includes('.')) {
+  const handleSendCode = async () => {
+    const trimmed = email.trim().toLowerCase();
+    if (!isValidEmail(trimmed)) {
       setEmailError('Por favor ingresa un correo electrónico válido.');
       return;
     }
 
     setEmailError('');
     setLoading(true);
-
-    // Maqueta: Simula envío de código de 6 dígitos
-    setTimeout(() => {
-      setLoading(false);
-      setStep(2);
-      setResendTimer(45);
+    try {
+      // Siempre responde igual (exista o no la cuenta) para no revelar qué correos están registrados
+      const res = await authApi.requestRecoveryCode(trimmed);
+      setEmail(trimmed);
       setOtpCode('');
-    }, 900);
+      setStep2Errors({});
+      setStep(2);
+      setResendTimer(RESEND_SECONDS);
+      showDevCode(res.devCode);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 400) setEmailError(error.message);
+      else Alert.alert('No pudimos enviar el código', errorMessage(error));
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Reenviar Código
-  const handleResendCode = () => {
+  const handleResendCode = async () => {
     if (resendTimer > 0) return;
-    setResendTimer(45);
-    Alert.alert('Código reenviado', 'Hemos enviado un nuevo código de 6 dígitos a tu correo.');
+    setResendTimer(RESEND_SECONDS);
+    try {
+      const res = await authApi.requestRecoveryCode(email);
+      Alert.alert('Código reenviado', 'Si el correo está registrado, te llegará un código nuevo de 6 dígitos.');
+      showDevCode(res.devCode);
+    } catch (error) {
+      Alert.alert('No pudimos reenviar el código', errorMessage(error));
+    }
   };
 
   // Manejador del Paso 2: Restablecer Contraseña
-  const handleResetPassword = () => {
+  const handleResetPassword = async () => {
     const errors: Record<string, string> = {};
 
-    if (otpCode.length !== 6) {
+    if (!/^\d{6}$/.test(otpCode)) {
       errors.otp = 'Ingresa el código completo de 6 dígitos.';
     }
-    if (!newPassword || newPassword.length < 8) {
-      errors.newPassword = 'La nueva contraseña debe tener al menos 8 caracteres.';
-    } else if (!hasNumber) {
-      errors.newPassword = 'La contraseña debe incluir al menos un número.';
+    const passwordError = newPasswordError(newPassword);
+    if (passwordError) {
+      errors.newPassword = passwordError;
     }
     if (newPassword !== confirmPassword) {
       errors.confirmPassword = 'Las contraseñas no coinciden.';
@@ -160,27 +189,33 @@ export default function RecoverPasswordScreen({
 
     setStep2Errors({});
     setLoading(true);
-
-    // Maqueta: Simula actualización exitosa
-    setTimeout(() => {
+    try {
+      await authApi.resetPassword(email, otpCode, newPassword);
+    } catch (error) {
       setLoading(false);
-      Alert.alert(
-        '¡Listo el pollo! 🎁🔑',
-        'Tu contraseña ha sido restablecida exitosamente. Ya puedes ingresar.',
-        [
-          {
-            text: 'Iniciar Sesión',
-            onPress: () => {
-              if (onRecoverySuccess) {
-                onRecoverySuccess();
-              } else if (onNavigateToLogin) {
-                onNavigateToLogin();
-              }
-            },
-          },
-        ]
-      );
-    }, 1200);
+      if (error instanceof ApiError && error.status === 400) {
+        const isPassword = /contraseña/i.test(error.message);
+        setStep2Errors(isPassword ? { newPassword: error.message } : { otp: error.message });
+      } else {
+        Alert.alert('No pudimos cambiar tu contraseña', errorMessage(error));
+      }
+      return;
+    }
+    // Contraseña cambiada: se entra de una vez con la nueva
+    let session: SessionPayload | null = null;
+    try {
+      session = await authApi.login(email, newPassword);
+    } catch {
+      session = null;
+    }
+    setLoading(false);
+    Alert.alert(
+      '¡Listo el pollo! 🎁🔑',
+      session
+        ? 'Tu contraseña quedó cambiada. Por seguridad cerramos tus otras sesiones.'
+        : 'Tu contraseña quedó cambiada. Ya puedes iniciar sesión.',
+      [{ text: session ? 'Entrar' : 'Iniciar sesión', onPress: () => void onRecoverySuccess?.(session) }]
+    );
   };
 
   return (
@@ -269,7 +304,7 @@ export default function RecoverPasswordScreen({
               {/* Título y Explicación */}
               <Text style={authStyles.registerHeading}>¿Olvidaste tu clave?</Text>
               <Text style={authStyles.registerSubheading}>
-                No te preocupes. Ingresa el correo asociado a tu cuenta de EntrePanas y te enviaremos un código de seguridad de 6 dígitos para restablecerla.
+                No te preocupes. Ingresa el correo asociado a tu cuenta de EntrePanas y te enviaremos un código de seguridad de 6 dígitos para restablecerla. Si entraste con Google, así también creas tu contraseña.
               </Text>
 
               {/* Tarjeta del Formulario */}
@@ -325,7 +360,7 @@ export default function RecoverPasswordScreen({
                 {/* Botón Principal: Mismo estilo estándar que "Crear mi Cuenta de Pana" */}
                 <TouchableOpacity
                   style={[buttonStyles.btnPrimary, { marginTop: theme.spacing.md }]}
-                  onPress={handleSendCode}
+                  onPress={() => void handleSendCode()}
                   disabled={loading}
                   activeOpacity={0.85}
                 >
@@ -451,7 +486,7 @@ export default function RecoverPasswordScreen({
                     </View>
 
                     <TouchableOpacity
-                      onPress={handleResendCode}
+                      onPress={() => void handleResendCode()}
                       disabled={resendTimer > 0}
                       activeOpacity={0.7}
                     >
@@ -491,7 +526,7 @@ export default function RecoverPasswordScreen({
                     />
                     <TextInput
                       style={formStyles.inputField}
-                      placeholder="Mínimo 8 caracteres"
+                      placeholder={`Mínimo ${MIN_PASSWORD} caracteres`}
                       placeholderTextColor={theme.colors.outline}
                       value={newPassword}
                       onChangeText={(val) => {
@@ -542,7 +577,7 @@ export default function RecoverPasswordScreen({
                             hasMinLength && { color: theme.colors.textDark, fontWeight: 'bold' },
                           ]}
                         >
-                          Mínimo 8 caracteres
+                          Mínimo {MIN_PASSWORD} caracteres
                         </Text>
                       </View>
 
@@ -628,7 +663,7 @@ export default function RecoverPasswordScreen({
                 {/* Botón Principal: Restablecer y Entrar (Estilo estándar con ArrowRight) */}
                 <TouchableOpacity
                   style={[buttonStyles.btnPrimary, { marginTop: theme.spacing.md }]}
-                  onPress={handleResetPassword}
+                  onPress={() => void handleResetPassword()}
                   disabled={loading}
                   activeOpacity={0.85}
                 >

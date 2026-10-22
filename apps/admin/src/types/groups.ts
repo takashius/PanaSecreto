@@ -36,6 +36,14 @@ export interface GroupMemberView {
   role: MemberRole;
   joinedAt: string;
   exclusions?: string[];
+  nickname?: string;
+  /** Si ya eligió alias (nunca se muestra cuál, para no asociarlo a la persona) */
+  hasAlias?: boolean;
+}
+
+export interface GroupLocation {
+  name: string;
+  address?: string;
 }
 
 export interface GroupDetail {
@@ -52,6 +60,8 @@ export interface GroupDetail {
   budgetMax: number | null;
   maxParticipants: number;
   anonymousClues: boolean;
+  location?: GroupLocation | null;
+  note?: string | null;
   inviteCode: string;
   memberCount: number;
   drawnAt?: string;

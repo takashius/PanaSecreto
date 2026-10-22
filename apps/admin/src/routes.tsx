@@ -13,6 +13,8 @@ import UserList from '@pages/users/UserList';
 import UserDetail from '@pages/users/UserDetail';
 import GroupList from '@pages/groups/GroupList';
 import GroupDetail from '@pages/groups/GroupDetail';
+import AliasList from '@pages/aliases/AliasList';
+import TipList from '@pages/tips/TipList';
 import Configuration from './pages/settings/Configuration';
 import Profile from './pages/profile/Profile';
 import { ROLES, type UserRole } from './constants/roles';
@@ -59,6 +61,18 @@ export const routes: AppRoute[] = [
       {
         path: '/groups/:id',
         element: <GroupDetail />,
+        protected: true,
+        allowedRoles: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
+      },
+      {
+        path: '/aliases',
+        element: <AliasList />,
+        protected: true,
+        allowedRoles: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
+      },
+      {
+        path: '/tips',
+        element: <TipList />,
         protected: true,
         allowedRoles: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
       },

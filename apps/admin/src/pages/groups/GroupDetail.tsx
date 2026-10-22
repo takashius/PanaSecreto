@@ -1,6 +1,6 @@
 import { Alert, App, Avatar, Button, Card, Descriptions, Spin, Table, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { DeleteOutlined, LockOutlined, UserOutlined } from '@ant-design/icons';
+import { CheckCircleOutlined, ClockCircleOutlined, DeleteOutlined, EnvironmentOutlined, LockOutlined, UserOutlined } from '@ant-design/icons';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import PageHeader from '@components/PageHeader';
@@ -73,6 +73,7 @@ export default function GroupDetail() {
             <Link to={`/users-management/${m.userId}`} className="font-semibold text-gray-900 dark:text-gray-100 leading-tight hover:underline">
               {m.name} {m.lastName || ''}
             </Link>
+            {m.nickname && <span className="ml-2 text-xs text-gray-500">«{m.nickname}»</span>}
             <p className="text-xs text-gray-500">{m.email}</p>
           </div>
         </div>
@@ -97,6 +98,18 @@ export default function GroupDetail() {
           </div>
         ) : (
           <span className="text-gray-400 text-xs">{t('groupsManagement.noExclusions')}</span>
+        ),
+    },
+    {
+      title: t('groupsManagement.alias'),
+      key: 'alias',
+      render: (_: unknown, m: GroupMemberView) =>
+        m.hasAlias ? (
+          <Tag color="green" icon={<CheckCircleOutlined />}>
+            {t('groupsManagement.aliasChosen')}
+          </Tag>
+        ) : (
+          <Tag icon={<ClockCircleOutlined />}>{t('groupsManagement.aliasPending')}</Tag>
         ),
     },
     {
@@ -147,6 +160,33 @@ export default function GroupDetail() {
             <Descriptions.Item label={t('groupsManagement.anonymousClues')}>
               {group.anonymousClues ? t('groupsManagement.yes') : t('groupsManagement.no')}
             </Descriptions.Item>
+            <Descriptions.Item label={t('groupsManagement.location')}>
+              {group.location ? (
+                <div>
+                  <p className="leading-tight">{group.location.name}</p>
+                  {group.location.address && <p className="text-xs text-gray-500">{group.location.address}</p>}
+                  <a
+                    className="text-xs inline-flex items-center gap-1 mt-1"
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                      [group.location.name, group.location.address].filter(Boolean).join(', ')
+                    )}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <EnvironmentOutlined /> {t('groupsManagement.openMap')}
+                  </a>
+                </div>
+              ) : (
+                <span className="text-gray-400">{t('groupsManagement.noLocation')}</span>
+              )}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('groupsManagement.note')} span={2}>
+              {group.note ? (
+                <span className="whitespace-pre-line">{group.note}</span>
+              ) : (
+                <span className="text-gray-400">{t('groupsManagement.noNote')}</span>
+              )}
+            </Descriptions.Item>
             <Descriptions.Item label={t('groupsManagement.createdAt')}>{formatDate(group.createdAt, true)}</Descriptions.Item>
             {group.drawnAt && (
               <Descriptions.Item label={t('groupsManagement.drawnAt')}>{formatDate(group.drawnAt, true)}</Descriptions.Item>
@@ -158,7 +198,14 @@ export default function GroupDetail() {
               <Descriptions.Item label={t('groupsManagement.completedAt')}>{formatDate(group.completedAt, true)}</Descriptions.Item>
             )}
           </Descriptions>
-          <Alert className="mt-4" type="info" showIcon icon={<LockOutlined />} message={t('groupsManagement.privacyNote')} />
+          <Alert
+            className="mt-4"
+            type="info"
+            showIcon
+            icon={<LockOutlined />}
+            message={t('groupsManagement.privacyNote')}
+            description={t('groupsManagement.aliasHelp')}
+          />
         </Card>
 
         <Card

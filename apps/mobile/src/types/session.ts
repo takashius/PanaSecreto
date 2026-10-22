@@ -3,11 +3,22 @@
  * Se reemplazarán por los tipos de @panasecreto/shared al conectar la app con la API.
  */
 export interface SessionUser {
-  identifier?: string;
-  fullname?: string;
-  username?: string;
-  email?: string;
+  _id: string;
+  name: string;
+  lastName?: string;
+  email: string;
+  /** Con prefijo internacional, p. ej. +584121234567 */
   phone?: string;
+  photo?: string | null;
+  nickname?: string;
+  gender?: 'M' | 'F' | 'N';
+  notifyEmail?: boolean;
+  notifyComments?: boolean;
+  role?: string | string[];
+  /** false si la cuenta se creó con Google y aún no tiene contraseña propia */
+  hasPassword?: boolean;
+  googleLinked?: boolean;
+  forcePasswordChangeOnNextLogin?: boolean;
 }
 
 export interface CreatedGroupDraft {

@@ -350,6 +350,33 @@ export const authStyles = StyleSheet.create({
     borderColor: theme.colors.success,
     borderWidth: 1,
   },
+  // Aviso arriba del formulario de login (sesión vencida, contraseña cambiada…)
+  noticeBanner: {
+    backgroundColor: theme.colors.secondaryContainer,
+    borderRadius: theme.radii.md,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 16,
+  },
+  noticeText: {
+    fontFamily: theme.typography.fontFamily.bodySemibold,
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.onSecondaryContainer,
+    lineHeight: 19,
+  },
+  // Pantalla de arranque mientras se restaura la sesión
+  splash: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.surface,
+    gap: 24,
+  },
+  splashLogo: {
+    width: 220,
+    height: 205,
+    resizeMode: 'contain',
+  },
   ruleBadgeText: {
     fontFamily: theme.typography.fontFamily.body,
     fontSize: theme.typography.fontSize.xs,

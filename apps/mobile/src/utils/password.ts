@@ -1,5 +1,5 @@
-/** Mínimo de caracteres de contraseña (igual que el backend) */
-export const MIN_PASSWORD = 6;
+/** Mínimo de caracteres para contraseñas nuevas (el backend acepta desde 6; la app pide 8 y un número) */
+export const MIN_PASSWORD = 8;
 
 export interface PasswordStrength {
   /** 0 = vacía, 1 = débil, 2 = media, 3 = fuerte */

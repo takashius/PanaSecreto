@@ -26,6 +26,10 @@ export interface IUser {
   recoveryCode?: number;
   recoveryCodeExpires?: Date;
   recoveryAttempts?: number;
+  /** Identificador de la cuenta de Google vinculada (sub) */
+  googleId?: string;
+  /** false si la cuenta se creó con Google y aún no tiene contraseña propia */
+  hasPassword?: boolean;
 }
 
 export interface IUserDocument extends IUser, Document {

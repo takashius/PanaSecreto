@@ -44,6 +44,10 @@ const userSchema = new Schema<IUserDocument>(
       minLength: [6, 'La contraseña debe tener al menos 6 caracteres.'],
     },
     forcePasswordChangeOnNextLogin: { type: Boolean, default: false },
+    /** Cuenta de Google vinculada (sub del ID token) */
+    googleId: { type: String, index: { unique: true, sparse: true } },
+    /** false = cuenta creada con Google sin contraseña propia (puede crearla con "Olvidé mi contraseña") */
+    hasPassword: { type: Boolean, default: true },
     active: { type: Boolean, default: true },
     date: { type: Date, default: Date.now },
     recoveryCode: { type: Number },

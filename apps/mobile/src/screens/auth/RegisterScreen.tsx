@@ -38,17 +38,25 @@ import {
   authStyles,
 } from '../../styles';
 
-import type { SessionUser } from '../../types/session';
+import * as authApi from '../../api/auth';
+import type { SessionPayload } from '../../api/auth';
+import { ApiError, errorMessage } from '../../api/client';
+import { signInWithGoogle } from '../../auth/google';
+import { GoogleIcon } from '../../components/common/GoogleIcon';
+import { MIN_PASSWORD } from '../../utils/password';
+import { isValidEmail, newPasswordError, splitFullName, toInternationalPhone } from '../../utils/validation';
 import { BRAND_ISOTIPO } from '../../constants/brand';
 
 interface RegisterScreenProps {
   onNavigateToLogin?: () => void;
-  onRegisterSuccess?: (user: SessionUser) => void;
+  onRegisterSuccess?: (session: SessionPayload) => void | Promise<void>;
+  onOpenLegal?: (doc: 'terminos' | 'privacidad') => void;
 }
 
 export default function RegisterScreen({
   onNavigateToLogin,
   onRegisterSuccess,
+  onOpenLegal,
 }: RegisterScreenProps) {
   const [fullname, setFullname] = useState('');
   const [username, setUsername] = useState('');
@@ -63,6 +71,8 @@ export default function RegisterScreen({
   // Estados de enfoque
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const busy = loading || googleLoading;
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Manejo del botón de atrás nativo de Android
@@ -81,7 +91,7 @@ export default function RegisterScreen({
   // Cálculo de fortaleza de contraseña
   const getPasswordStrength = () => {
     if (!password) return { level: 0, label: '', color: theme.colors.textMuted };
-    if (password.length < 6) {
+    if (password.length < MIN_PASSWORD) {
       return { level: 1, label: 'Débil', color: theme.colors.danger };
     }
     const hasNumbers = /\d/.test(password);
@@ -96,20 +106,22 @@ export default function RegisterScreen({
 
   const strength = getPasswordStrength();
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     const newErrors: Record<string, string> = {};
+    const { name, lastName } = splitFullName(fullname);
 
-    if (!fullname.trim()) {
+    if (!name) {
       newErrors.fullname = 'Ingresa tu nombre y apellido.';
     }
-    if (!username.trim()) {
-      newErrors.username = 'Elige tu nombre de usuario.';
+    if (username.length > 30) {
+      newErrors.username = 'El apodo puede tener máximo 30 caracteres.';
     }
-    if (!email.trim() || !email.includes('@')) {
+    if (!isValidEmail(email)) {
       newErrors.email = 'Ingresa un correo electrónico válido.';
     }
-    if (!password || password.length < 6) {
-      newErrors.password = 'La contraseña debe tener al menos 6 caracteres.';
+    const passwordError = newPasswordError(password);
+    if (passwordError) {
+      newErrors.password = passwordError;
     }
     if (password !== confirmPassword) {
       newErrors.confirmPassword = 'Las contraseñas no coinciden.';
@@ -125,27 +137,39 @@ export default function RegisterScreen({
 
     setErrors({});
     setLoading(true);
-
-    // Maqueta: Simulación de registro exitoso
-    setTimeout(() => {
+    try {
+      const session = await authApi.register({
+        name,
+        lastName,
+        nickname: username.trim() || undefined,
+        email: email.trim().toLowerCase(),
+        phone: toInternationalPhone(phone),
+        password,
+      });
+      await onRegisterSuccess?.(session);
+    } catch (error) {
+      if (error instanceof ApiError && (error.code === 'EMAIL_TAKEN' || error.fields.email)) {
+        setErrors({ email: error.message });
+      } else if (error instanceof ApiError && Object.keys(error.fields).length > 0) {
+        setErrors(error.fields);
+      } else {
+        Alert.alert('No pudimos crear tu cuenta', errorMessage(error));
+      }
+    } finally {
       setLoading(false);
-      Alert.alert(
-        '¡Bienvenido al bonche! 🎉',
-        `Pana ${fullname}, tu cuenta ha sido creada exitosamente.`,
-        [
-          {
-            text: 'Continuar',
-            onPress: () => {
-              if (onRegisterSuccess) {
-                onRegisterSuccess({ fullname, username, email, phone });
-              } else if (onNavigateToLogin) {
-                onNavigateToLogin();
-              }
-            },
-          },
-        ]
-      );
-    }, 1200);
+    }
+  };
+
+  const handleGoogle = async () => {
+    setGoogleLoading(true);
+    try {
+      const session = await signInWithGoogle();
+      if (session) await onRegisterSuccess?.(session);
+    } catch (error) {
+      Alert.alert('Google', errorMessage(error));
+    } finally {
+      setGoogleLoading(false);
+    }
   };
 
   return (
@@ -250,8 +274,8 @@ export default function RegisterScreen({
             {/* Campo: Nombre de Pana (Usuario) */}
             <View style={formStyles.formGroup}>
               <View style={formStyles.labelRow}>
-                <Text style={formStyles.label}>Nombre de Pana (Usuario)</Text>
-                <Text style={formStyles.labelHint}>Para menciones</Text>
+                <Text style={formStyles.label}>Apodo</Text>
+                <Text style={formStyles.labelHint}>Opcional · así te ven tus panas</Text>
               </View>
               <View
                 collapsable={false}
@@ -272,16 +296,17 @@ export default function RegisterScreen({
                 />
                 <TextInput
                   style={formStyles.inputField}
-                  placeholder="carlos_gomez"
+                  placeholder="Carlitos"
                   placeholderTextColor={theme.colors.outline}
                   value={username}
+                  maxLength={30}
                   onChangeText={(val) => {
-                    setUsername(val.toLowerCase().replace(/\s+/g, '_'));
+                    setUsername(val.replace(/^@/, ''));
                     if (errors.username) setErrors((prev) => ({ ...prev, username: '' }));
                   }}
                   onFocus={() => setFocusedField('username')}
                   onBlur={() => setFocusedField(null)}
-                  autoCapitalize="none"
+                  autoCapitalize="words"
                   autoCorrect={false}
                 />
               </View>
@@ -326,6 +351,8 @@ export default function RegisterScreen({
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoCorrect={false}
+                  autoComplete="email"
+                  textContentType="emailAddress"
                 />
               </View>
               {errors.email ? (
@@ -375,7 +402,8 @@ export default function RegisterScreen({
                     placeholder="412 123 4567"
                     placeholderTextColor={theme.colors.outline}
                     value={phone}
-                    onChangeText={setPhone}
+                    onChangeText={(val) => setPhone(val.replace(/[^\d\s]/g, ''))}
+                    maxLength={14}
                     onFocus={() => setFocusedField('phone')}
                     onBlur={() => setFocusedField(null)}
                     keyboardType="phone-pad"
@@ -408,9 +436,11 @@ export default function RegisterScreen({
                 />
                 <TextInput
                   style={formStyles.inputField}
-                  placeholder="••••••••"
+                  placeholder={`Mínimo ${MIN_PASSWORD} caracteres y un número`}
                   placeholderTextColor={theme.colors.outline}
                   value={password}
+                  autoComplete="new-password"
+                  textContentType="newPassword"
                   onChangeText={(val) => {
                     setPassword(val);
                     if (errors.password) setErrors((prev) => ({ ...prev, password: '' }));
@@ -561,8 +591,14 @@ export default function RegisterScreen({
               </View>
               <Text style={formStyles.termsText}>
                 Acepto las{' '}
-                <Text style={formStyles.termsLink}>reglas del juego</Text> y la{' '}
-                <Text style={formStyles.termsLink}>política de privacidad</Text> de EntrePanas.
+                <Text style={formStyles.termsLink} onPress={() => onOpenLegal?.('terminos')} suppressHighlighting>
+                  reglas del juego
+                </Text>{' '}
+                y la{' '}
+                <Text style={formStyles.termsLink} onPress={() => onOpenLegal?.('privacidad')} suppressHighlighting>
+                  política de privacidad
+                </Text>{' '}
+                de EntrePanas.
               </Text>
             </TouchableOpacity>
             {errors.terms ? (
@@ -572,8 +608,8 @@ export default function RegisterScreen({
             {/* Botón Principal: Crear mi Cuenta de Pana */}
             <TouchableOpacity
               style={[buttonStyles.btnPrimary, { marginTop: theme.spacing.md }]}
-              onPress={handleRegister}
-              disabled={loading}
+              onPress={() => void handleRegister()}
+              disabled={busy}
               activeOpacity={0.85}
             >
               {loading ? (
@@ -586,6 +622,26 @@ export default function RegisterScreen({
                   <ArrowRight size={20} color={theme.colors.onSecondaryContainer} />
                 </View>
               )}
+            </TouchableOpacity>
+
+            {/* Registro con Google */}
+            <View style={commonStyles.dividerRow}>
+              <View style={commonStyles.dividerLine} />
+              <Text style={commonStyles.dividerText}>O regístrate con</Text>
+              <View style={commonStyles.dividerLine} />
+            </View>
+            <TouchableOpacity
+              style={[buttonStyles.btnGoogle, busy && { opacity: 0.6 }]}
+              onPress={() => void handleGoogle()}
+              disabled={busy}
+              activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="Continuar con Google"
+            >
+              {googleLoading ? <ActivityIndicator color={theme.colors.primary} size="small" /> : <GoogleIcon size={20} />}
+              <Text style={buttonStyles.btnGoogleText}>
+                {googleLoading ? 'Conectando con Google…' : 'Continuar con Google'}
+              </Text>
             </TouchableOpacity>
           </View>
 

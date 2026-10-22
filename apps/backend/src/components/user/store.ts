@@ -1,4 +1,4 @@
-import { randomInt } from 'crypto';
+import { createHash, randomBytes, randomInt } from 'crypto';
 import { User } from './model';
 import type { FilterQuery } from 'mongoose';
 import type { IUserDocument } from '../../types/users';
@@ -20,6 +20,8 @@ import type { UploadedImage } from '../../types/general';
 import { sendMail } from '../../services/mail';
 import { recoveryCodeEmail } from '../../services/mailTemplates';
 import { notifyAccountCreated, notifyPasswordChanged, notifyWelcome } from '../../services/notifications';
+import type { GoogleProfile } from '../../services/google';
+import { AuthTicket } from './authTicket.model';
 
 const MAX_RECOVERY_ATTEMPTS = 5;
 const RECOVERY_CODE_MINUTES = 15;
@@ -57,7 +59,29 @@ function displayFullName(user: { name?: string; lastName?: string }): string {
   return [user.name, user.lastName].filter(Boolean).join(' ');
 }
 
-const PUBLIC_USER_FIELDS = '-password -tokens -__v -recoveryCode -recoveryCodeExpires -recoveryAttempts';
+const PUBLIC_USER_FIELDS = '-password -tokens -__v -recoveryCode -recoveryCodeExpires -recoveryAttempts -googleId';
+
+/** Respuesta de sesión común a login, registro y Google */
+function sessionPayload(user: IUserDocument, token: string, extra: Record<string, unknown> = {}) {
+  return {
+    _id: String(user._id),
+    name: user.name,
+    lastName: user.lastName,
+    email: user.email,
+    phone: user.phone,
+    photo: user.photo,
+    nickname: user.nickname,
+    gender: user.gender,
+    notifyEmail: user.notifyEmail !== false,
+    notifyComments: user.notifyComments !== false,
+    role: user.role,
+    hasPassword: user.hasPassword !== false,
+    googleLinked: Boolean(user.googleId),
+    forcePasswordChangeOnNextLogin: user.forcePasswordChangeOnNextLogin,
+    token,
+    ...extra,
+  };
+}
 
 export async function login(
   emailRaw: string,
@@ -85,21 +109,7 @@ export async function login(
     }
 
     const token = await user.generateAuthToken();
-
-    return {
-      status: 200,
-      message: {
-        _id: user._id.toString(),
-        name: user.name,
-        lastName: user.lastName,
-        email: user.email,
-        phone: user.phone,
-        photo: user.photo,
-        role: user.role,
-        forcePasswordChangeOnNextLogin: user.forcePasswordChangeOnNextLogin,
-        token,
-      },
-    };
+    return { status: 200, message: sessionPayload(user, token) };
   } catch (error) {
     return {
       status: 400,
@@ -115,6 +125,7 @@ export async function register(data: {
   email: string;
   password: string;
   phone?: string;
+  nickname?: string;
 }): Promise<StoreResponse> {
   try {
     const email = sanitizeEmail(data.email);
@@ -122,13 +133,21 @@ export async function register(data: {
     if (existing) {
       return {
         status: 400,
-        message: { email: 'Ya existe una cuenta registrada con este correo.' },
+        message: {
+          code: 'EMAIL_TAKEN',
+          message: existing.googleId
+            ? 'Ese correo ya está registrado con Google. Usa «Continuar con Google».'
+            : 'Ya existe una cuenta registrada con este correo.',
+          email: 'Ya existe una cuenta registrada con este correo.',
+        },
       };
     }
+    const nickname = typeof data.nickname === 'string' ? data.nickname.trim().replace(/^@/, '').slice(0, 30) : '';
 
     const user = new User({
       name: data.name.trim(),
       lastName: data.lastName?.trim(),
+      nickname: nickname || undefined,
       email,
       phone: data.phone?.trim(),
       password: data.password,
@@ -139,19 +158,7 @@ export async function register(data: {
     await user.save();
     notifyWelcome(recipientOf(user));
     const token = await user.generateAuthToken();
-
-    return {
-      status: 201,
-      message: {
-        _id: user._id.toString(),
-        name: user.name,
-        lastName: user.lastName,
-        email: user.email,
-        phone: user.phone,
-        role: user.role,
-        token,
-      },
-    };
+    return { status: 201, message: sessionPayload(user, token) };
   } catch (error) {
     const safe = describeSaveError(error, 'Error al registrar usuario.');
     return {
@@ -202,20 +209,23 @@ export async function changePassword(
   currentToken?: string
 ): Promise<StoreResponse> {
   try {
-    if (!oldPass) {
-      return { status: 400, message: 'La contraseña actual es requerida.' };
-    }
     const user = await User.findById(userId);
     if (!user) {
       return { status: 404, message: 'Usuario no encontrado.' };
     }
-
-    const match = await compare(oldPass, user.password || '');
-    if (!match) {
-      return { status: 400, message: 'La contraseña actual no es correcta.' };
+    // Las cuentas creadas con Google no tienen contraseña propia: la crean sin pedir la actual
+    if (user.hasPassword !== false) {
+      if (!oldPass) {
+        return { status: 400, message: 'La contraseña actual es requerida.' };
+      }
+      const match = await compare(oldPass, user.password || '');
+      if (!match) {
+        return { status: 400, message: 'La contraseña actual no es correcta.' };
+      }
     }
 
     user.password = newPass;
+    user.hasPassword = true;
     user.forcePasswordChangeOnNextLogin = false;
     // Cierra las demás sesiones; conserva solo la actual
     user.tokens = user.tokens.filter((t) => t.token === currentToken);
@@ -348,6 +358,7 @@ export async function recoveryStepTwo(
     }
 
     user.password = newPass;
+    user.hasPassword = true;
     user.recoveryCode = undefined;
     user.recoveryCodeExpires = undefined;
     user.recoveryAttempts = 0;
@@ -358,6 +369,118 @@ export async function recoveryStepTwo(
     return { status: 200, message: { ok: true, message: 'Contraseña restablecida exitosamente.' } };
   } catch (error) {
     return { status: 500, message: 'Error al restablecer contraseña.', detail: error };
+  }
+}
+
+/* ==============================================================
+   INICIO DE SESIÓN CON GOOGLE
+   ============================================================== */
+
+const TICKET_MINUTES = 5;
+const hashTicket = (ticket: string) => createHash('sha256').update(ticket).digest('hex');
+
+function splitGoogleName(profile: GoogleProfile): { name: string; lastName?: string } {
+  if (profile.givenName) return { name: profile.givenName, lastName: profile.familyName };
+  const parts = (profile.name || profile.email.split('@')[0]).trim().split(/\s+/);
+  return { name: parts[0] || 'Pana', lastName: parts.slice(1).join(' ') || undefined };
+}
+
+/**
+ * Inicia sesión (o crea la cuenta) con un perfil de Google ya verificado.
+ * - Busca por googleId; si no, por correo verificado y vincula la cuenta existente.
+ * - Si no existe, crea una cuenta USER sin contraseña propia (hasPassword = false).
+ */
+export async function loginWithGoogle(profile: GoogleProfile, client?: 'web' | 'mobile'): Promise<StoreResponse> {
+  try {
+    if (!profile.emailVerified) {
+      return {
+        status: 403,
+        message: { code: 'GOOGLE_EMAIL_NOT_VERIFIED', message: 'Tu correo de Google no está verificado.' },
+      };
+    }
+    let isNew = false;
+    let user = await User.findOne({ googleId: profile.sub });
+    if (!user) {
+      user = await User.findOne({ email: sanitizeEmail(profile.email) });
+      if (user) {
+        // Vincula la cuenta existente (mismo correo verificado por Google)
+        user.googleId = profile.sub;
+        if (!user.photo && profile.picture) user.photo = profile.picture;
+      }
+    }
+    if (user && user.active === false) {
+      return {
+        status: 403,
+        message: { code: 'USER_INACTIVE', message: 'Tu cuenta ha sido desactivada por un administrador.' },
+      };
+    }
+    if (!user) {
+      if (client === 'web') {
+        return {
+          status: 403,
+          message: { code: 'WEB_ACCESS_DENIED', message: 'No hay una cuenta del panel con ese correo de Google.' },
+        };
+      }
+      isNew = true;
+      user = new User({
+        ...splitGoogleName(profile),
+        email: sanitizeEmail(profile.email),
+        photo: profile.picture,
+        googleId: profile.sub,
+        // Contraseña aleatoria que nadie conoce: la cuenta entra con Google o crea una propia luego
+        password: randomBytes(24).toString('base64url'),
+        hasPassword: false,
+        role: [ROLES.USER],
+        active: true,
+      });
+    }
+    if (client === 'web' && !canAccessWeb(user.role)) {
+      return {
+        status: 403,
+        message: {
+          code: 'WEB_ACCESS_DENIED',
+          message: 'El acceso al panel web está reservado para administradores u organizadores.',
+        },
+      };
+    }
+    // generateAuthToken guarda el documento (incluye el vínculo o la cuenta nueva)
+    const token = await user.generateAuthToken();
+    if (isNew) notifyWelcome(recipientOf(user));
+    return { status: isNew ? 201 : 200, message: sessionPayload(user, token, { isNew }) };
+  } catch (error) {
+    const safe = describeSaveError(error, 'Error al iniciar sesión con Google.');
+    return { status: safe.status, message: safe.message, detail: error };
+  }
+}
+
+/** Crea un ticket de un solo uso con la sesión ya emitida (flujo por navegador) */
+export async function createAuthTicket(session: { _id: string; token: string; isNew?: boolean }): Promise<string> {
+  const ticket = randomBytes(32).toString('base64url');
+  await AuthTicket.create({
+    ticketHash: hashTicket(ticket),
+    user: session._id,
+    token: session.token,
+    newAccount: Boolean(session.isNew),
+    expiresAt: new Date(Date.now() + TICKET_MINUTES * 60 * 1000),
+  });
+  return ticket;
+}
+
+/** Canjea el ticket (una sola vez) por la sesión */
+export async function exchangeAuthTicket(ticket: unknown): Promise<StoreResponse> {
+  const invalid: StoreResponse = {
+    status: 400,
+    message: { code: 'TICKET_INVALID', message: 'El inicio de sesión expiró. Intenta de nuevo.' },
+  };
+  try {
+    if (typeof ticket !== 'string' || ticket.length < 20 || ticket.length > 200) return invalid;
+    const found = await AuthTicket.findOneAndDelete({ ticketHash: hashTicket(ticket), expiresAt: { $gt: new Date() } });
+    if (!found) return invalid;
+    const user = await User.findOne({ _id: found.user, 'tokens.token': found.token });
+    if (!user || user.active === false) return invalid;
+    return { status: 200, message: sessionPayload(user, found.token, { isNew: found.newAccount }) };
+  } catch (error) {
+    return { status: 500, message: 'Error al completar el inicio de sesión.', detail: error };
   }
 }
 

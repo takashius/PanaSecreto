@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Card, Descriptions, Tag, Button, Modal, Input, message, Spin, Switch } from 'antd';
-import { KeyOutlined } from '@ant-design/icons';
+import { CheckCircleOutlined, KeyOutlined, StopOutlined } from '@ant-design/icons';
+import GenderTag from '@components/catalogs/GenderTag';
 import { useTranslation } from 'react-i18next';
 import { useUser, useSetUserPassword, useSetUserForcePasswordChange } from '@api/users';
 import PageHeader from '@components/PageHeader';
@@ -90,6 +91,12 @@ export default function UserDetail() {
             <Descriptions.Item label="Nombre Completo">
               {user.name} {user.lastName || ''}
             </Descriptions.Item>
+            <Descriptions.Item label={t('usersManagement.nickname')}>
+              {user.nickname || <span className="text-gray-400">{t('usersManagement.noValue')}</span>}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('usersManagement.gender')}>
+              {user.gender ? <GenderTag gender={user.gender} /> : <span className="text-gray-400">{t('usersManagement.noValue')}</span>}
+            </Descriptions.Item>
             <Descriptions.Item label="Correo Electrónico">
               {user.email}
             </Descriptions.Item>
@@ -112,6 +119,7 @@ export default function UserDetail() {
           </Descriptions>
         </Card>
 
+        <div className="space-y-6">
         <Card className="rounded-2xl shadow-xs h-fit" title="Seguridad de Acceso">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -134,6 +142,35 @@ export default function UserDetail() {
             </div>
           </div>
         </Card>
+
+        <Card className="rounded-2xl shadow-xs h-fit" title={t('usersManagement.preferences')}>
+          <ul className="space-y-4">
+            {(
+              [
+                ['notifyEmail', user.notifyEmail],
+                ['notifyComments', user.notifyComments],
+              ] as const
+            ).map(([key, value]) => (
+              <li key={key} className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">{t(`usersManagement.${key}`)}</p>
+                  <p className="text-xs text-gray-500">{t(`usersManagement.${key}Help`)}</p>
+                </div>
+                {value !== false ? (
+                  <Tag color="green" icon={<CheckCircleOutlined />} className="!m-0">
+                    {t('usersManagement.on')}
+                  </Tag>
+                ) : (
+                  <Tag icon={<StopOutlined />} className="!m-0">
+                    {t('usersManagement.off')}
+                  </Tag>
+                )}
+              </li>
+            ))}
+          </ul>
+          <p className="text-xs text-gray-400 mt-4">{t('usersManagement.prefsReadOnly')}</p>
+        </Card>
+        </div>
       </div>
 
       <Modal

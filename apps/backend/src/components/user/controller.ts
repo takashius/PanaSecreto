@@ -1,4 +1,5 @@
 import * as store from './store';
+import type { GoogleProfile } from '../../services/google';
 import { UserRole } from '../../config/roles';
 import type { UploadedImage } from '../../types/general';
 
@@ -18,6 +19,7 @@ export function registerUser(data: {
   email: string;
   password: string;
   phone?: string;
+  nickname?: string;
 }) {
   if (!data?.name || !data?.email || !data?.password) {
     return Promise.resolve({
@@ -166,3 +168,15 @@ export function uploadUserPhoto(userId: string, image?: UploadedImage) {
   return store.uploadUserPhoto(userId, image);
 }
 
+
+export function loginWithGoogle(profile: GoogleProfile, client?: 'web' | 'mobile') {
+  return store.loginWithGoogle(profile, client);
+}
+
+export function createAuthTicket(session: { _id: string; token: string; isNew?: boolean }) {
+  return store.createAuthTicket(session);
+}
+
+export function exchangeAuthTicket(ticket: unknown) {
+  return store.exchangeAuthTicket(ticket);
+}

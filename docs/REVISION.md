@@ -456,3 +456,30 @@ Reemplaza la paleta anterior (Morado Noche `#1E1338`, Amarillo Araguaney `#F7A80
 - **Limpieza:** comentarios, chat y notificaciones se borran con el grupo; los comentarios, al deshacer el sorteo o borrar el deseo.
 - **Pruebas:** `src/test/engagement.test.ts` (alias, sobre, comentarios, notificaciones, recordatorios, chat REST y sockets, revelación, catálogos) y `utils/badWords.test.ts`; se actualizaron las de grupos y deseos al sobre por alias. Total: 158 pruebas en verde, `tsc` y ESLint sin errores. Se agregó `socket.io-client` como dependencia de desarrollo del backend (ya estaba en el lockfile).
 - **Pendiente para la app y el panel:** conectar estos endpoints (ver `docs/PENDIENTES.md`).
+
+### 2026-10-22 — Panel web: alias, tips y campos nuevos
+
+- **Menú:** nuevas secciones «Alias» (`/aliases`) y «Tips» (`/tips`), solo para ADMIN y SUPER_ADMIN.
+- **Alias:** tarjetas por género, catálogo con filtros y activar/desactivar en línea, formulario (alias, emoji, género, activo), importación masiva y pestaña de alias propios con marca de posibles groserías y opción de quitarlos.
+- **Tips:** listado con filtros y conteo por pantalla, aviso de pantallas sin tips, formulario con vista previa en vivo (mascota + «¡Tip del pana!») y panel que muestra lo que recibe la app en cada pantalla.
+- **Grupos:** lugar con enlace a Google Maps, nota, estado del alias por miembro y apodo.
+- **Usuarios:** apodo, género y preferencias de correo.
+- **Código:** `api/catalogs.ts`, `types/catalogs.ts`, `components/catalogs/{TipBubble,GenderTag}.tsx`, `utils/aliasImport.ts`; textos en español e inglés.
+- **Verificación:** `tsc` y ESLint sin errores, `vite build` correcto y capturas de cada pantalla con datos simulados (escritorio y móvil).
+
+### 2026-10-22 — App móvil: autenticación real y «Continuar con Google»
+
+- **Backend:**
+  - Login, registro y Google devuelven la misma sesión (`sessionPayload`), ahora con apodo, género, preferencias, `hasPassword` y `googleLinked`. El registro acepta `nickname` y avisa con `EMAIL_TAKEN` (y si el correo ya es de Google).
+  - Google por navegador sin dependencias nuevas (`services/google.ts`): `GET /google/start` → Google → `GET /google/callback` → regreso a la app con un ticket de un solo uso (`AuthTicket`, TTL 5 min) → `POST /google/exchange`. Verifica la firma del ID token con las claves de Google (JWKS en caché), emisor, audiencia y nonce.
+  - `POST /google` con ID token directo y `GET /google/config`.
+  - Cuentas nuevas de Google: `USER`, foto de Google, `hasPassword: false`; si el correo ya existía, se vincula. Las cuentas desactivadas no entran. Cambiar contraseña no pide la actual si la cuenta no tenía.
+  - Variables nuevas: `API_PUBLIC_URL`, `GOOGLE_WEB_CLIENT_ID`, `GOOGLE_WEB_CLIENT_SECRET`, `GOOGLE_EXTRA_CLIENT_IDS`, `GOOGLE_APP_REDIRECT_SCHEMES`.
+  - Pruebas: `src/test/google.test.ts` simula Google con claves RSA propias (cuenta nueva, vinculación, ticket de un solo uso, nonce falso, audiencia ajena, correo sin verificar, cancelación, state falso, cuenta desactivada, crear contraseña). Total: 166 pruebas en verde.
+- **App:**
+  - `src/api/{config,client,auth}.ts`: URL de la API (`EXPO_PUBLIC_API_URL` o la IP de Metro), cliente `fetch` con token, tiempo límite, errores normalizados (`ApiError` con mensaje y errores por campo) y cierre automático ante un 401.
+  - `src/auth/{AuthContext.tsx,storage.ts,google.ts}`: sesión en `expo-secure-store`, restauración al abrir (con pantalla de carga y modo sin conexión), `signIn`/`signOut`, y Google con `expo-web-browser` + `expo-linking`.
+  - Login: correo (antes decía «Correo o usuario»), errores en el campo, aviso de sesión vencida y Google funcionando. Registro: nombre y apellido se separan, el usuario pasa a ser «Apodo» (opcional), teléfono con +58, reglas de contraseña (8 caracteres y un número), enlaces a Términos y Privacidad, y Google. Recuperación: código real, reenviar a los 60 s, código de prueba en desarrollo, y entra sola con la nueva clave.
+  - `App.tsx`: pila de autenticación separada de la de la app; el perfil y el saludo del inicio salen del usuario real.
+  - Dependencias nuevas (solo en el lockfile): `expo-secure-store`, `expo-web-browser`, `expo-linking`, `expo-constants`. `app.json` con `scheme: "entrepanas"`.
+  - Verificación: `tsc` y ESLint sin errores; recorrido completo en el navegador con la API simulada (login malo y bueno, sesión restaurada, registro con correo repetido y bueno, recuperación, Google).
