@@ -133,7 +133,8 @@ docker compose up --build
 
 ### Backend (`apps/backend`)
 - **Tipo**: Dockerfile · **Base Directory**: `/` · **Dockerfile**: `apps/backend/Dockerfile` · **Puerto**: `4000`
-- Definir las variables de la tabla anterior con `NODE_ENV=production`.
+- Definir las variables de la tabla anterior con `NODE_ENV=production` (**solo runtime** en Coolify: desmarcar “Available at Buildtime”).
+- Las variables de Google OAuth y secretos van **solo en runtime**, no en build.
 - Healthcheck incluido (`/api/health`).
 
 ### Panel admin (`apps/admin`)

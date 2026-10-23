@@ -7,8 +7,11 @@
  * .coolify-provision.local.json tras el primer aprovisionamiento.
  */
 export const COOLIFY = {
-  projectUuid: 'asoows0swko4c4kcw8sgoc00', // ErDesarrollo
-  environmentUuid: 'eooo0w4cggg08kcssss0wokk', // production
+  // Proyecto dedicado en Coolify (recursos aún pueden estar en ErDesarrollo → production hasta moverlos en la UI).
+  projectUuid: 'smvzjzr9gmyntk0pdfw8aiks', // EntrePanas
+  environmentUuid: 'wrb3eeeojafss7jv1gedg5o5', // production
+  legacyProjectUuid: 'asoows0swko4c4kcw8sgoc00', // ErDesarrollo (donde se crearon vía API)
+  legacyEnvironmentUuid: 'eooo0w4cggg08kcssss0wokk',
   serverUuid: 'j4848o4cgcoo4444kosw4s4k',
   destinationUuid: 'f00w8woo8ww8gccgg8sk44kw',
   githubAppUuid: 'locws4kk0k8k4kwg0gwckog4',

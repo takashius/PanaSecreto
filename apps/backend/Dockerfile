@@ -12,6 +12,8 @@ RUN corepack enable
 # Builder Stage: Instalación y Compilación del Monorepo
 # -------------------------------------------------------------
 FROM base AS builder
+# Coolify suele inyectar NODE_ENV=production en build; aquí necesitamos devDependencies (tsc).
+ENV NODE_ENV=development
 WORKDIR /app
 
 # Copiar manifiestos de workspaces para resolver el árbol de dependencias
@@ -52,21 +54,18 @@ ENV PORT=4000
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 panabackend
 
-# Copiar artefactos y dependencias necesarias desde el builder
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
-COPY --from=builder /app/node_modules ./node_modules
+# Copiar artefactos (--chown evita chown -R sobre node_modules, que agota el build en Coolify)
+COPY --chown=panabackend:nodejs --from=builder /app/package.json ./package.json
+COPY --chown=panabackend:nodejs --from=builder /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
+COPY --chown=panabackend:nodejs --from=builder /app/node_modules ./node_modules
 
-COPY --from=builder /app/packages/shared/package.json ./packages/shared/package.json
-COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
-COPY --from=builder /app/packages/shared/node_modules ./packages/shared/node_modules
+COPY --chown=panabackend:nodejs --from=builder /app/packages/shared/package.json ./packages/shared/package.json
+COPY --chown=panabackend:nodejs --from=builder /app/packages/shared/dist ./packages/shared/dist
+COPY --chown=panabackend:nodejs --from=builder /app/packages/shared/node_modules ./packages/shared/node_modules
 
-COPY --from=builder /app/apps/backend/package.json ./apps/backend/package.json
-COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
-COPY --from=builder /app/apps/backend/node_modules ./apps/backend/node_modules
-
-# Asignar permisos al usuario
-RUN chown -R panabackend:nodejs /app
+COPY --chown=panabackend:nodejs --from=builder /app/apps/backend/package.json ./apps/backend/package.json
+COPY --chown=panabackend:nodejs --from=builder /app/apps/backend/dist ./apps/backend/dist
+COPY --chown=panabackend:nodejs --from=builder /app/apps/backend/node_modules ./apps/backend/node_modules
 
 USER panabackend
 WORKDIR /app/apps/backend

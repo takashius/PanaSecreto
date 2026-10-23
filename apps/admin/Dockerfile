@@ -6,6 +6,7 @@ ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 ENV CI=true
 ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+ENV NODE_ENV=development
 RUN corepack enable
 
 WORKDIR /app
