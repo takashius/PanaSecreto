@@ -41,6 +41,8 @@ RUN pnpm --filter @panasecreto/backend build
 FROM node:22-alpine AS runner
 WORKDIR /app
 
+RUN apk add --no-cache wget
+
 ENV NODE_ENV=production
 ENV PORT=4000
 # JWT_KEY / USER_ADMIN_PASSWORD deben inyectarse en tiempo de ejecución (Coolify / docker compose).

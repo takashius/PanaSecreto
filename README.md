@@ -138,7 +138,8 @@ docker compose up --build
 
 ### Panel admin (`apps/admin`)
 - **Tipo**: Dockerfile · **Base Directory**: `/` · **Dockerfile**: `apps/admin/Dockerfile` · **Puerto**: `80`
-- **Build Variable** `VITE_API_URL=https://api.tudominio.com`: la URL de la API queda incrustada al compilar.
+- **Build Variable** `VITE_API_URL=https://entrepanas-api.erdesarrollo.com.ve`: la URL de la API queda incrustada al compilar.
+- Producción (Coolify, proyecto **ErDesarrollo**): API `https://entrepanas-api.erdesarrollo.com.ve`, panel `https://entrepanas.erdesarrollo.com.ve`.
 - Nginx sirve la SPA con gzip, CSP y cabeceras de seguridad.
 
 ---
