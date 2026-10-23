@@ -191,6 +191,8 @@ export interface GroupSummary {
   envelopeOpened?: boolean;
   /** Nombre del lugar del encuentro (si se definió) */
   locationName?: string | null;
+  /** Cuántos deseos tengo en este grupo */
+  myWishCount?: number;
   drawnAt?: string | Date | null;
   revealedAt?: string | Date | null;
   completedAt?: string | Date | null;

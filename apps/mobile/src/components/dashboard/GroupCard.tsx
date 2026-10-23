@@ -9,7 +9,7 @@ import { exchangeCountdown, monthYear, shortExchangeDate } from '../../utils/gro
 interface Props {
   group: GroupSummary;
   /** Abre el detalle; 'sobre' entra directo a Mi sobre */
-  onOpen: (groupId: string, tab?: 'resumen' | 'sobre') => void;
+  onOpen: (groupId: string, tab?: 'resumen' | 'sobre', askAlias?: boolean) => void;
 }
 
 const AVATAR_COLORS = ['#FFD79D', '#B8E1FF', '#D5F2E3', '#FFD3E0'];
@@ -135,7 +135,7 @@ export const GroupCard: React.FC<Props> = ({ group, onOpen }) => {
       {group.status === 'WAITING' && (
         <>
           {!group.myAlias && (
-            <TouchableOpacity style={dashboardStyles.aliasHint} activeOpacity={0.85} onPress={() => open()}>
+            <TouchableOpacity style={dashboardStyles.aliasHint} activeOpacity={0.85} onPress={() => onOpen(group.id, 'resumen', true)}>
               <Text style={{ fontSize: 16 }}>🥸</Text>
               <Text style={dashboardStyles.aliasHintText}>Elige tu alias antes del sorteo</Text>
               <ChevronRight size={16} color={theme.colors.primary} />

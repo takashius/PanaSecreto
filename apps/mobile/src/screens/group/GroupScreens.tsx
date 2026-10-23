@@ -18,6 +18,7 @@ import GroupDetailScreen from './GroupDetailScreen';
 import EditGroupScreen from './EditGroupScreen';
 import ExclusionsScreen from './ExclusionsScreen';
 import RevealScreen from './RevealScreen';
+import { AliasPickerModal } from '../../components/alias/AliasPickerModal';
 
 /**
  * Contenedores de las pantallas del grupo conectadas a la API.
@@ -29,7 +30,8 @@ import RevealScreen from './RevealScreen';
 export function useGroupDetail(groupId: string) {
   const { user } = useAuth();
   const fetcher = useCallback(() => fetchGroupBundle(groupId), [groupId]);
-  const query = useApiQuery(groupKey(groupId), fetcher, { enabled: Boolean(groupId) });
+  // 10 s de margen: volver al grupo no recarga todo; tras cada acción se recarga explícitamente
+  const query = useApiQuery(groupKey(groupId), fetcher, { enabled: Boolean(groupId), staleMs: 10_000 });
   const view = useMemo(() => (query.data ? toGroupDetailView(query.data, user?._id ?? '') : null), [query.data, user?._id]);
   return { ...query, view, bundle: query.data };
 }
@@ -70,7 +72,7 @@ function BusyOverlay({ label }: { label: string | null }) {
 }
 
 /** Encabezado + estado (cargando o error) mientras no hay datos */
-function GroupState({
+export function GroupState({
   title,
   loading,
   message,
@@ -96,11 +98,11 @@ function GroupState({
         {loading ? (
           <>
             <ActivityIndicator size="large" color={theme.colors.primary} />
-            <Text style={styles.stateText}>Cargando el grupo…</Text>
+            <Text style={styles.stateText}>Cargando…</Text>
           </>
         ) : (
           <>
-            <Text style={styles.stateTitle}>No pudimos abrir el grupo</Text>
+            <Text style={styles.stateTitle}>No pudimos abrir esto</Text>
             <Text style={styles.stateText}>{message}</Text>
             {onRetry && (
               <TouchableOpacity style={styles.stateButton} onPress={onRetry} activeOpacity={0.85}>
@@ -133,12 +135,21 @@ interface DetailProps {
   chatRoom?: ChatRoomSummary | null;
   onOpenChat?: () => void;
   chatUnread?: number;
+  /** Abre la elección del alias apenas carga (al crear o unirse a un grupo) */
+  promptAlias?: boolean;
 }
 
-export function GroupDetailContainer({ groupId, onGroupGone, ...nav }: DetailProps) {
+export function GroupDetailContainer({ groupId, onGroupGone, promptAlias = false, ...nav }: DetailProps) {
   const detail = useGroupDetail(groupId);
   const { busy, run } = useAction();
   const [pulling, setPulling] = useState(false);
+  const [aliasOpen, setAliasOpen] = useState(false);
+  const [aliasDismissed, setAliasDismissed] = useState(false);
+  const autoAlias = promptAlias && !aliasDismissed && detail.view?.status === 'WAITING' && !detail.view.myAlias;
+  const closeAlias = () => {
+    setAliasOpen(false);
+    setAliasDismissed(true);
+  };
 
   if (!detail.view) {
     return (
@@ -191,6 +202,7 @@ export function GroupDetailContainer({ groupId, onGroupGone, ...nav }: DetailPro
         onComplete={() => act('Finalizando…', () => groupApi.completeGroup(groupId), 'Intercambio finalizado|El grupo pasó al histórico.')}
         onRemoveMember={(m) => act('Quitando…', () => groupApi.removeMember(groupId, m.id))}
         onOpenEnvelope={() => act('Abriendo tu sobre…', () => groupApi.openEnvelope(groupId))}
+        onChooseAlias={() => setAliasOpen(true)}
         onDeleteGroup={() =>
           void run('Eliminando…', async () => {
             await groupApi.deleteGroup(groupId);
@@ -207,6 +219,18 @@ export function GroupDetailContainer({ groupId, onGroupGone, ...nav }: DetailPro
         }
       />
       <BusyOverlay label={busy} />
+      <AliasPickerModal
+        visible={aliasOpen || autoAlias}
+        groupId={groupId}
+        groupName={detail.view.name}
+        currentAlias={detail.view.myAlias}
+        onClose={closeAlias}
+        onSaved={(alias, emoji) => {
+          closeAlias();
+          void refreshGroup(groupId);
+          Alert.alert('¡Alias listo! 🥸', `En «${detail.view?.name}» ahora eres ${emoji} ${alias}.`);
+        }}
+      />
     </View>
   );
 }

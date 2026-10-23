@@ -15,6 +15,7 @@ import { ExclusionsCard } from '../../components/groupDetail/ExclusionsCard';
 import { DrawSection } from '../../components/groupDetail/DrawSection';
 import { EnvelopeTab } from '../../components/envelope/EnvelopeTab';
 import { ChatTabPreview } from '../../components/chat/ChatTabPreview';
+import { AliasCard } from '../../components/alias/AliasCard';
 import type { ChatRoomSummary, GroupDetailView, GroupMemberPreview, WishPreview } from '../../types/session';
 
 interface GroupDetailScreenProps {
@@ -35,6 +36,8 @@ interface GroupDetailScreenProps {
   onComplete?: () => void;
   onRemoveMember?: (member: GroupMemberPreview) => void;
   onOpenEnvelope?: () => void;
+  /** Abre la elección del alias */
+  onChooseAlias?: () => void;
   onOpenWish?: (wish: WishPreview) => void;
   /** Sala de chat del grupo (para la vista previa de la pestaña Chat) */
   chatRoom?: ChatRoomSummary | null;
@@ -66,6 +69,7 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
   onComplete,
   onRemoveMember,
   onOpenEnvelope,
+  onChooseAlias,
   onOpenWish,
   chatRoom,
   onOpenChat,
@@ -216,6 +220,7 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
 
         {tab === 'resumen' && (
           <>
+            <AliasCard alias={group.myAlias ?? null} emoji={group.myAliasEmoji ?? null} editable={isWaiting} onPress={() => onChooseAlias?.()} />
             <SummaryStats group={group} />
             <MeetingPlaceCard
               location={group.location}

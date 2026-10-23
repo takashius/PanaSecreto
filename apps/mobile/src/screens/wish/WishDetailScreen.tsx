@@ -9,6 +9,7 @@ import {
   Linking,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { Alert } from '../../components/common/AppDialog';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -34,44 +35,61 @@ const CURRENCY = { USD: '$', VES: 'Bs. ' } as const;
 const MAX_COMMENT = 500;
 const GIVER_SUGGESTIONS = ['¿Qué talla usas?', '¿Qué color prefieres?', '¿Alguna marca en especial?'];
 
-/** Comentario propio creado localmente (mientras no hay API) */
-function localComment(text: string): WishComment {
-  const now = new Date();
-  return { id: `local-${now.getTime()}`, author: 'me', text, createdAt: now.toISOString() };
-}
 
 interface WishDetailScreenProps {
   wish: WishDetailView;
   onNavigateBack: () => void;
-  /** Avisa los comentarios actualizados (para conservarlos al volver y actualizar contadores) */
-  onCommentsChange?: (wishId: string, comments: WishComment[]) => void;
+  /** Comentarios del hilo (vienen de la API) */
+  comments: WishComment[];
+  commentsLoading?: boolean;
+  /** false cuando el intercambio finalizó o antes del sorteo */
+  canComment?: boolean;
+  /** Por qué no se puede comentar (se muestra en lugar del cuadro de texto) */
+  closedReason?: string | null;
+  /** Publica un comentario; si falla, el texto se conserva */
+  onSend: (text: string) => Promise<void>;
   /** Solo el dueño: editar o eliminar el deseo */
   onEdit?: () => void;
   onDelete?: () => void;
 }
 
 /** Detalle de un deseo con su hilo de comentarios anónimos (sin tiempo real: se notifica al otro lado) */
-export const WishDetailScreen: React.FC<WishDetailScreenProps> = ({ wish, onNavigateBack, onCommentsChange, onEdit, onDelete }) => {
+export const WishDetailScreen: React.FC<WishDetailScreenProps> = ({
+  wish,
+  onNavigateBack,
+  comments,
+  commentsLoading = false,
+  canComment = true,
+  closedReason = null,
+  onSend,
+  onEdit,
+  onDelete,
+}) => {
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
-  const [comments, setComments] = useState<WishComment[]>(wish.comments);
   const [draft, setDraft] = useState('');
+  const [sending, setSending] = useState(false);
 
   const isGiver = wish.viewer === 'giver';
   const cat = WISH_CATEGORIES[wish.category];
   const CatIcon = cat.icon;
   const otherName = isGiver ? wish.ownerAlias : 'tu amigo secreto';
-  const canSend = draft.trim().length > 0;
+  const canSend = draft.trim().length > 0 && !sending && canComment;
 
-  const send = (text: string = draft) => {
+  const send = async (text: string = draft) => {
     const value = text.trim();
-    if (!value) return;
-    // Al conectar la API: POST /api/group/:id/wishlist/:wishId/comments (el backend envía la notificación)
-    const next = [...comments, localComment(value)];
-    setComments(next);
-    setDraft('');
-    onCommentsChange?.(wish.id, next);
-    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 50);
+    if (!value || sending) return;
+    setSending(true);
+    try {
+      // El backend guarda el comentario y avisa al otro lado (sin decir quién es)
+      await onSend(value);
+      setDraft('');
+      setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 50);
+    } catch (error) {
+      Alert.alert('No se pudo enviar', error instanceof Error ? error.message : 'Intenta de nuevo.');
+    } finally {
+      setSending(false);
+    }
   };
 
   const handleMore = () => {
@@ -209,7 +227,11 @@ export const WishDetailScreen: React.FC<WishDetailScreenProps> = ({ wish, onNavi
             <EyeOff size={20} color={theme.colors.textMuted} strokeWidth={2.2} />
           </View>
 
-          {comments.length > 0 ? (
+          {commentsLoading && comments.length === 0 ? (
+            <View style={styles.emptyComments}>
+              <ActivityIndicator color={theme.colors.primary} />
+            </View>
+          ) : comments.length > 0 ? (
             comments.map((c) => <CommentItem key={c.id} comment={c} viewer={wish.viewer} ownerAlias={wish.ownerAlias} />)
           ) : (
             <View style={styles.emptyComments}>
@@ -219,10 +241,10 @@ export const WishDetailScreen: React.FC<WishDetailScreenProps> = ({ wish, onNavi
                   ? '¿Dudas con la talla, el color o el modelo? Pregúntale sin revelar quién eres.'
                   : 'Cuando tu amigo secreto te pregunte algo sobre este deseo, te avisaremos.'}
               </Text>
-              {isGiver && (
+              {isGiver && canComment && (
                 <View style={styles.suggestions}>
                   {GIVER_SUGGESTIONS.map((q) => (
-                    <TouchableOpacity key={q} style={styles.suggestion} onPress={() => send(q)} activeOpacity={0.8}>
+                    <TouchableOpacity key={q} style={styles.suggestion} onPress={() => void send(q)} activeOpacity={0.8}>
                       <Text style={styles.suggestionText}>{q}</Text>
                     </TouchableOpacity>
                   ))}
@@ -233,6 +255,14 @@ export const WishDetailScreen: React.FC<WishDetailScreenProps> = ({ wish, onNavi
         </ScrollView>
 
         {/* Escribir comentario */}
+        {!canComment ? (
+          <View style={[styles.composer, { paddingBottom: Math.max(insets.bottom, 10) }]}>
+            <View style={styles.composerHint}>
+              <Lock size={14} color={theme.colors.textMuted} strokeWidth={2.2} />
+              <Text style={styles.composerHintText}>{closedReason ?? 'Los comentarios están cerrados.'}</Text>
+            </View>
+          </View>
+        ) : (
         <View style={[styles.composer, { paddingBottom: Math.max(insets.bottom, 10) }]}>
           <View style={styles.composerRow}>
             <TextInput
@@ -246,7 +276,7 @@ export const WishDetailScreen: React.FC<WishDetailScreenProps> = ({ wish, onNavi
             />
             <TouchableOpacity
               style={[styles.sendButton, !canSend && styles.sendButtonDisabled]}
-              onPress={() => send()}
+              onPress={() => void send()}
               disabled={!canSend}
               accessibilityLabel="Enviar comentario"
             >
@@ -258,6 +288,7 @@ export const WishDetailScreen: React.FC<WishDetailScreenProps> = ({ wish, onNavi
             <Text style={styles.composerHintText}>Le avisaremos a {otherName} por notificación</Text>
           </View>
         </View>
+        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

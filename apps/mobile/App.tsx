@@ -18,11 +18,6 @@ import RecoverPasswordScreen from './src/screens/auth/RecoverPasswordScreen';
 import DashboardScreen from './src/screens/dashboard/DashboardScreen';
 import CreateGroupScreen from './src/screens/group/CreateGroupScreen';
 import type { GroupDetailTab } from './src/components/groupDetail/GroupDetailTabs';
-import WishDetailScreen from './src/screens/wish/WishDetailScreen';
-import { MOCK_GROUPS } from './src/mocks/groupDetail';
-import { MOCK_WISH_DETAILS } from './src/mocks/wishes';
-import MyWishesScreen from './src/screens/wishes/MyWishesScreen';
-import WishFormScreen from './src/screens/wishes/WishFormScreen';
 import ChatsScreen from './src/screens/chat/ChatsScreen';
 import ChatRoomScreen from './src/screens/chat/ChatRoomScreen';
 import { MOCK_CHATS } from './src/mocks/chats';
@@ -39,14 +34,14 @@ import { useApiQuery } from './src/api/queryStore';
 import { fetchQuery } from './src/api/queryStore';
 import { fetchMyGroups, MY_GROUPS_KEY } from './src/api/groups';
 import { EditGroupContainer, ExclusionsContainer, GroupDetailContainer, RevealContainer } from './src/screens/group/GroupScreens';
+import { MyWishesContainer, WishDetailContainer, WishFormContainer } from './src/screens/wishes/WishScreens';
 import { CHAT_UNREAD_KEY, fetchChatUnread, fetchNotificationsUnread, NOTIFICATIONS_UNREAD_KEY } from './src/api/badges';
 import LegalScreen from './src/screens/legal/LegalScreen';
 import NotificationsScreen from './src/screens/notifications/NotificationsScreen';
 import JoinGroupScreen from './src/screens/group/JoinGroupScreen';
-import { MOCK_NOTIFICATIONS, MOCK_JOIN_PREVIEWS } from './src/mocks/notifications';
-import { MOCK_MY_WISHLISTS } from './src/mocks/myWishes';
+import { MOCK_NOTIFICATIONS } from './src/mocks/notifications';
 import type { DashboardTab } from './src/components/common/FloatingTabBar';
-import type { AppNotification, ProfileView, ChatMessage, ChatRoomSummary, GroupDetailView, MyWish, MyWishlistGroup, WishComment, WishDetailView } from './src/types/session';
+import type { AppNotification, ProfileView, ChatMessage, ChatRoomSummary } from './src/types/session';
 import { theme } from './src/styles/theme';
 import type { SessionUser } from './src/types/session';
 
@@ -75,14 +70,14 @@ function AppContent() {
   const [authHistory, setAuthHistory] = useState<Array<Screen>>(['login']);
   const [groupDetailTab, setGroupDetailTab] = useState<GroupDetailTab>('resumen');
   const [groupDetailId, setGroupDetailId] = useState<string>('');
-  // Estado de maqueta: conserva los cambios locales mientras no hay API
-  const [groups, setGroups] = useState<Record<string, GroupDetailView>>(MOCK_GROUPS);
-  const [wishDetails, setWishDetails] = useState(MOCK_WISH_DETAILS);
-  const [wishDetailId, setWishDetailId] = useState<string | null>(null);
-  // Deseos: listas por grupo y de qué lado se abrió el detalle del deseo
-  const [myLists, setMyLists] = useState<MyWishlistGroup[]>(MOCK_MY_WISHLISTS);
-  const [myListGroupId, setMyListGroupId] = useState<string>(MOCK_MY_WISHLISTS[0]?.groupId ?? '');
-  const [wishSource, setWishSource] = useState<'giver' | 'owner'>('giver');
+  // Abrir la elección del alias apenas cargue el grupo (al crearlo o unirse)
+  const [promptAlias, setPromptAlias] = useState(false);
+  // Deseos: grupo elegido en la pestaña, deseo abierto (y desde qué lado) y formulario
+  const [myListGroupId, setMyListGroupId] = useState<string>('');
+  const [wishCtx, setWishCtx] = useState<{ groupId: string; wishId: string; viewer: 'owner' | 'giver' } | null>(null);
+  const [wishForm, setWishForm] = useState<{ groupId: string; wishId: string | null } | null>(null);
+  // Mis grupos (para las estadísticas del perfil)
+  const myGroupsQuery = useApiQuery(MY_GROUPS_KEY, fetchMyGroups, { enabled: signedIn, staleMs: 60_000 });
   // Perfil (maqueta): se completa con los datos de la sesión cuando existen
   // Perfil: datos de la sesión + cambios locales de la maqueta (hasta conectar la edición de perfil)
   const [profileEdits, setProfileEdits] = useState<ProfileView | null>(null);
@@ -113,55 +108,21 @@ function AppContent() {
   const updateChatMessages = (groupId: string, messages: ChatMessage[]) =>
     setChats((prev) => prev.map((c) => (c.groupId === groupId ? { ...c, messages } : c)));
 
-  // Formulario de deseo: null = agregar; id = editar ese deseo
-  const [wishFormEditId, setWishFormEditId] = useState<string | null>(null);
-
   const openWishForm = (groupId: string, wishId: string | null) => {
     setMyListGroupId(groupId);
-    setWishFormEditId(wishId);
+    setWishForm({ groupId, wishId });
     navigateTo('wishForm');
   };
 
-  const saveWish = (wish: MyWish) => {
-    const list = myLists.find((l) => l.groupId === myListGroupId);
-    if (!list) return;
-    const exists = list.wishes.some((w) => w.id === wish.id);
-    const wishes = exists ? list.wishes.map((w) => (w.id === wish.id ? wish : w)) : [...list.wishes, wish];
-    updateMyList({ ...list, wishes });
-    goBack();
+  const openWish = (groupId: string, wishId: string, viewer: 'owner' | 'giver') => {
+    setWishCtx({ groupId, wishId, viewer });
+    navigateTo('wishDetail');
   };
 
-  const deleteWish = (wishId: string) => {
-    const list = myLists.find((l) => l.groupId === myListGroupId);
-    if (!list) return;
-    updateMyList({ ...list, wishes: list.wishes.filter((w) => w.id !== wishId) });
-    goBack();
-  };
-
-  const updateMyList = (list: MyWishlistGroup) =>
-    setMyLists((prev) => prev.map((l) => (l.groupId === list.groupId ? list : l)));
-
-  /** Detalle del deseo propio (vista del dueño) a partir de Deseos */
-  const ownerWishDetail = (): WishDetailView | null => {
-    const list = myLists.find((l) => l.groupId === myListGroupId);
-    const wish = list?.wishes.find((w) => w.id === wishDetailId);
-    if (!list || !wish) return null;
-    return { ...wish, viewer: 'owner', groupName: list.name, ownerAlias: 'Pana Incógnito' };
-  };
-
-  const handleOwnerComments = (wishId: string, comments: WishComment[]) => {
-    const list = myLists.find((l) => l.groupId === myListGroupId);
-    if (!list) return;
-    // Al responder, las preguntas pendientes quedan atendidas
-    const wishes = list.wishes.map((w) =>
-      w.id === wishId ? { ...w, comments, commentsCount: comments.length, unansweredCount: 0 } : w
-    );
-    updateMyList({ ...list, wishes });
-  };
-
-  const openGroup = (groupId: string, tab: GroupDetailTab = 'resumen') => {
+  const openGroup = (groupId: string, tab: GroupDetailTab = 'resumen', askAlias = false) => {
     setGroupDetailId(groupId);
     setGroupDetailTab(tab);
+    setPromptAlias(askAlias);
     navigateTo('groupDetail');
   };
 
@@ -169,17 +130,9 @@ function AppContent() {
   const openNotification = (n: AppNotification) => {
     setNotifications((prev) => prev.map((x) => (x.id === n.id ? { ...x, read: true } : x)));
     const { screen, wishId } = n.target;
-    if (screen === 'myWish' && wishId) {
-      setMyListGroupId(n.groupId);
-      setWishSource('owner');
-      setWishDetailId(wishId);
-      navigateTo('wishDetail');
-    } else if (screen === 'wish' && wishId) {
-      setGroupDetailId(n.groupId);
-      setWishSource('giver');
-      setWishDetailId(wishId);
-      navigateTo('wishDetail');
-    } else if (screen === 'envelope') openGroup(n.groupId, 'sobre');
+    if (screen === 'myWish' && wishId) openWish(n.groupId, wishId, 'owner');
+    else if (screen === 'wish' && wishId) openWish(n.groupId, wishId, 'giver');
+    else if (screen === 'envelope') openGroup(n.groupId, 'sobre');
     else if (screen === 'chat') openChatRoom(n.groupId);
     else if (screen === 'reveal') {
       setGroupDetailId(n.groupId);
@@ -195,15 +148,6 @@ function AppContent() {
     else setScreenHistory(['dashboard', 'profile']);
   };
 
-  const handleWishComments = (wishId: string, comments: WishComment[]) => {
-    setWishDetails((prev) => ({ ...prev, [wishId]: { ...prev[wishId], comments, commentsCount: comments.length } }));
-    setGroups((prev) => {
-      const g = prev[groupDetailId];
-      if (!g?.envelope) return prev;
-      const wishes = g.envelope.wishes.map((w) => (w.id === wishId ? { ...w, commentsCount: comments.length } : w));
-      return { ...prev, [g.id]: { ...g, envelope: { ...g.envelope, wishes } } };
-    });
-  };
   const activeHistory = signedIn ? screenHistory : authHistory;
   const currentScreen = activeHistory[activeHistory.length - 1];
 
@@ -310,6 +254,7 @@ function AppContent() {
         onOpenGroup={(groupId) => {
           setGroupDetailId(groupId);
           setGroupDetailTab('resumen');
+          setPromptAlias(true);
           // Reemplaza "Crear grupo" por el detalle: atrás vuelve al inicio
           setScreenHistory(['dashboard', 'groupDetail']);
         }}
@@ -320,6 +265,7 @@ function AppContent() {
       <GroupDetailContainer
         key={groupDetailId}
         groupId={groupDetailId}
+        promptAlias={promptAlias}
         initialTab={groupDetailTab}
         onNavigateBack={goBack}
         onTabChange={setGroupDetailTab}
@@ -335,52 +281,28 @@ function AppContent() {
         onGroupGone={() => setScreenHistory(['dashboard'])}
         onOpenReveal={() => navigateTo('reveal')}
         chatUnread={chatUnread}
-        onOpenWish={(wish) => {
-          if (!wishDetails[wish.id]) {
-            Alert.alert(wish.title, 'El detalle del deseo y sus comentarios se conectan con la API en el siguiente paso.');
-            return;
-          }
-          setWishSource('giver');
-          setWishDetailId(wish.id);
-          navigateTo('wishDetail');
-        }}
+        onOpenWish={(wish) => openWish(groupDetailId, wish.id, 'giver')}
       />
     );
-  } else if (currentScreen === 'wishDetail' && wishSource === 'owner' && ownerWishDetail()) {
+  } else if (currentScreen === 'wishDetail' && wishCtx) {
     content = (
-      <WishDetailScreen
-        key={`owner-${wishDetailId}`}
-        wish={ownerWishDetail() as WishDetailView}
+      <WishDetailContainer
+        key={`${wishCtx.viewer}-${wishCtx.wishId}`}
+        groupId={wishCtx.groupId}
+        wishId={wishCtx.wishId}
+        viewer={wishCtx.viewer}
         onNavigateBack={goBack}
-        onCommentsChange={handleOwnerComments}
-        onEdit={() => openWishForm(myListGroupId, wishDetailId)}
-        onDelete={() => wishDetailId && deleteWish(wishDetailId)}
+        onEdit={() => openWishForm(wishCtx.groupId, wishCtx.wishId)}
+        onDeleted={goBack}
       />
     );
-  } else if (currentScreen === 'wishDetail' && wishDetailId && wishDetails[wishDetailId]) {
+  } else if (currentScreen === 'wishForm' && wishForm) {
     content = (
-      <WishDetailScreen
-        key={wishDetailId}
-        wish={wishDetails[wishDetailId]}
-        onNavigateBack={goBack}
-        onCommentsChange={handleWishComments}
-      />
-    );
-  } else if (currentScreen === 'wishForm' && myLists.some((l) => l.groupId === myListGroupId)) {
-    const list = myLists.find((l) => l.groupId === myListGroupId) as MyWishlistGroup;
-    content = (
-      <WishFormScreen
-        key={`${myListGroupId}-${wishFormEditId ?? 'nuevo'}`}
-        group={{
-          groupId: list.groupId,
-          emoji: list.emoji,
-          name: list.name,
-          currency: list.currency,
-          budgetMax: list.budgetMax,
-          year: list.exchangeYear,
-        }}
-        initial={list.wishes.find((w) => w.id === wishFormEditId) ?? null}
-        onSave={saveWish}
+      <WishFormContainer
+        key={`${wishForm.groupId}-${wishForm.wishId ?? 'nuevo'}`}
+        groupId={wishForm.groupId}
+        wishId={wishForm.wishId}
+        onDone={goBack}
         onCancel={goBack}
       />
     );
@@ -398,9 +320,9 @@ function AppContent() {
       <ProfileScreen
         profile={profile}
         stats={{
-          groups: myLists.length,
-          wishes: myLists.reduce((n, l) => n + l.wishes.length, 0),
-          exchanges: chats.filter((c) => c.status === 'REVEALED' || c.status === 'COMPLETED').length,
+          groups: myGroupsQuery.data?.length ?? 0,
+          wishes: (myGroupsQuery.data ?? []).reduce((n, g) => n + (g.myWishCount ?? 0), 0),
+          exchanges: (myGroupsQuery.data ?? []).filter((g) => g.status === 'REVEALED' || g.status === 'COMPLETED').length,
         }}
         onProfileChange={setProfile}
         onEditProfile={() => navigateTo('editProfile')}
@@ -441,11 +363,10 @@ function AppContent() {
   } else if (currentScreen === 'joinGroup') {
     content = (
       <JoinGroupScreen
-        lookup={(code) => MOCK_JOIN_PREVIEWS[code] ?? null}
-        myGroupIds={Object.keys(groups)}
-        onJoined={(preview) => {
+        onJoined={(groupId) => {
+          void fetchQuery(MY_GROUPS_KEY, fetchMyGroups);
           setScreenHistory(['dashboard']);
-          openGroup(preview.groupId);
+          openGroup(groupId, 'resumen', true);
         }}
         onOpenGroup={(groupId) => {
           setScreenHistory(['dashboard']);
@@ -487,29 +408,13 @@ function AppContent() {
     );
   } else if (currentScreen === 'myWishes') {
     content = (
-      <MyWishesScreen
-        lists={myLists}
+      <MyWishesContainer
         selectedGroupId={myListGroupId}
         onSelectGroup={setMyListGroupId}
-        onListChange={updateMyList}
-        onOpenWish={(groupId, wish) => {
-          setMyListGroupId(groupId);
-          setWishSource('owner');
-          setWishDetailId(wish.id);
-          navigateTo('wishDetail');
-        }}
+        onOpenWish={openWish}
         onAddWish={(groupId) => openWishForm(groupId, null)}
-        onEditWish={(groupId, wish) => openWishForm(groupId, wish.id)}
-        envelopes={Object.fromEntries(
-          Object.values(groups).map((g) => [g.id, { envelope: g.envelope, opened: !!g.envelopeOpened }])
-        )}
+        onEditWish={(groupId, wishId) => openWishForm(groupId, wishId)}
         onOpenEnvelope={(groupId) => openGroup(groupId, 'sobre')}
-        onOpenPanaWish={(groupId, wish) => {
-          setGroupDetailId(groupId);
-          setWishSource('giver');
-          setWishDetailId(wish.id);
-          navigateTo('wishDetail');
-        }}
         onOpenNotifications={() => navigateTo('notifications')}
         hasNotifications={hasNotifications}
         onNavigateTab={handleNavigateTab}
@@ -525,11 +430,7 @@ function AppContent() {
         onOpenNotifications={() => navigateTo('notifications')}
         onJoinGroup={() => navigateTo('joinGroup')}
         onNavigateTab={handleNavigateTab}
-        onOpenGroup={(groupId, tab = 'resumen') => {
-          setGroupDetailId(groupId);
-          setGroupDetailTab(tab);
-          navigateTo('groupDetail');
-        }}
+        onOpenGroup={(groupId, tab = 'resumen', askAlias = false) => openGroup(groupId, tab, askAlias)}
       />
     );
   }

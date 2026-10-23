@@ -16,6 +16,7 @@ import {
 import { Assignment, Group, IGroup, IGroupMember } from './model';
 import { User } from '../user/model'; // también registra el modelo User para populate
 import { deleteWishesOfGroup, deleteWishesOfMember } from '../wishlist/cleanup';
+import { Wish } from '../wishlist/model';
 import { drawSecretFriends } from './draw';
 import { pickAutoAliases } from '../alias/store';
 import { deleteEngagementOfGroup, deleteEngagementOfMember, deleteCommentsOfGroup } from '../engagement/cleanup';
@@ -277,6 +278,12 @@ export async function listMyGroups(
       .select('name lastName nickname photo')
       .lean();
     const userById = new Map(previewUsers.map((u) => [idOf(u._id), u]));
+    // Cuántos deseos tengo en cada grupo (pestaña Deseos y perfil)
+    const wishCounts = await Wish.aggregate<{ _id: Types.ObjectId; n: number }>([
+      { $match: { user: uid, group: { $in: groups.map((g) => g._id) } } },
+      { $group: { _id: '$group', n: { $sum: 1 } } },
+    ]);
+    const wishCountByGroup = new Map(wishCounts.map((w) => [idOf(w._id), w.n]));
     const initialsOf = (u?: { name?: string; lastName?: string }) =>
       [u?.name, u?.lastName]
         .filter(Boolean)
@@ -304,6 +311,7 @@ export async function listMyGroups(
         myAliasEmoji: me?.aliasEmoji ?? null,
         envelopeOpened: Boolean(me?.envelopeOpenedAt),
         locationName: g.location?.name ?? null,
+        myWishCount: wishCountByGroup.get(idOf(g._id)) ?? 0,
         drawnAt: g.drawnAt ?? null,
         revealedAt: g.revealedAt ?? null,
         completedAt: g.completedAt ?? null,

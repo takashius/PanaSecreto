@@ -17,3 +17,4 @@ export { joinGroupStyles } from './joinGroup.styles';
 export { exclusionsStyles } from './exclusions.styles';
 export { revealStyles } from './reveal.styles';
 export { dialogStyles } from './dialog.styles';
+export { aliasPickerStyles } from './aliasPicker.styles';

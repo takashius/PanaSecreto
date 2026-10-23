@@ -62,6 +62,7 @@ export interface ApiAssignedWish {
   estimatedPrice: number | null;
   currency?: Currency;
   imageUrl?: string;
+  productUrl?: string;
   category?: string;
   storeName?: string;
   isFavorite: boolean;
@@ -144,3 +145,47 @@ export const resetDraw = (id: string) => api<ApiGroup>(`/api/group/${id}/draw`, 
 export const revealGroup = (id: string) => api<ApiGroup>(`/api/group/${id}/reveal`, { method: 'POST' });
 export const completeGroup = (id: string) => api<ApiGroup>(`/api/group/${id}/complete`, { method: 'POST' });
 export const openEnvelope = (id: string) => api<{ opened: boolean }>(`/api/group/${id}/envelope/open`, { method: 'POST' });
+
+/* ---------------------------------------------------------------- Unirse con código */
+
+export interface ApiJoinPreview {
+  id: string;
+  name: string;
+  description?: string;
+  emoji?: string;
+  location: { name: string; address: string } | null;
+  note: string | null;
+  members: Array<{ initials: string; photo: string | null }>;
+  creatorName: string;
+  status: GroupStatus;
+  exchangeDate: string;
+  currency: Currency;
+  budgetMin: number | null;
+  budgetMax: number | null;
+  memberCount: number;
+  maxParticipants: number;
+  alreadyMember: boolean;
+  canJoin: boolean;
+}
+
+export const previewByCode = (code: string) => api<ApiJoinPreview>(`/api/group/code/${encodeURIComponent(code)}`);
+export const joinByCode = (inviteCode: string) => api<ApiGroup>('/api/group/join', { method: 'POST', body: { inviteCode } });
+
+/* ---------------------------------------------------------------- Alias */
+
+export interface AliasSuggestion {
+  id: string;
+  text: string;
+  gender: 'M' | 'F' | 'N';
+  emoji?: string;
+}
+
+export const fetchAliasSuggestions = (groupId: string, gender: 'M' | 'F' | 'N' | null, exclude: string[]) => {
+  const params = new URLSearchParams();
+  if (gender) params.set('gender', gender);
+  if (exclude.length) params.set('exclude', exclude.join(','));
+  return api<{ results: AliasSuggestion[]; gender: 'M' | 'F' | 'N' | null }>(`/api/group/${groupId}/alias/suggestions?${params.toString()}`);
+};
+
+export const setMyAlias = (groupId: string, alias: string, emoji?: string) =>
+  api<{ alias: string; aliasEmoji: string }>(`/api/group/${groupId}/members/me/alias`, { method: 'PUT', body: { alias, emoji } });

@@ -94,6 +94,8 @@ export function toGroupDetailView(bundle: GroupBundle, myId: string): GroupDetai
         }
       : null,
     envelopeOpened: g.envelopeOpened || Boolean(assignment?.opened),
+    myAlias: g.myAlias,
+    myAliasEmoji: g.myAliasEmoji,
     reveal: reveal
       ? {
           giftedTo: { fullname: fullName(reveal.giftedTo), alias: reveal.giftedTo.alias, initials: initialsOf(reveal.giftedTo) },

@@ -508,3 +508,14 @@ Reemplaza la paleta anterior (Morado Noche `#1E1338`, Amarillo Araguaney `#F7A80
   - Todavía con maqueta: el chat del grupo y el detalle de un deseo (avisan que se conectan en el siguiente paso).
 - **Verificación:** `tsc` y ESLint sin errores. Recorrido completo en el navegador con respuestas reales del backend (capturadas con un servidor de prueba): crear → ver grupo → sortear → abrir el sobre.
 
+### 2026-10-22 — App móvil: alias, unirse con código y lista de deseos conectados
+
+- **Alias** (`components/alias/AliasPickerModal.tsx`, `AliasCard.tsx`): 5 sugerencias del servidor según el género del perfil, con pestañas Masculinos / Femeninos / Neutros, «Ver otras 5» sin repetir (al agotarse vuelve a empezar), o «Escribir el mío» con emoji. Errores del servidor (repetido, grosería, bloqueado tras el sorteo) en la misma hoja. Se abre sola al crear un grupo o unirse, desde «Elige tu alias» en el inicio y desde la tarjeta «Tu alias en este grupo» del detalle (solo lectura después del sorteo).
+- **Unirse con código:** vista previa real (`GET /api/group/code/:code`), avisa si ya eres miembro, si el grupo está lleno o ya se sorteó, y al entrar abre el grupo con la elección del alias.
+- **Deseos** (`screens/wishes/WishScreens.tsx`): chips con los grupos reales, mi lista del grupo elegido (`/wishlist/me`), prioridad alta (= favorito), eliminar, deslizar para recargar, y «Lista de mi pana» con el sobre real.
+- **Agregar / editar deseo:** con foto nueva se envía multipart (la foto sube a Cloudinary); sin foto nueva, JSON. Campos: nombre, precio y moneda, categoría, tienda o enlace, notas y prioridad. Avisa si la lista está llena o la foto pesa más de 8 MB.
+- **Detalle del deseo:** el dueño y quien regala ven el mismo hilo (`/comments`); enviar comentario actualiza el hilo y los contadores. Antes del sorteo o con el intercambio finalizado, el cuadro de texto se reemplaza por el motivo.
+- **Backend:** `GET /api/group` agrega `myWishCount` (usado en las estadísticas del perfil). Prueba nueva en `wishlist.test.ts`.
+- **App:** el cliente HTTP acepta `FormData`; el detalle del grupo guarda 10 s en caché para no recargar todo al volver. Se quitaron de `App.tsx` los datos de ejemplo de grupos, deseos y comentarios (los archivos de `src/mocks` siguen para chat y notificaciones).
+- **Verificación:** `tsc` y ESLint sin errores; pruebas de grupos, deseos e interacción en verde; recorrido en el navegador con respuestas reales del backend: unirse → elegir alias → Deseos → agregar con foto → detalle (dueño), y quien regala: abrir el sobre → deseo → comentar → Lista de mi pana.
+

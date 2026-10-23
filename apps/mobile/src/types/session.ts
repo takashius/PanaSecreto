@@ -92,6 +92,9 @@ export interface GroupDetailView {
   envelopeOpened?: boolean;
   /** Solo cuando el grupo está REVEALED: quién era quién */
   reveal?: GroupReveal | null;
+  /** Mi alias en este grupo (null si aún no lo elijo) */
+  myAlias?: string | null;
+  myAliasEmoji?: string | null;
 }
 
 /** Resultado de la revelación para mí */

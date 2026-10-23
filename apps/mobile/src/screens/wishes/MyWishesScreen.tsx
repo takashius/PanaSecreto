@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Image, ActivityIndicator, RefreshControl } from 'react-native';
 import { Alert } from '../../components/common/AppDialog';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Heart, Camera, Lock, Gift } from 'lucide-react-native';
@@ -16,8 +16,17 @@ interface MyWishesScreenProps {
   lists: MyWishlistGroup[];
   selectedGroupId: string;
   onSelectGroup: (groupId: string) => void;
-  /** Cambios locales en una lista (prioridad, eliminar…) mientras no hay API */
-  onListChange: (list: MyWishlistGroup) => void;
+  /** Prioridad alta = favorito en la API */
+  onTogglePriority: (groupId: string, wish: MyWish) => void;
+  onDeleteWish: (groupId: string, wish: MyWish) => void;
+  /** Cargando la lista del grupo elegido */
+  loadingWishes?: boolean;
+  /** Cargando los grupos (primera vez) */
+  loadingGroups?: boolean;
+  wishesError?: string | null;
+  onRetry?: () => void;
+  refreshing?: boolean;
+  onRefresh?: () => void;
   onOpenWish: (groupId: string, wish: MyWish) => void;
   onAddWish: (groupId: string) => void;
   onEditWish: (groupId: string, wish: MyWish) => void;
@@ -37,7 +46,14 @@ export const MyWishesScreen: React.FC<MyWishesScreenProps> = ({
   lists,
   selectedGroupId,
   onSelectGroup,
-  onListChange,
+  onTogglePriority,
+  onDeleteWish,
+  loadingWishes = false,
+  loadingGroups = false,
+  wishesError = null,
+  onRetry,
+  refreshing = false,
+  onRefresh,
   onOpenWish,
   onAddWish,
   onEditWish,
@@ -53,6 +69,18 @@ export const MyWishesScreen: React.FC<MyWishesScreenProps> = ({
   const insets = useSafeAreaInsets();
   const [view, setView] = useState<'mia' | 'pana'>('mia');
   const list = lists.find((l) => l.groupId === selectedGroupId) ?? lists[0];
+
+  if (!list && loadingGroups) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <MainHeader title="Deseos" icon={Heart} onBellPress={onOpenNotifications} hasNotifications={hasNotifications} onAvatarPress={onProfilePress} />
+        <View style={[styles.scrollContent, { flex: 1, justifyContent: 'center', alignItems: 'center' }]}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+        </View>
+        <FloatingTabBar activeTab="deseos" onTabChange={onNavigateTab} badges={{ chats: chatUnread }} />
+      </SafeAreaView>
+    );
+  }
 
   if (!list) {
     return (
@@ -82,11 +110,6 @@ export const MyWishesScreen: React.FC<MyWishesScreenProps> = ({
   const fill = Math.min(100, Math.round((count / Math.max(list.maxWishes, 1)) * 100));
   const limitLabel = list.budgetMax != null ? `Límite ${formatBudget(list.currency, null, list.budgetMax).replace('Hasta ', '')}` : 'Sin límite';
 
-  const updateWish = (wishId: string, change: (w: MyWish) => MyWish | null) => {
-    const wishes = list.wishes.map((w) => (w.id === wishId ? change(w) : w)).filter((w): w is MyWish => w !== null);
-    onListChange({ ...list, wishes });
-  };
-
   const handleMenu = (wish: MyWish) => {
     Alert.alert(wish.title, undefined, [
       { text: 'Editar deseo', onPress: () => onEditWish(list.groupId, wish) },
@@ -96,7 +119,7 @@ export const MyWishesScreen: React.FC<MyWishesScreenProps> = ({
         onPress: () =>
           Alert.alert('¿Eliminar este deseo?', 'Se borrarán también sus comentarios.', [
             { text: 'Cancelar', style: 'cancel' },
-            { text: 'Eliminar', style: 'destructive', onPress: () => updateWish(wish.id, () => null) },
+            { text: 'Eliminar', style: 'destructive', onPress: () => onDeleteWish(list.groupId, wish) },
           ]),
       },
       { text: 'Cancelar', style: 'cancel' },
@@ -116,6 +139,11 @@ export const MyWishesScreen: React.FC<MyWishesScreenProps> = ({
       <ScrollView
         contentContainerStyle={[styles.scrollContent, { paddingBottom: Math.max(insets.bottom, 16) + 96 }]}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          onRefresh ? (
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} colors={[theme.colors.primary]} />
+          ) : undefined
+        }
       >
         {/* Selector de grupo */}
         <ScrollView
@@ -226,7 +254,21 @@ export const MyWishesScreen: React.FC<MyWishesScreenProps> = ({
               </View>
             </View>
 
-            {count === 0 ? (
+            {wishesError && count === 0 ? (
+              <View style={styles.emptyCard}>
+                <Text style={styles.emptyTitle}>No pudimos cargar tu lista</Text>
+                <Text style={styles.emptyText}>{wishesError}</Text>
+                {onRetry && (
+                  <TouchableOpacity style={[styles.addButton, { marginTop: 8 }]} onPress={onRetry} activeOpacity={0.85}>
+                    <Text style={styles.addButtonText}>Reintentar</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            ) : loadingWishes && count === 0 ? (
+              <View style={styles.emptyCard}>
+                <ActivityIndicator color={theme.colors.primary} />
+              </View>
+            ) : count === 0 ? (
               <View style={styles.emptyCard}>
                 <Image source={BRAND_ISOTIPO} style={styles.emptyMascot} />
                 <Text style={styles.emptyTitle}>Tu lista está vacía</Text>
@@ -241,9 +283,7 @@ export const MyWishesScreen: React.FC<MyWishesScreenProps> = ({
                   wish={w}
                   visibleToFriend={!isWaiting}
                   onOpen={(wish) => onOpenWish(list.groupId, wish)}
-                  onTogglePriority={(wish) =>
-                    updateWish(wish.id, (x) => ({ ...x, priority: x.priority === 'alta' ? 'normal' : 'alta' }))
-                  }
+                  onTogglePriority={(wish) => onTogglePriority(list.groupId, wish)}
                   onMenu={handleMenu}
                 />
               ))

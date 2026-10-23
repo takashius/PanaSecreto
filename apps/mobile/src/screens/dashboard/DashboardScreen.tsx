@@ -30,7 +30,7 @@ interface DashboardScreenProps {
   /** Abre "Unirse a un grupo" */
   onJoinGroup?: () => void;
   /** Abre el detalle del grupo; 'sobre' entra directo a la pestaña Mi sobre */
-  onOpenGroup?: (groupId: string, tab?: 'resumen' | 'sobre') => void;
+  onOpenGroup?: (groupId: string, tab?: 'resumen' | 'sobre', askAlias?: boolean) => void;
 }
 
 export default function DashboardScreen({
@@ -73,7 +73,8 @@ export default function DashboardScreen({
 
   const handleCreateGroup = () => onNavigateToCreateGroup?.();
   const handleEnterCode = () => onJoinGroup?.();
-  const handleOpenGroup = (groupId: string, tab: 'resumen' | 'sobre' = 'resumen') => onOpenGroup?.(groupId, tab);
+  const handleOpenGroup = (groupId: string, tab: 'resumen' | 'sobre' = 'resumen', askAlias = false) =>
+    onOpenGroup?.(groupId, tab, askAlias);
 
   const segmentCount = (segment: 'creados' | 'participo') =>
     groupsQuery.data ? (segment === 'creados' ? created.length : joined.length) : '–';

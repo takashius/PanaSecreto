@@ -48,7 +48,8 @@ interface WishFormScreenProps {
   group: WishFormGroup;
   /** Si viene, el formulario edita ese deseo */
   initial?: MyWish | null;
-  onSave: (wish: MyWish) => void;
+  /** Guarda en la API; si falla, el formulario se queda abierto */
+  onSave: (wish: MyWish) => Promise<void> | void;
   onCancel: () => void;
 }
 
@@ -74,6 +75,7 @@ export const WishFormScreen: React.FC<WishFormScreenProps> = ({ group, initial, 
   const [notes, setNotes] = useState(initial?.subtitle ?? '');
   const [priority, setPriority] = useState<'normal' | 'alta'>(initial?.priority ?? 'normal');
   const [submitted, setSubmitted] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const priceValue = parsePrice(price);
   const sameCurrency = currency === group.currency;
@@ -113,15 +115,21 @@ export const WishFormScreen: React.FC<WishFormScreenProps> = ({ group, initial, 
     ]);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (saving) return;
     setSubmitted(true);
     if (errors.image || errors.title) {
       Alert.alert('Faltan datos', [errors.image, errors.title].filter(Boolean).join('\n'));
       return;
     }
     const whereValue = where.trim();
-    // Al conectar la API: POST/PUT /api/group/:id/wishlist (multipart con la imagen, que se sube a Cloudinary)
-    onSave({
+    if (title.trim().length < 2) {
+      Alert.alert('Nombre muy corto', 'Escribe al menos 2 letras para el nombre del deseo.');
+      return;
+    }
+    setSaving(true);
+    try {
+      await onSave({
       id: initial?.id ?? newLocalId(),
       title: title.trim(),
       subtitle: notes.trim() || null,
@@ -136,7 +144,10 @@ export const WishFormScreen: React.FC<WishFormScreenProps> = ({ group, initial, 
       commentsCount: initial?.commentsCount ?? 0,
       unansweredCount: initial?.unansweredCount ?? 0,
       comments: initial?.comments ?? [],
-    });
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const budgetLabel = group.budgetMax != null ? formatBudget(group.currency, null, group.budgetMax).replace('Hasta ', '') : null;
@@ -414,9 +425,14 @@ export const WishFormScreen: React.FC<WishFormScreenProps> = ({ group, initial, 
         </ScrollView>
 
         <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 8) }]}>
-          <TouchableOpacity style={styles.saveButton} onPress={handleSave} activeOpacity={0.85}>
+          <TouchableOpacity
+            style={[styles.saveButton, saving && { opacity: 0.6 }]}
+            onPress={() => void handleSave()}
+            disabled={saving}
+            activeOpacity={0.85}
+          >
             <Gift size={22} color={theme.colors.primary} strokeWidth={2.4} />
-            <Text style={styles.saveButtonText}>{editing ? 'Guardar cambios' : 'Guardar deseo'}</Text>
+            <Text style={styles.saveButtonText}>{saving ? 'Guardando…' : editing ? 'Guardar cambios' : 'Guardar deseo'}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
             <Text style={styles.cancelText}>Cancelar y volver</Text>

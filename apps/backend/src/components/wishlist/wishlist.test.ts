@@ -65,6 +65,11 @@ describe('Lista de deseos', () => {
     assert.equal(r.d.code, 'WISHLIST_FULL');
   });
 
+  it('mis grupos dice cuántos deseos tengo en cada uno', async () => {
+    const mine = (await ctx.call('GET', '/group', undefined, A.t)).d.results.find((g: any) => g.id === G);
+    assert.equal(mine.myWishCount, 20);
+  });
+
   it('antes del sorteo no hay lista asignada', async () => {
     assert.equal((await ctx.call('GET', `${base()}/assigned`, undefined, B.t)).s, 409);
   });

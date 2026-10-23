@@ -72,10 +72,12 @@ interface RequestOptions {
   body?: unknown;
   /** false = no envía el token (login, registro, recuperación) */
   auth?: boolean;
+  /** multipart/form-data (p. ej. deseo con foto); reemplaza a body */
+  form?: FormData;
   timeoutMs?: number;
 }
 
-export async function api<T>(path: string, { method = 'GET', body, auth = true, timeoutMs = 15000 }: RequestOptions = {}): Promise<T> {
+export async function api<T>(path: string, { method = 'GET', body, auth = true, form, timeoutMs = 15000 }: RequestOptions = {}): Promise<T> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   const sentToken = auth ? authToken : null;
@@ -85,10 +87,11 @@ export async function api<T>(path: string, { method = 'GET', body, auth = true, 
       method,
       headers: {
         Accept: 'application/json',
-        ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+        // Con FormData, fetch pone el Content-Type con el boundary
+        ...(body !== undefined && !form ? { 'Content-Type': 'application/json' } : {}),
         ...(sentToken ? { Authorization: `Bearer ${sentToken}` } : {}),
       },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body: form ?? (body !== undefined ? JSON.stringify(body) : undefined),
       signal: controller.signal,
     });
   } catch {

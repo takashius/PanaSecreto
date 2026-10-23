@@ -78,7 +78,7 @@ Lista viva de lo que falta después de maquetar la app móvil (22 de octubre de 
 
 ## App móvil
 
-- [ ] **Elegir alias:** pantalla o modal con las 5 sugerencias, «Ver otras 5» y «Escribir el mío». Se abre al unirse a un grupo o al crearlo.
+- [x] **Elegir alias:** hoja con las 5 sugerencias, «Ver otras 5» y «Escribir el mío». Se abre al unirse a un grupo o al crearlo, desde el aviso del inicio y desde «Tu alias» en el detalle.
 - [ ] **Tips:**
   - Componente de tip que pida los tips de su pantalla y muestre uno al azar.
   - Reemplazar los tips fijos de Mi sobre, Detalle del deseo, Agregar deseo, Deseos, Chats y Notificaciones.
@@ -89,7 +89,8 @@ Lista viva de lo que falta después de maquetar la app móvil (22 de octubre de 
   - [x] Cliente HTTP (`src/api/client.ts`), sesión guardada en el teléfono y manejo de errores.
   - [x] Inicio (Mis Grupos): grupos reales, campana y chats con no leídos reales, tips de la pantalla `grupos` (22/10/2026).
   - [x] Crear grupo, detalle del grupo (Resumen y Mi sobre), editar, exclusiones, sortear, deshacer, revelar, finalizar, quitar panas, salir, eliminar y El Gran Día (22/10/2026).
-  - [ ] Elegir alias (siguiente paso), unirse con código, detalle del deseo con comentarios, Deseos, chat y notificaciones.
+  - [x] Elegir alias (5 sugerencias, «Ver otras 5», escribir el propio), unirse con código, Deseos (mi lista y la de mi pana), agregar/editar deseo con foto, prioridad, eliminar y detalle del deseo con comentarios anónimos (22/10/2026).
+  - [ ] Chat del grupo (socket), notificaciones, perfil (editar, foto, cambiar contraseña) y tips en el resto de pantallas.
   - Reemplazar los datos de ejemplo (`src/mocks`) pantalla por pantalla.
   - Socket del chat.
   - Consultas periódicas de notificaciones.

@@ -5,53 +5,97 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ArrowLeft, CircleHelp, Sparkles, Check, CalendarDays, Banknote, MapPin, Users, ShieldCheck, Pencil, Search } from 'lucide-react-native';
 import { theme, wishFormStyles as form, joinGroupStyles as styles, groupDetailStyles } from '../../styles';
 import { BRAND_ISOTIPO } from '../../constants/brand';
-import { formatBudget, normalizeInviteCode } from '../../utils/format';
+import { exchangeLabels, formatBudget, normalizeInviteCode } from '../../utils/format';
 import type { JoinPreview } from '../../types/session';
+import { joinByCode, previewByCode, type ApiJoinPreview } from '../../api/groupDetail';
+import { ApiError, errorMessage } from '../../api/client';
+
+/** Vista previa del grupo + si puedo entrar */
+type Preview = JoinPreview & { alreadyMember: boolean; canJoin: boolean; closedReason: string | null };
+
+function toPreview(code: string, p: ApiJoinPreview): Preview {
+  const labels = exchangeLabels(p.exchangeDate);
+  const full = p.memberCount >= p.maxParticipants;
+  return {
+    code,
+    groupId: p.id,
+    emoji: p.emoji || '🎁',
+    name: p.name,
+    organizerName: p.creatorName,
+    exchangeDateLabel: labels.dateLabel,
+    exchangeTimeLabel: labels.timeLabel,
+    currency: p.currency,
+    budgetMin: p.budgetMin,
+    budgetMax: p.budgetMax,
+    location: p.location,
+    membersCount: p.memberCount,
+    maxMembers: p.maxParticipants,
+    memberInitials: p.members.map((m) => m.initials),
+    alreadyMember: p.alreadyMember,
+    canJoin: p.canJoin,
+    closedReason: p.alreadyMember || p.canJoin
+      ? null
+      : p.status !== 'WAITING'
+        ? 'El sorteo de este grupo ya se hizo, así que no admite panas nuevos.'
+        : full
+          ? 'El grupo ya llenó su cupo. Pídele a quien organiza que lo amplíe.'
+          : 'Este grupo no admite panas nuevos.',
+  };
+}
 
 const CODE_LENGTH = 12; // PANA-XXXX-XX
 
 interface JoinGroupScreenProps {
   initialCode?: string;
-  /** Busca el grupo por código (maqueta: mocks; API: GET /api/group/invite/:code) */
-  lookup: (code: string) => JoinPreview | null;
-  /** IDs de grupos donde ya estoy, para avisar si ya soy miembro */
-  myGroupIds: string[];
-  onJoined: (preview: JoinPreview) => void;
+  /** Ya entré: abre el grupo (y la elección del alias) */
+  onJoined: (groupId: string) => void;
   onOpenGroup: (groupId: string) => void;
   onNavigateBack: () => void;
 }
 
 /** Unirse a un grupo: escribir el código y confirmar con la vista previa del grupo */
-export const JoinGroupScreen: React.FC<JoinGroupScreenProps> = ({ initialCode = '', lookup, myGroupIds, onJoined, onOpenGroup, onNavigateBack }) => {
+export const JoinGroupScreen: React.FC<JoinGroupScreenProps> = ({ initialCode = '', onJoined, onOpenGroup, onNavigateBack }) => {
   const insets = useSafeAreaInsets();
   const [code, setCode] = useState(normalizeInviteCode(initialCode));
   const [focused, setFocused] = useState(false);
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [preview, setPreview] = useState<JoinPreview | null>(null);
+  const [preview, setPreview] = useState<Preview | null>(null);
+  const [joining, setJoining] = useState(false);
 
   const complete = code.length === CODE_LENGTH;
-  const alreadyMember = !!preview && myGroupIds.includes(preview.groupId);
+  const alreadyMember = !!preview?.alreadyMember;
 
-  const search = () => {
-    if (!complete) return;
+  const search = async () => {
+    if (!complete || searching) return;
     setSearching(true);
     setError(null);
-    // Simula la consulta al servidor
-    setTimeout(() => {
-      const found = lookup(code);
+    try {
+      setPreview(toPreview(code, await previewByCode(code)));
+    } catch (e) {
+      setError(
+        e instanceof ApiError && (e.status === 404 || e.status === 400)
+          ? 'No encontramos ningún grupo con ese código. Revisa que esté bien escrito o pídele uno nuevo a quien organiza.'
+          : errorMessage(e)
+      );
+    } finally {
       setSearching(false);
-      if (found) setPreview(found);
-      else setError('No encontramos ningún grupo con ese código. Revisa que esté bien escrito o pídele uno nuevo a quien organiza.');
-    }, 500);
+    }
   };
 
-  const join = () => {
+  const join = async () => {
     if (!preview) return;
     if (alreadyMember) return onOpenGroup(preview.groupId);
-    // Al conectar la API: POST /api/group/join { code }
-    onJoined(preview);
-    Alert.alert('¡Bienvenido a la parranda! 🎉', `Ya eres parte de «${preview.name}». Arma tu lista de deseos mientras llega el sorteo.`);
+    if (preview.closedReason) return Alert.alert('No se puede entrar', preview.closedReason);
+    setJoining(true);
+    try {
+      const group = await joinByCode(preview.code);
+      onJoined(group.id);
+    } catch (e) {
+      Alert.alert('No pudimos unirte', errorMessage(e));
+    } finally {
+      setJoining(false);
+    }
   };
 
   const spots = preview ? preview.maxMembers - preview.membersCount : 0;
@@ -105,12 +149,12 @@ export const JoinGroupScreen: React.FC<JoinGroupScreenProps> = ({ initialCode = 
                   autoCapitalize="characters"
                   autoCorrect={false}
                   returnKeyType="search"
-                  onSubmitEditing={search}
+                  onSubmitEditing={() => void search()}
                 />
                 {error ? (
                   <Text style={form.errorText}>{error}</Text>
                 ) : (
-                  <Text style={styles.infoHint}>Ejemplo de prueba: PANA-7K2M-QX</Text>
+                  <Text style={styles.infoHint}>Tiene la forma PANA-XXXX-XX. No importan mayúsculas ni minúsculas.</Text>
                 )}
               </View>
             </>
@@ -225,7 +269,7 @@ export const JoinGroupScreen: React.FC<JoinGroupScreenProps> = ({ initialCode = 
           {!preview ? (
             <TouchableOpacity
               style={[form.saveButton, (!complete || searching) && { opacity: 0.5 }]}
-              onPress={search}
+              onPress={() => void search()}
               disabled={!complete || searching}
               activeOpacity={0.85}
             >
@@ -234,8 +278,15 @@ export const JoinGroupScreen: React.FC<JoinGroupScreenProps> = ({ initialCode = 
             </TouchableOpacity>
           ) : (
             <>
-              <TouchableOpacity style={form.saveButton} onPress={join} activeOpacity={0.85}>
-                <Text style={form.saveButtonText}>{alreadyMember ? 'Ver el grupo' : '¡Unirme al grupo! 🎁'}</Text>
+              {preview.closedReason ? <Text style={[form.errorText, { textAlign: 'center', marginBottom: 8 }]}>{preview.closedReason}</Text> : null}
+              <TouchableOpacity
+                style={[form.saveButton, (joining || !!preview.closedReason) && { opacity: 0.5 }]}
+                onPress={() => void join()}
+                disabled={joining || !!preview.closedReason}
+                activeOpacity={0.85}
+              >
+                {joining ? <ActivityIndicator color={theme.colors.primary} /> : null}
+                <Text style={form.saveButtonText}>{alreadyMember ? 'Ver el grupo' : joining ? 'Entrando…' : '¡Unirme al grupo! 🎁'}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.secondaryButton}

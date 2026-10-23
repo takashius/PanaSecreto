@@ -23,6 +23,8 @@ export interface GroupSummary {
   myAliasEmoji: string | null;
   envelopeOpened: boolean;
   locationName: string | null;
+  /** Cuántos deseos tengo en este grupo */
+  myWishCount: number;
   drawnAt: string | null;
   revealedAt: string | null;
   completedAt: string | null;
