@@ -519,3 +519,15 @@ Reemplaza la paleta anterior (Morado Noche `#1E1338`, Amarillo Araguaney `#F7A80
 - **App:** el cliente HTTP acepta `FormData`; el detalle del grupo guarda 10 s en caché para no recargar todo al volver. Se quitaron de `App.tsx` los datos de ejemplo de grupos, deseos y comentarios (los archivos de `src/mocks` siguen para chat y notificaciones).
 - **Verificación:** `tsc` y ESLint sin errores; pruebas de grupos, deseos e interacción en verde; recorrido en el navegador con respuestas reales del backend: unirse → elegir alias → Deseos → agregar con foto → detalle (dueño), y quien regala: abrir el sobre → deseo → comentar → Lista de mi pana.
 
+### 2026-10-26 — App móvil: perfil, tips y enlaces de invitación
+
+- **Perfil** (`screens/profile/ProfileContainers.tsx`, `api/profile.ts`):
+  - Editar perfil guarda nombre y apellido, apodo y teléfono con `PATCH /api/user/me`; si cambió la foto, la sube (`POST /api/user/upload`) o la quita.
+  - En la pestaña Perfil, la foto y los avisos se guardan al instante (si falla, vuelven como estaban y se avisa).
+  - Cambiar contraseña con `POST /api/user/change-password`; si la contraseña actual no coincide, el error sale bajo ese campo. Las cuentas de Google ven «Crear contraseña» sin el campo de la actual.
+  - Registro: la cámara del avatar ya no dice «Próximamente»; la foto elegida se sube justo después de crear la cuenta.
+- **Backend:** `DELETE /api/user/photo` quita la foto y la borra de Cloudinary. Página pública `GET /join/:code` (`routes/invite.routes.ts`) con el código y el botón «Abrir en la app»; variable nueva `APP_LINK_BASE`. Pruebas en `test/profile.test.ts`.
+- **Tips:** `hooks/useTip.ts` y `components/common/TipCard.tsx`; un tip al azar por visita (caché de 30 min), tocar muestra otro.
+- **Enlaces de invitación:** `inviteLink` usa `<API_URL>/join/CODIGO` (o `EXPO_PUBLIC_INVITE_URL`). La app escucha `expo-linking` (al abrir y con la app abierta) y entiende `entrepanas://join/…`, `exp://…/--/join/…` y `https://…/join/…` (`utils/deepLink.ts`).
+- **Verificación:** `tsc` (app y backend) y ESLint sin errores; todas las pruebas del backend en verde; recorrido en el navegador: perfil de cuenta Google → apagar avisos → crear contraseña; editar perfil; enlace con y sin sesión; tips en Chats.
+

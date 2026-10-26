@@ -134,6 +134,9 @@ export const authStyles = StyleSheet.create({
     borderRadius: 48,
     resizeMode: 'contain',
   },
+  registerAvatarPhoto: {
+    resizeMode: 'cover',
+  },
   cameraBadge: {
     position: 'absolute',
     bottom: -2,

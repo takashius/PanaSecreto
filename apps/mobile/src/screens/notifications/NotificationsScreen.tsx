@@ -17,6 +17,7 @@ import { theme, notificationsStyles as styles } from '../../styles';
 import { BRAND_ISOTIPO } from '../../constants/brand';
 import { timeAgo } from '../../utils/format';
 import type { AppNotification, NotificationKind } from '../../types/session';
+import { useTip } from '../../hooks/useTip';
 
 type Filter = 'todas' | 'comentarios' | 'grupos';
 
@@ -51,6 +52,7 @@ interface NotificationsScreenProps {
 
 /** Notificaciones (no son en tiempo real): filtros, agrupadas por fecha y con destino al tocarlas */
 export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ notifications, onOpen, onMarkAllRead, onNavigateBack }) => {
+  const tip = useTip('notificaciones', '¡Pilas, mi pana! En EntrePanas nadie sabe quién le regala a quién hasta el destape final.');
   const insets = useSafeAreaInsets();
   const [filter, setFilter] = useState<Filter>('todas');
   const [now] = useState(() => Date.now());
@@ -168,7 +170,7 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ notifi
           <Image source={BRAND_ISOTIPO} style={styles.tipMascot} />
           <View style={{ flex: 1 }}>
             <Text style={styles.tipEyebrow}>CERO SAPOS</Text>
-            <Text style={styles.tipText}>¡Pilas, mi pana! En EntrePanas nadie sabe quién le regala a quién hasta el destape final.</Text>
+            <Text style={styles.tipText}>{tip.text}</Text>
           </View>
         </View>
       </ScrollView>

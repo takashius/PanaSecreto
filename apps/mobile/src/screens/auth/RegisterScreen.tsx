@@ -40,7 +40,9 @@ import {
 
 import * as authApi from '../../api/auth';
 import type { SessionPayload } from '../../api/auth';
-import { ApiError, errorMessage } from '../../api/client';
+import { ApiError, errorMessage, setAuthToken } from '../../api/client';
+import { uploadProfilePhoto } from '../../api/profile';
+import { choosePhotoSource } from '../../utils/pickImage';
 import { signInWithGoogle } from '../../auth/google';
 import { GoogleIcon } from '../../components/common/GoogleIcon';
 import { MIN_PASSWORD } from '../../utils/password';
@@ -70,6 +72,8 @@ export default function RegisterScreen({
 
   // Estados de enfoque
   const [focusedField, setFocusedField] = useState<string | null>(null);
+  /** Foto elegida antes de crear la cuenta: se sube justo después del registro */
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const busy = loading || googleLoading;
@@ -146,7 +150,21 @@ export default function RegisterScreen({
         phone: toInternationalPhone(phone),
         password,
       });
-      await onRegisterSuccess?.(session);
+      let finalSession = session;
+      let photoFailed = false;
+      if (photoUri) {
+        // La subida necesita el token de la cuenta recién creada
+        setAuthToken(session.token);
+        try {
+          finalSession = { ...session, ...(await uploadProfilePhoto(photoUri)) };
+        } catch {
+          photoFailed = true;
+        }
+      }
+      await onRegisterSuccess?.(finalSession);
+      if (photoFailed) {
+        Alert.alert('Tu foto no se subió', 'Tu cuenta quedó lista. Puedes ponerte una foto luego desde tu perfil.');
+      }
     } catch (error) {
       if (error instanceof ApiError && (error.code === 'EMAIL_TAKEN' || error.fields.email)) {
         setErrors({ email: error.message });
@@ -208,15 +226,14 @@ export default function RegisterScreen({
           {/* 2. Avatar con Mascota (Guacamaya) y Botón de Foto */}
           <View style={authStyles.registerAvatarWrapper}>
             <Image
-              source={BRAND_ISOTIPO}
-              style={authStyles.registerAvatarImage}
+              source={photoUri ? { uri: photoUri } : BRAND_ISOTIPO}
+              style={[authStyles.registerAvatarImage, photoUri ? authStyles.registerAvatarPhoto : null]}
             />
             <TouchableOpacity
               style={authStyles.cameraBadge}
-              onPress={() =>
-                Alert.alert('Subir Foto', 'Próximamente podrás personalizar tu avatar.')
-              }
+              onPress={() => choosePhotoSource([1, 1], setPhotoUri, photoUri ? () => setPhotoUri(null) : undefined)}
               activeOpacity={0.8}
+              accessibilityLabel="Elegir foto de perfil"
             >
               <Camera size={16} color={theme.colors.onSecondaryContainer} />
             </TouchableOpacity>

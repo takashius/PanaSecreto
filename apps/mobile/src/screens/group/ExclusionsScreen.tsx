@@ -7,6 +7,7 @@ import { theme, wishFormStyles as form, exclusionsStyles as styles } from '../..
 import { BRAND_ISOTIPO } from '../../constants/brand';
 import { isDrawPossible } from '../../utils/drawFeasibility';
 import type { GroupDetailView, GroupExclusionPreview, GroupMemberPreview } from '../../types/session';
+import { TipCard } from '../../components/common/TipCard';
 
 const firstName = (m: GroupMemberPreview) => m.fullname.split(' ')[0];
 const AVATAR_COLORS = [theme.colors.primary, theme.colors.coral, theme.colors.accentDark, theme.colors.secondaryDark];
@@ -215,6 +216,12 @@ export const ExclusionsScreen: React.FC<ExclusionsScreenProps> = ({ group, onSav
             </Text>
           </View>
         </View>
+
+        <TipCard
+          screen="exclusiones"
+          fallback="Usa las exclusiones solo para parejas o familia cercana: mientras menos bloqueos, más sorpresa."
+          style={{ marginTop: 12 }}
+        />
       </ScrollView>
 
       <View style={[form.footer, { paddingBottom: Math.max(insets.bottom, 8) }]}>

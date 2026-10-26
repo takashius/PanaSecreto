@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Image, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Image, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { Alert } from '../../components/common/AppDialog';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Camera, BadgeCheck, UserRound, IdCard, PartyPopper, Info, Mail, Lock, ShieldCheck, CircleCheck } from 'lucide-react-native';
 import { theme, profileStyles as styles } from '../../styles';
 import { BRAND_ISOTIPO } from '../../constants/brand';
 import { choosePhotoSource, initialsOf } from '../../utils/pickImage';
+import { errorMessage } from '../../api/client';
 import type { ProfileView } from '../../types/session';
 
 const MAX_NAME = 80;
@@ -13,7 +14,8 @@ const MAX_NICK = 30;
 
 interface EditProfileScreenProps {
   profile: ProfileView;
-  onSave: (profile: ProfileView) => void;
+  /** Guarda en la API; si falla, la pantalla muestra el error y conserva lo escrito */
+  onSave: (profile: ProfileView) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -29,6 +31,7 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ profile, o
   const [nickname, setNickname] = useState(profile.nickname ?? '');
   const [phone, setPhone] = useState(profile.phone ?? '');
   const [submitted, setSubmitted] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const nameError = fullname.trim().length < 2 ? 'Escribe tu nombre completo.' : null;
   const phoneError = phone && phone.length !== 10 ? 'El teléfono debe tener 10 dígitos (ej. 412 123 4567).' : null;
@@ -46,12 +49,17 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ profile, o
     ]);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setSubmitted(true);
-    if (nameError || phoneError) return;
-    // Al conectar la API: PATCH /api/user/me (+ POST /api/user/upload si cambió la foto)
-    onSave({ ...profile, photoUri, fullname: fullname.trim(), nickname: nickname.trim() || null, phone: phone || null });
-    Alert.alert(`¡Listo el pollo, ${fullname.trim().split(' ')[0]}!`, 'Tus datos se actualizaron finísimo.');
+    if (nameError || phoneError || saving) return;
+    setSaving(true);
+    try {
+      await onSave({ ...profile, photoUri, fullname: fullname.trim(), nickname: nickname.trim() || null, phone: phone || null });
+      Alert.alert(`¡Listo el pollo, ${fullname.trim().split(' ')[0]}!`, 'Tus datos se actualizaron finísimo.');
+    } catch (error) {
+      setSaving(false);
+      Alert.alert('No pudimos guardar tu perfil', errorMessage(error));
+    }
   };
 
   return (
@@ -189,11 +197,20 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ profile, o
         </ScrollView>
 
         <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 8) }]}>
-          <TouchableOpacity style={[styles.saveButton, !dirty && styles.saveButtonDisabled]} onPress={handleSave} disabled={!dirty} activeOpacity={0.85}>
-            <CircleCheck size={22} color={theme.colors.primary} strokeWidth={2.4} />
-            <Text style={styles.saveButtonText}>Guardar cambios</Text>
+          <TouchableOpacity
+            style={[styles.saveButton, (!dirty || saving) && styles.saveButtonDisabled]}
+            onPress={() => void handleSave()}
+            disabled={!dirty || saving}
+            activeOpacity={0.85}
+          >
+            {saving ? (
+              <ActivityIndicator color={theme.colors.primary} />
+            ) : (
+              <CircleCheck size={22} color={theme.colors.primary} strokeWidth={2.4} />
+            )}
+            <Text style={styles.saveButtonText}>{saving ? 'Guardando…' : 'Guardar cambios'}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
+          <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} disabled={saving}>
             <Text style={styles.cancelText}>Cancelar y volver al perfil</Text>
           </TouchableOpacity>
         </View>

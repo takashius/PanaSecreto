@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image, StatusBar } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Image, StatusBar, ActivityIndicator } from 'react-native';
 import { Alert } from '../../components/common/AppDialog';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -29,7 +29,12 @@ import type { ProfileView } from '../../types/session';
 interface ProfileScreenProps {
   profile: ProfileView;
   stats: { groups: number; wishes: number; exchanges: number };
+  /** Foto y avisos: el contenedor guarda en la API (cambio optimista) */
   onProfileChange: (profile: ProfileView) => void;
+  /** Mientras sube o quita la foto */
+  photoBusy?: boolean;
+  /** false = cuenta de Google sin contraseña propia ("Crear contraseña") */
+  hasPassword?: boolean;
   onEditProfile: () => void;
   onChangePassword: () => void;
   onLogout: () => void;
@@ -50,6 +55,8 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   profile,
   stats,
   onProfileChange,
+  photoBusy = false,
+  hasPassword = true,
   onEditProfile,
   onChangePassword,
   onLogout,
@@ -60,8 +67,8 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const insets = useSafeAreaInsets();
   const [contactOpen, setContactOpen] = useState(false);
 
-  // Al conectar la API: POST /api/user/upload (campo "photo", carpeta avatars de Cloudinary)
   const changePhoto = () =>
+    !photoBusy &&
     choosePhotoSource(
       [1, 1],
       (uri) => onProfileChange({ ...profile, photoUri: uri }),
@@ -104,6 +111,11 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
               ) : (
                 <Text style={styles.avatarInitials}>{initialsOf(profile.fullname)}</Text>
               )}
+              {photoBusy && (
+                <View style={styles.avatarBusy}>
+                  <ActivityIndicator color={theme.colors.white} />
+                </View>
+              )}
             </View>
             <View style={styles.cameraBadge}>
               <Camera size={16} color={theme.colors.primary} strokeWidth={2.4} />
@@ -140,7 +152,13 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
           <Text style={styles.sectionLabel}>CUENTA</Text>
           <View style={styles.menuCard}>
             <MenuRow icon={UserRound} title="Editar perfil" subtitle="Nombre, foto y apodo festivo" onPress={onEditProfile} />
-            <MenuRow icon={Lock} title="Cambiar contraseña" subtitle="Actualiza tu clave de acceso" onPress={onChangePassword} divider />
+            <MenuRow
+              icon={Lock}
+              title={hasPassword ? 'Cambiar contraseña' : 'Crear contraseña'}
+              subtitle={hasPassword ? 'Actualiza tu clave de acceso' : 'Entra también con tu correo, no solo con Google'}
+              onPress={onChangePassword}
+              divider
+            />
           </View>
 
           <Text style={styles.sectionLabel}>NOTIFICACIONES</Text>

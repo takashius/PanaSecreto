@@ -79,18 +79,19 @@ Lista viva de lo que falta después de maquetar la app móvil (22 de octubre de 
 ## App móvil
 
 - [x] **Elegir alias:** hoja con las 5 sugerencias, «Ver otras 5» y «Escribir el mío». Se abre al unirse a un grupo o al crearlo, desde el aviso del inicio y desde «Tu alias» en el detalle.
-- [ ] **Tips:**
-  - Componente de tip que pida los tips de su pantalla y muestre uno al azar.
-  - Reemplazar los tips fijos de Mi sobre, Detalle del deseo, Agregar deseo, Deseos, Chats y Notificaciones.
+- [x] **Tips (26/10/2026):** `TipCard` + `useTip` muestran un tip al azar del servidor (tocar = otro) en Mi sobre (sellado y abierto), Detalle del deseo, Agregar deseo, Deseos, Chats, Notificaciones, Unirse, Exclusiones y El Gran Día. Sin red usan un texto de respaldo.
 - [x] **Autenticación conectada (22/10/2026):** registro, inicio de sesión, recuperar contraseña, sesión guardada en el teléfono (`expo-secure-store`), cierre de sesión y «Continuar con Google» (ver `docs/AUTENTICACION.md`).
-- [ ] **Google:** crear el cliente OAuth en Google Cloud y llenar `GOOGLE_WEB_CLIENT_ID`, `GOOGLE_WEB_CLIENT_SECRET` y `API_PUBLIC_URL` (https o túnel).
-- [ ] **Perfil:** conectar Editar perfil, foto y Cambiar contraseña (la API ya lo soporta; las cuentas de Google crean su contraseña sin la actual).
+- [x] **Google:** cliente OAuth creado y variables cargadas en Coolify; funciona en producción.
+- [x] **Perfil (26/10/2026):** editar nombre, apodo y teléfono; subir o quitar la foto (`DELETE /api/user/photo`, nuevo); interruptores de avisos; cambiar contraseña, o crearla si la cuenta es de Google. La foto también se puede elegir al registrarse.
+- [x] **Enlaces de invitación (26/10/2026):** el enlace que se comparte es `<API_PUBLIC_URL>/join/PANA-XXXX-XX`; esa página abre la app con `APP_LINK_BASE` (`entrepanas://` o, con Expo Go, `exp://IP:8081/--/`). La app abre «Unirse» con el código ya buscado; sin sesión, pide entrar primero.
+  - [ ] Con la app instalada (build propio): enlaces https verificados (App Links / Universal Links) para abrir sin pasar por la página.
 - [ ] **Conectar con la API:**
   - [x] Cliente HTTP (`src/api/client.ts`), sesión guardada en el teléfono y manejo de errores.
   - [x] Inicio (Mis Grupos): grupos reales, campana y chats con no leídos reales, tips de la pantalla `grupos` (22/10/2026).
   - [x] Crear grupo, detalle del grupo (Resumen y Mi sobre), editar, exclusiones, sortear, deshacer, revelar, finalizar, quitar panas, salir, eliminar y El Gran Día (22/10/2026).
   - [x] Elegir alias (5 sugerencias, «Ver otras 5», escribir el propio), unirse con código, Deseos (mi lista y la de mi pana), agregar/editar deseo con foto, prioridad, eliminar y detalle del deseo con comentarios anónimos (22/10/2026).
-  - [ ] Chat del grupo (socket), notificaciones, perfil (editar, foto, cambiar contraseña) y tips en el resto de pantallas.
+  - [x] Perfil, tips en todas las pantallas y enlaces de invitación (26/10/2026).
+  - [ ] Chat del grupo (socket) y notificaciones.
   - Reemplazar los datos de ejemplo (`src/mocks`) pantalla por pantalla.
   - Socket del chat.
   - Consultas periódicas de notificaciones.

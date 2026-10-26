@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Image, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { Alert } from '../../components/common/AppDialog';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,6 +9,7 @@ import { exchangeLabels, formatBudget, normalizeInviteCode } from '../../utils/f
 import type { JoinPreview } from '../../types/session';
 import { joinByCode, previewByCode, type ApiJoinPreview } from '../../api/groupDetail';
 import { ApiError, errorMessage } from '../../api/client';
+import { TipCard } from '../../components/common/TipCard';
 
 /** Vista previa del grupo + si puedo entrar */
 type Preview = JoinPreview & { alreadyMember: boolean; canJoin: boolean; closedReason: string | null };
@@ -53,15 +54,34 @@ interface JoinGroupScreenProps {
   onNavigateBack: () => void;
 }
 
+const searchErrorMessage = (e: unknown) =>
+  e instanceof ApiError && (e.status === 404 || e.status === 400)
+    ? 'No encontramos ningún grupo con ese código. Revisa que esté bien escrito o pídele uno nuevo a quien organiza.'
+    : errorMessage(e);
+
 /** Unirse a un grupo: escribir el código y confirmar con la vista previa del grupo */
 export const JoinGroupScreen: React.FC<JoinGroupScreenProps> = ({ initialCode = '', onJoined, onOpenGroup, onNavigateBack }) => {
   const insets = useSafeAreaInsets();
   const [code, setCode] = useState(normalizeInviteCode(initialCode));
   const [focused, setFocused] = useState(false);
-  const [searching, setSearching] = useState(false);
+  // Si llega un código completo (enlace de invitación), se busca solo al abrir
+  const [searching, setSearching] = useState(() => normalizeInviteCode(initialCode).length === CODE_LENGTH);
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<Preview | null>(null);
   const [joining, setJoining] = useState(false);
+
+  useEffect(() => {
+    const linkCode = normalizeInviteCode(initialCode);
+    if (linkCode.length !== CODE_LENGTH) return;
+    let alive = true;
+    previewByCode(linkCode)
+      .then((p) => alive && setPreview(toPreview(linkCode, p)))
+      .catch((e: unknown) => alive && setError(searchErrorMessage(e)))
+      .finally(() => alive && setSearching(false));
+    return () => {
+      alive = false;
+    };
+  }, [initialCode]);
 
   const complete = code.length === CODE_LENGTH;
   const alreadyMember = !!preview?.alreadyMember;
@@ -73,11 +93,7 @@ export const JoinGroupScreen: React.FC<JoinGroupScreenProps> = ({ initialCode = 
     try {
       setPreview(toPreview(code, await previewByCode(code)));
     } catch (e) {
-      setError(
-        e instanceof ApiError && (e.status === 404 || e.status === 400)
-          ? 'No encontramos ningún grupo con ese código. Revisa que esté bien escrito o pídele uno nuevo a quien organiza.'
-          : errorMessage(e)
-      );
+      setError(searchErrorMessage(e));
     } finally {
       setSearching(false);
     }
@@ -263,6 +279,12 @@ export const JoinGroupScreen: React.FC<JoinGroupScreenProps> = ({ initialCode = 
               </View>
             </>
           )}
+
+          <TipCard
+            screen="unirse"
+            fallback="Apenas entres, arma tu lista de deseos: le ahorras el dolor de cabeza a tu amigo secreto."
+            style={{ marginTop: 16 }}
+          />
         </ScrollView>
 
         <View style={[form.footer, { paddingBottom: Math.max(insets.bottom, 8) }]}>

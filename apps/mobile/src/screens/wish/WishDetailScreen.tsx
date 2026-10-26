@@ -30,6 +30,7 @@ import { theme, wishDetailStyles as styles } from '../../styles';
 import { WISH_CATEGORIES } from '../../constants/wishCategories';
 import { CommentItem } from '../../components/wish/CommentItem';
 import type { WishComment, WishDetailView } from '../../types/session';
+import { TipCard } from '../../components/common/TipCard';
 
 const CURRENCY = { USD: '$', VES: 'Bs. ' } as const;
 const MAX_COMMENT = 500;
@@ -252,6 +253,12 @@ export const WishDetailScreen: React.FC<WishDetailScreenProps> = ({
               )}
             </View>
           )}
+
+          <TipCard
+            screen="deseo.detalle"
+            fallback="Pregunta la talla, el color o el modelo en los comentarios. Tu pana nunca sabrá que eres tú."
+            style={{ marginTop: 16 }}
+          />
         </ScrollView>
 
         {/* Escribir comentario */}

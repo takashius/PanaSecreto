@@ -8,6 +8,7 @@ import { MainHeader } from '../../components/common/MainHeader';
 import { FloatingTabBar, type DashboardTab } from '../../components/common/FloatingTabBar';
 import { ChatRow } from '../../components/chat/ChatRow';
 import type { ChatRoomSummary } from '../../types/session';
+import { TipCard } from '../../components/common/TipCard';
 
 interface ChatsScreenProps {
   rooms: ChatRoomSummary[];
@@ -122,6 +123,12 @@ export const ChatsScreen: React.FC<ChatsScreenProps> = ({
             </Text>
           </View>
         </View>
+
+        <TipCard
+          screen="chat.lista"
+          fallback="Lanza pistas en el chat sin delatarte: escribe con tu alias y nunca menciones nombres reales."
+          style={{ marginTop: 12 }}
+        />
       </ScrollView>
 
       <FloatingTabBar activeTab="chats" onTabChange={onNavigateTab} badges={{ chats: totalUnread }} />

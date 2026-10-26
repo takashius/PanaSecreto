@@ -1,4 +1,5 @@
 import { api } from './client';
+import { localImageFile } from './localUploadFile';
 import type { Currency } from './groups';
 
 /** Deseo tal como lo devuelve la API (el dueño ve su userId; quien regala no) */
@@ -48,14 +49,6 @@ export interface WishInput {
   localImageUri?: string | null;
 }
 
-function imagePart(uri: string) {
-  const name = uri.split('/').pop()?.split('?')[0] || 'deseo.jpg';
-  const ext = (name.split('.').pop() || 'jpg').toLowerCase();
-  const type = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : ext === 'gif' ? 'image/gif' : 'image/jpeg';
-  // React Native acepta { uri, name, type } como archivo en FormData
-  return { uri, name: name.includes('.') ? name : `${name}.jpg`, type } as unknown as Blob;
-}
-
 /** Multipart: todos los campos viajan como texto (el backend convierte números, booleanos y null) */
 function toForm(input: WishInput, editing: boolean): FormData {
   const form = new FormData();
@@ -77,7 +70,7 @@ function toForm(input: WishInput, editing: boolean): FormData {
   put('storeName', input.storeName);
   put('productUrl', input.productUrl);
   put('isFavorite', input.isFavorite);
-  if (input.localImageUri) form.append('image', imagePart(input.localImageUri));
+  if (input.localImageUri) form.append('image', localImageFile(input.localImageUri));
   return form;
 }
 

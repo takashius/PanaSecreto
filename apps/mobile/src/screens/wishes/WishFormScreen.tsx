@@ -30,6 +30,7 @@ import { BRAND_ISOTIPO } from '../../constants/brand';
 import { WISH_CATEGORIES, WISH_CATEGORY_ORDER } from '../../constants/wishCategories';
 import { formatBudget } from '../../utils/format';
 import type { MyWish, WishCategory } from '../../types/session';
+import { TipCard } from '../../components/common/TipCard';
 
 /** Mismos límites que el modelo Wish del backend */
 const MAX_TITLE = 120;
@@ -422,6 +423,12 @@ export const WishFormScreen: React.FC<WishFormScreenProps> = ({ group, initial, 
               </Text>
             </View>
           </View>
+
+          <TipCard
+            screen="deseo.formulario"
+            fallback="Agrega una foto y el enlace de la tienda: así tu amigo secreto acierta a la primera."
+            style={{ marginTop: 12 }}
+          />
         </ScrollView>
 
         <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 8) }]}>

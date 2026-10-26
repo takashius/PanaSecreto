@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { StatusBar, Platform, BackHandler, View, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as NavigationBar from 'expo-navigation-bar';
+import * as Linking from 'expo-linking';
 import { useFonts } from 'expo-font';
 import { Fredoka_600SemiBold, Fredoka_700Bold } from '@expo-google-fonts/fredoka';
 import {
@@ -21,15 +22,12 @@ import type { GroupDetailTab } from './src/components/groupDetail/GroupDetailTab
 import ChatsScreen from './src/screens/chat/ChatsScreen';
 import ChatRoomScreen from './src/screens/chat/ChatRoomScreen';
 import { MOCK_CHATS } from './src/mocks/chats';
-import ProfileScreen from './src/screens/profile/ProfileScreen';
-import EditProfileScreen from './src/screens/profile/EditProfileScreen';
-import ChangePasswordScreen from './src/screens/profile/ChangePasswordScreen';
+import { ProfileContainer, EditProfileContainer, ChangePasswordContainer } from './src/screens/profile/ProfileContainers';
 import { Alert, AppDialogHost } from './src/components/common/AppDialog';
 import { AuthProvider, useAuth } from './src/auth/AuthContext';
 import type { SessionPayload } from './src/api/auth';
 import { BRAND_LOGO } from './src/constants/brand';
 import { authStyles } from './src/styles';
-import { toLocalPhone } from './src/utils/validation';
 import { useApiQuery } from './src/api/queryStore';
 import { fetchQuery } from './src/api/queryStore';
 import { fetchMyGroups, MY_GROUPS_KEY } from './src/api/groups';
@@ -41,23 +39,9 @@ import NotificationsScreen from './src/screens/notifications/NotificationsScreen
 import JoinGroupScreen from './src/screens/group/JoinGroupScreen';
 import { MOCK_NOTIFICATIONS } from './src/mocks/notifications';
 import type { DashboardTab } from './src/components/common/FloatingTabBar';
-import type { AppNotification, ProfileView, ChatMessage, ChatRoomSummary } from './src/types/session';
+import type { AppNotification, ChatMessage, ChatRoomSummary } from './src/types/session';
 import { theme } from './src/styles/theme';
-import type { SessionUser } from './src/types/session';
-
-/** Perfil que muestra la app a partir del usuario de la sesión */
-function profileFromUser(user: SessionUser | null): ProfileView {
-  return {
-    fullname: [user?.name, user?.lastName].filter(Boolean).join(' '),
-    nickname: user?.nickname ?? null,
-    email: user?.email ?? '',
-    phone: toLocalPhone(user?.phone) || null,
-    photoUri: user?.photo ?? null,
-    notifyEmail: user?.notifyEmail !== false,
-    notifyComments: user?.notifyComments !== false,
-  };
-}
-
+import { joinCodeFromUrl } from './src/utils/deepLink';
 
 type Screen = 'login' | 'register' | 'recover' | 'dashboard' | 'createGroup' | 'groupDetail' | 'wishDetail' | 'myWishes' | 'wishForm' | 'chats' | 'chatRoom' | 'profile' | 'editProfile' | 'changePassword' | 'notifications' | 'joinGroup' | 'exclusions' | 'editGroup' | 'reveal' | 'legal';
 
@@ -80,9 +64,8 @@ function AppContent() {
   const myGroupsQuery = useApiQuery(MY_GROUPS_KEY, fetchMyGroups, { enabled: signedIn, staleMs: 60_000 });
   // Perfil (maqueta): se completa con los datos de la sesión cuando existen
   // Perfil: datos de la sesión + cambios locales de la maqueta (hasta conectar la edición de perfil)
-  const [profileEdits, setProfileEdits] = useState<ProfileView | null>(null);
-  const profile: ProfileView = profileEdits ?? profileFromUser(user);
-  const setProfile = (p: ProfileView) => setProfileEdits(p);
+  /** Código que llegó por un enlace de invitación: abre "Unirse" apenas haya sesión */
+  const [linkJoinCode, setLinkJoinCode] = useState<string | null>(null);
   const [legalDoc, setLegalDoc] = useState<'terminos' | 'privacidad'>('terminos');
 
   // Notificaciones (no son en tiempo real)
@@ -154,7 +137,6 @@ function AppContent() {
   /** Entra con la sesión que devolvió la API (correo, registro, Google o recuperación) */
   const startSession = async (session: SessionPayload, welcome = false) => {
     await signIn(session);
-    setProfileEdits(null);
     setScreenHistory(['dashboard']);
     setAuthHistory(['login']);
     if (welcome || session.isNew) {
@@ -164,7 +146,6 @@ function AppContent() {
 
   const handleLogout = () => {
     void signOut();
-    setProfileEdits(null);
     setScreenHistory(['dashboard']);
     setAuthHistory(['login']);
   };
@@ -200,9 +181,30 @@ function AppContent() {
     }
   }, []);
 
+  // Enlaces de invitación (…/join/PANA-XXXX-XX): al abrir la app con uno o mientras está abierta
+  useEffect(() => {
+    let alive = true;
+    void Linking.getInitialURL().then((url) => {
+      const code = joinCodeFromUrl(url);
+      if (alive && code) setLinkJoinCode(code);
+    });
+    const sub = Linking.addEventListener('url', ({ url }) => {
+      const code = joinCodeFromUrl(url);
+      if (code) setLinkJoinCode(code);
+    });
+    return () => {
+      alive = false;
+      sub.remove();
+    };
+  }, []);
+
   // Intercepta el botón de atrás nativo de Android
   useEffect(() => {
     const onBackPress = () => {
+      if (signedIn && linkJoinCode) {
+        setLinkJoinCode(null);
+        return true;
+      }
       if (activeHistory.length > 1) {
         const pop = (prev: Screen[]) => prev.slice(0, -1);
         if (signedIn) setScreenHistory(pop);
@@ -214,7 +216,7 @@ function AppContent() {
 
     const backSub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
     return () => backSub.remove();
-  }, [activeHistory, signedIn]);
+  }, [activeHistory, signedIn, linkJoinCode]);
 
   let content: React.ReactNode;
   if (!signedIn && currentScreen === 'register') {
@@ -243,7 +245,34 @@ function AppContent() {
         onNavigateToRegister={() => navigateTo('register')}
         onNavigateToRecoverPassword={() => navigateTo('recover')}
         onLoginSuccess={(session) => startSession(session)}
-        notice={sessionExpired ? 'Tu sesión expiró o se cerró en otro dispositivo. Vuelve a entrar, pana.' : null}
+        notice={
+          linkJoinCode
+            ? `Inicia sesión o crea tu cuenta para unirte al grupo ${linkJoinCode}.`
+            : sessionExpired
+              ? 'Tu sesión expiró o se cerró en otro dispositivo. Vuelve a entrar, pana.'
+              : null
+        }
+      />
+    );
+  } else if (linkJoinCode || currentScreen === 'joinGroup') {
+    // Desde un enlace, "Unirse" se muestra encima de lo que hubiera (sin sesión, primero el login)
+    const fromLink = !!linkJoinCode;
+    content = (
+      <JoinGroupScreen
+        key={linkJoinCode ?? 'manual'}
+        initialCode={linkJoinCode ?? undefined}
+        onJoined={(groupId) => {
+          setLinkJoinCode(null);
+          void fetchQuery(MY_GROUPS_KEY, fetchMyGroups);
+          setScreenHistory(['dashboard']);
+          openGroup(groupId, 'resumen', true);
+        }}
+        onOpenGroup={(groupId) => {
+          setLinkJoinCode(null);
+          setScreenHistory(['dashboard']);
+          openGroup(groupId);
+        }}
+        onNavigateBack={fromLink ? () => setLinkJoinCode(null) : goBack}
       />
     );
   } else if (currentScreen === 'createGroup') {
@@ -317,14 +346,12 @@ function AppContent() {
     );
   } else if (currentScreen === 'profile') {
     content = (
-      <ProfileScreen
-        profile={profile}
+      <ProfileContainer
         stats={{
           groups: myGroupsQuery.data?.length ?? 0,
           wishes: (myGroupsQuery.data ?? []).reduce((n, g) => n + (g.myWishCount ?? 0), 0),
           exchanges: (myGroupsQuery.data ?? []).filter((g) => g.status === 'REVEALED' || g.status === 'COMPLETED').length,
         }}
-        onProfileChange={setProfile}
         onEditProfile={() => navigateTo('editProfile')}
         onChangePassword={() => navigateTo('changePassword')}
         onOpenLegal={(doc) => {
@@ -338,17 +365,10 @@ function AppContent() {
     );
   } else if (currentScreen === 'editProfile') {
     content = (
-      <EditProfileScreen
-        profile={profile}
-        onSave={(p) => {
-          setProfile(p);
-          goBack();
-        }}
-        onCancel={goBack}
-      />
+<EditProfileContainer onDone={goBack} onCancel={goBack} />
     );
   } else if (currentScreen === 'changePassword') {
-    content = <ChangePasswordScreen onDone={goBack} onCancel={goBack} />;
+    content = <ChangePasswordContainer onDone={goBack} onCancel={goBack} />;
   } else if (currentScreen === 'legal') {
     content = <LegalScreen document={legalDoc} onNavigateBack={goBack} />;
   } else if (currentScreen === 'notifications') {
@@ -357,21 +377,6 @@ function AppContent() {
         notifications={notifications}
         onOpen={openNotification}
         onMarkAllRead={() => setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))}
-        onNavigateBack={goBack}
-      />
-    );
-  } else if (currentScreen === 'joinGroup') {
-    content = (
-      <JoinGroupScreen
-        onJoined={(groupId) => {
-          void fetchQuery(MY_GROUPS_KEY, fetchMyGroups);
-          setScreenHistory(['dashboard']);
-          openGroup(groupId, 'resumen', true);
-        }}
-        onOpenGroup={(groupId) => {
-          setScreenHistory(['dashboard']);
-          openGroup(groupId);
-        }}
         onNavigateBack={goBack}
       />
     );

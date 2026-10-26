@@ -82,6 +82,14 @@ const config = {
   },
   /** URL pública de esta API (la usa Google para volver después de iniciar sesión) */
   apiPublicUrl: (process.env.API_PUBLIC_URL || `http://localhost:${process.env.PORT || '4000'}`).replace(/\/$/, ''),
+  /**
+   * Inicio de los enlaces que abren la app (invitaciones /join/CODIGO).
+   * Con la app instalada: entrepanas://  ·  Con Expo Go: exp://IP-DE-TU-PC:8081/--/
+   */
+  appLinkBase: (() => {
+    const base = (process.env.APP_LINK_BASE || 'entrepanas://').trim();
+    return base.endsWith('/') ? base : `${base}/`;
+  })(),
   google: {
     /** Cliente OAuth de tipo "Aplicación web" (lo usa el flujo por navegador de la app) */
     webClientId: process.env.GOOGLE_WEB_CLIENT_ID?.trim() || '',

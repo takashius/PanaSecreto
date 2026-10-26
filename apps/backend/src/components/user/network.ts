@@ -194,6 +194,16 @@ router.post('/upload', auth(), uploadImages([{ name: 'photo', folder: 'avatars' 
   }
 });
 
+// Quitar foto de perfil
+router.delete('/photo', auth(), async (req: IGetUserAuthInfoRequest, res: Response) => {
+  try {
+    const result = await controller.removeUserPhoto(req.user!._id);
+    sendOrError(res, result, controllerError, req);
+  } catch (error) {
+    controllerError(error, req, res);
+  }
+});
+
 // Cerrar sesión activa
 router.post('/logout', auth(), async (req: IGetUserAuthInfoRequest, res: Response) => {
   try {

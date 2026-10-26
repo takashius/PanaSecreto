@@ -1,3 +1,5 @@
+import { INVITE_BASE_URL } from '../api/config';
+
 /** Formatos de presentación compartidos por las pantallas */
 
 const CURRENCY_SYMBOL = { USD: '$', VES: 'Bs.' } as const;
@@ -12,8 +14,8 @@ export function formatBudget(currency: 'USD' | 'VES', min: number | null, max: n
   return 'Sin límite';
 }
 
-/** Enlace público para unirse con un código de invitación */
-export const inviteLink = (code: string) => `https://entrepanas.app/join/${encodeURIComponent(code)}`;
+/** Enlace público para unirse con un código de invitación (página de la API que abre la app) */
+export const inviteLink = (code: string) => `${INVITE_BASE_URL}/join/${encodeURIComponent(code)}`;
 
 /** "ahora", "hace 5 min", "hace 3 h", "hace 1 día", "hace 2 días", o la fecha corta si pasó más de una semana */
 export function timeAgo(iso: string, now: number = Date.now()): string {

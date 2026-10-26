@@ -6,6 +6,7 @@ import { theme, revealStyles as styles } from '../../styles';
 import { BRAND_ISOTIPO } from '../../constants/brand';
 import { formatBudget } from '../../utils/format';
 import type { GroupDetailView } from '../../types/session';
+import { TipCard } from '../../components/common/TipCard';
 
 /** Confeti decorativo fijo (posición %, color, tamaño, giro) */
 const CONFETTI = [
@@ -149,6 +150,12 @@ export const RevealScreen: React.FC<RevealScreenProps> = ({ group, onNavigateBac
             </View>
           )}
         </View>
+
+        <TipCard
+          screen="revelacion"
+          fallback="Toma fotos del intercambio y compártelas en el chat del grupo antes de cerrarlo."
+          style={{ marginBottom: 16 }}
+        />
 
         <View style={styles.thanks}>
           <Image source={BRAND_ISOTIPO} style={{ width: 48, height: 48, borderRadius: 14 }} />

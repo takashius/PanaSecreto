@@ -6,6 +6,7 @@ import { BRAND_ISOTIPO } from '../../constants/brand';
 import { useCountdown } from '../../hooks/useCountdown';
 import { WishPreviewRow } from './WishPreviewRow';
 import type { EnvelopeView, WishPreview } from '../../types/session';
+import { useTip } from '../../hooks/useTip';
 
 interface Props {
   envelope: EnvelopeView;
@@ -19,6 +20,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
 
 /** Sobre abierto: cuenta regresiva, alias de mi pana y su lista de deseos */
 export const OpenedEnvelope: React.FC<Props> = ({ envelope, budgetMaxLabel, onOpenWish, onOpenReveal }) => {
+  const tip = useTip('sobre.lista', 'Pregunta la talla o el color en los comentarios de cada deseo. Tu pana no sabrá que eres tú.');
   const t = useCountdown(envelope.exchangeAt);
   const revealed = !!envelope.revealedName;
   const cells = [
@@ -112,7 +114,7 @@ export const OpenedEnvelope: React.FC<Props> = ({ envelope, budgetMaxLabel, onOp
         <View style={styles.tipBubble}>
           <Text style={styles.infoText}>
             <Text style={styles.strong}>¡Tip del pana! </Text>
-            Pregunta la talla o el color en los comentarios de cada deseo. Tu pana no sabrá que eres tú.
+            {tip.text}
           </Text>
         </View>
       </View>

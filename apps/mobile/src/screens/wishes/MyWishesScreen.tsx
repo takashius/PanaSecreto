@@ -11,6 +11,7 @@ import { MyWishCard } from '../../components/myWishes/MyWishCard';
 import { PanaWishlistPanel } from '../../components/myWishes/PanaWishlistPanel';
 import { formatBudget } from '../../utils/format';
 import type { EnvelopeView, MyWish, MyWishlistGroup, WishPreview } from '../../types/session';
+import { TipCard } from '../../components/common/TipCard';
 
 interface MyWishesScreenProps {
   lists: MyWishlistGroup[];
@@ -300,6 +301,12 @@ export const MyWishesScreen: React.FC<MyWishesScreenProps> = ({
             <Text style={styles.strong}>100% anónimo y seguro</Text>: nunca sabrá tu correo ni tu teléfono.
           </Text>
         </View>
+
+        <TipCard
+          screen="deseos"
+          fallback="Agrega varias opciones de precio: así tu amigo secreto puede elegir según el presupuesto del grupo."
+          style={{ marginTop: 12 }}
+        />
       </ScrollView>
 
       <FloatingTabBar activeTab="deseos" onTabChange={onNavigateTab} badges={{ chats: chatUnread }} />

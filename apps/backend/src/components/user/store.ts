@@ -810,3 +810,22 @@ export async function uploadUserPhoto(userId: string, image?: UploadedImage): Pr
   }
 }
 
+/** Quita la foto de perfil (y la borra de Cloudinary si es nuestra) */
+export async function removeUserPhoto(userId: string): Promise<StoreResponse> {
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return { status: 404, message: 'Usuario no encontrado.' };
+    }
+    const previous = user.photo;
+    user.photo = undefined;
+    await user.save();
+    if (previous) await deleteImage(previous);
+
+    const updated = await User.findById(userId).select(PUBLIC_USER_FIELDS);
+    return { status: 200, message: updated };
+  } catch (error) {
+    return { status: 500, message: 'Error al quitar la imagen de perfil.', detail: error };
+  }
+}
+

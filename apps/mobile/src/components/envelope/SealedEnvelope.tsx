@@ -4,6 +4,7 @@ import { CalendarDays, Gift, Lock, Hand, MailCheck } from 'lucide-react-native';
 import { theme, envelopeStyles as styles } from '../../styles';
 import { BRAND_ISOTIPO } from '../../constants/brand';
 import { HowItWorks } from './HowItWorks';
+import { TipCard } from '../common/TipCard';
 
 interface Props {
   exchangeDateLong: string;
@@ -81,6 +82,11 @@ export const SealedEnvelope: React.FC<Props> = ({ exchangeDateLong, budgetLabel,
       </View>
 
       <HowItWorks exchangeDateLong={exchangeDateLong} budgetLabel={budgetLabel} />
+
+      <TipCard
+        screen="sobre.sellado"
+        fallback="Abre tu sobre en un lugar tranquilo: que nadie te vea la cara de sorpresa. 🤫"
+      />
     </View>
   );
 };

@@ -1,4 +1,4 @@
-import { API_URL } from './config';
+import { API_DEBUG, API_URL } from './config';
 
 /** Error normalizado de la API: siempre trae un mensaje listo para mostrar */
 export class ApiError extends Error {
@@ -77,13 +77,61 @@ interface RequestOptions {
   timeoutMs?: number;
 }
 
+const LOG_PREFIX = '[EntrePanas API]';
+
+function summarizeFormData(form: FormData): Record<string, string> {
+  const out: Record<string, string> = {};
+  form.forEach((value, key) => {
+    if (typeof value === 'string') out[key] = value.length > 200 ? `${value.slice(0, 200)}…` : value;
+    else if (value instanceof Blob)
+      out[key] = `[archivo ${'name' in value && typeof value.name === 'string' ? value.name : 'blob'}, type=${value.type || '?'}, ${value.size}b]`;
+    else out[key] = `[parte no soportada: ${typeof value}]`;
+  });
+  return out;
+}
+
+function logRequest(method: string, url: string, opts: { auth: boolean; body?: unknown; form?: FormData }) {
+  if (!API_DEBUG) return;
+  console.group(`${LOG_PREFIX} → ${method} ${url}`);
+  console.log('base:', API_URL);
+  console.log('auth:', opts.auth ? (authToken ? 'Bearer ***' : 'sin token') : 'desactivado');
+  if (opts.form) console.log('body:', summarizeFormData(opts.form));
+  else if (opts.body !== undefined) console.log('body:', opts.body);
+  console.groupEnd();
+}
+
+function logResponse(method: string, url: string, status: number, ms: number, data: unknown, rawText: string) {
+  if (!API_DEBUG) return;
+  const label = status >= 400 ? 'error' : 'ok';
+  console.group(`${LOG_PREFIX} ← ${method} ${url} [${status}] ${ms}ms (${label})`);
+  if (data !== rawText) console.log('json:', data);
+  else if (rawText) console.log('text:', rawText.length > 500 ? `${rawText.slice(0, 500)}…` : rawText);
+  else console.log('(vacío)');
+  console.groupEnd();
+}
+
+function logNetworkFailure(method: string, url: string, ms: number, cause: unknown) {
+  if (!API_DEBUG) return;
+  console.group(`${LOG_PREFIX} ✕ ${method} ${url} (${ms}ms)`);
+  console.log('base:', API_URL);
+  if (cause instanceof Error) {
+    console.log('error:', cause.name, cause.message);
+    if ('cause' in cause && cause.cause) console.log('cause:', cause.cause);
+  } else console.log('error:', cause);
+  console.groupEnd();
+}
+
 export async function api<T>(path: string, { method = 'GET', body, auth = true, form, timeoutMs = 15000 }: RequestOptions = {}): Promise<T> {
+  const url = `${API_URL}${path}`;
+  logRequest(method, url, { auth, body, form });
+
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   const sentToken = auth ? authToken : null;
+  const started = Date.now();
   let res: Response;
   try {
-    res = await fetch(`${API_URL}${path}`, {
+    res = await fetch(url, {
       method,
       headers: {
         Accept: 'application/json',
@@ -94,7 +142,8 @@ export async function api<T>(path: string, { method = 'GET', body, auth = true, 
       body: form ?? (body !== undefined ? JSON.stringify(body) : undefined),
       signal: controller.signal,
     });
-  } catch {
+  } catch (cause) {
+    logNetworkFailure(method, url, Date.now() - started, cause);
     throw new ApiError(0, NETWORK_ERROR_MESSAGE, 'NETWORK_ERROR');
   } finally {
     clearTimeout(timer);
@@ -107,6 +156,8 @@ export async function api<T>(path: string, { method = 'GET', body, auth = true, 
   } catch {
     // respuesta en texto plano
   }
+
+  logResponse(method, url, res.status, Date.now() - started, data, text);
 
   if (!res.ok) {
     const error = toApiError(res.status, data);

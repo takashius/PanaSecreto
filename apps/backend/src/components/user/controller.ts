@@ -168,6 +168,10 @@ export function uploadUserPhoto(userId: string, image?: UploadedImage) {
   return store.uploadUserPhoto(userId, image);
 }
 
+export function removeUserPhoto(userId: string) {
+  return store.removeUserPhoto(userId);
+}
+
 
 export function loginWithGoogle(profile: GoogleProfile, client?: 'web' | 'mobile') {
   return store.loginWithGoogle(profile, client);

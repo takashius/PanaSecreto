@@ -9,10 +9,14 @@ import tipRouter from '../components/tip/network';
 import notificationRouter from '../components/notification/network';
 import groupChatRouter, { chatListRouter } from '../components/chat/network';
 import { healthRouter } from '../routes/health.routes';
+import { inviteRouter } from '../routes/invite.routes';
 
 export default function registerRoutes(app: Express) {
   // Estado y chequeo de salud
   app.use('/api', healthRouter);
+
+  // Página pública de los enlaces de invitación: abre la app en "Unirse" con el código
+  app.use('/', inviteRouter);
 
   // Módulo de Usuarios y Autenticación
   app.use('/user', userRouter);
