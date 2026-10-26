@@ -97,6 +97,8 @@
     "notifyEmailHelp": "Avisos de grupos, sorteo y revelación",
     "notifyComments": "Correos de comentarios",
     "notifyCommentsHelp": "Cuando comentan o responden en sus deseos",
+    "notifyPush": "Notificaciones push",
+    "notifyPushHelp": "Avisos en el teléfono (requiere la app instalada)",
     "on": "Encendido",
     "off": "Apagado",
     "prefsReadOnly": "Solo la persona puede cambiar estas preferencias desde la app."

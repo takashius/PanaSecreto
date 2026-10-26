@@ -46,6 +46,7 @@ export const UpdateProfileSchema = z
     gender: GenderSchema.nullable().optional(),
     notifyEmail: z.boolean().optional(),
     notifyComments: z.boolean().optional(),
+    notifyPush: z.boolean().optional(),
   })
   .strict();
 

@@ -53,7 +53,15 @@
         }
       ],
       "expo-secure-store",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#FFC107",
+          "defaultChannel": "default"
+        }
+      ]
     ],
     "web": {
       "favicon": "./assets/favicon.png"

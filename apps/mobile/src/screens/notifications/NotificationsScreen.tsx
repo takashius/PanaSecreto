@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Image, RefreshControl, ActivityIndicator } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ArrowLeft,
@@ -47,11 +47,31 @@ interface NotificationsScreenProps {
   notifications: AppNotification[];
   onOpen: (n: AppNotification) => void;
   onMarkAllRead: () => void;
+  /** Mantener presionada una notificación para borrarla */
+  onDelete?: (n: AppNotification) => void;
   onNavigateBack: () => void;
+  /** Primera carga (sin datos todavía) */
+  loading?: boolean;
+  /** Mensaje si no se pudo cargar y no hay datos guardados */
+  error?: string | null;
+  onRetry?: () => void;
+  refreshing?: boolean;
+  onRefresh?: () => void;
 }
 
 /** Notificaciones (no son en tiempo real): filtros, agrupadas por fecha y con destino al tocarlas */
-export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ notifications, onOpen, onMarkAllRead, onNavigateBack }) => {
+export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({
+  notifications,
+  onOpen,
+  onMarkAllRead,
+  onDelete,
+  onNavigateBack,
+  loading = false,
+  error = null,
+  onRetry,
+  refreshing = false,
+  onRefresh,
+}) => {
   const tip = useTip('notificaciones', '¡Pilas, mi pana! En EntrePanas nadie sabe quién le regala a quién hasta el destape final.');
   const insets = useSafeAreaInsets();
   const [filter, setFilter] = useState<Filter>('todas');
@@ -105,7 +125,10 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ notifi
         })}
       </View>
 
-      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: Math.max(insets.bottom, 16) + 16 }]}>
+      <ScrollView
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: Math.max(insets.bottom, 16) + 16 }]}
+        refreshControl={onRefresh ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} /> : undefined}
+      >
         {unread.length > 0 && (
           <View style={styles.unreadBanner}>
             <View style={styles.unreadBannerDot} />
@@ -116,11 +139,30 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ notifi
           </View>
         )}
 
-        {sections.length === 0 ? (
+        {loading ? (
+          <View style={styles.empty}>
+            <ActivityIndicator color={theme.colors.primary} />
+          </View>
+        ) : error ? (
+          <View style={styles.empty}>
+            <Image source={BRAND_ISOTIPO} style={{ width: 72, height: 72, borderRadius: 20 }} />
+            <Text style={styles.emptyTitle}>No pudimos cargar tus notificaciones</Text>
+            <Text style={styles.emptyText}>{error}</Text>
+            {onRetry && (
+              <TouchableOpacity onPress={onRetry} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Text style={styles.markAll}>Reintentar</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        ) : sections.length === 0 ? (
           <View style={styles.empty}>
             <Image source={BRAND_ISOTIPO} style={{ width: 72, height: 72, borderRadius: 20 }} />
             <Text style={styles.emptyTitle}>¡Todo al día!</Text>
-            <Text style={styles.emptyText}>No tienes notificaciones en esta categoría.</Text>
+            <Text style={styles.emptyText}>
+              {notifications.length === 0
+                ? 'Aquí te avisaremos del sorteo, los comentarios de tus deseos y las pistas del chat.'
+                : 'No tienes notificaciones en esta categoría.'}
+            </Text>
           </View>
         ) : (
           sections.map((section) => {
@@ -145,16 +187,24 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ notifi
                       key={n.id}
                       style={[styles.item, !n.read && styles.itemUnread]}
                       onPress={() => onOpen(n)}
+                      onLongPress={onDelete ? () => onDelete(n) : undefined}
                       activeOpacity={0.85}
+                      accessibilityHint={onDelete ? 'Mantén presionado para borrarla' : undefined}
                     >
                       <View style={[styles.itemIcon, { backgroundColor: k.bg }]}>
                         <Icon size={20} color={k.color} strokeWidth={2.2} />
                       </View>
                       <View style={{ flex: 1 }}>
+                        <Text style={[styles.itemTitle, !n.read && styles.itemTitleUnread]} numberOfLines={1}>
+                          {n.title}
+                        </Text>
                         <RichText text={n.text} unread={!n.read} />
                         <View style={styles.itemMeta}>
-                          <Text style={styles.itemGroup}>{n.groupName}</Text>
-                          <Text style={styles.itemTime}>· {timeAgo(n.at, now)}</Text>
+                          {!!n.groupName && <Text style={styles.itemGroup} numberOfLines={1}>{n.groupName}</Text>}
+                          <Text style={styles.itemTime}>
+                            {n.groupName ? '· ' : ''}
+                            {timeAgo(n.at, now)}
+                          </Text>
                         </View>
                       </View>
                       {!n.read && <View style={styles.unreadDot} />}

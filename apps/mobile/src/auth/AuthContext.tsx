@@ -5,6 +5,7 @@ import type { SessionPayload } from '../api/auth';
 import type { SessionUser } from '../types/session';
 import { clearSession, loadSession, saveSession, saveUser } from './storage';
 import { clearQueries } from '../api/queryStore';
+import { unregisterFromPush } from '../notifications/push';
 
 export type AuthStatus = 'restoring' | 'signedOut' | 'signedIn';
 
@@ -95,6 +96,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
+    // Primero este teléfono deja de recibir push de la cuenta (necesita el token aún vigente)
+    await unregisterFromPush();
     // Avisa a la API para invalidar el token; si no hay red, igual se cierra en el teléfono
     await authApi.logout().catch(() => undefined);
     await dropSession(false);

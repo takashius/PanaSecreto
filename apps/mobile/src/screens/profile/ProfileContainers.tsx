@@ -3,6 +3,7 @@ import { Alert } from '../../components/common/AppDialog';
 import { useAuth } from '../../auth/AuthContext';
 import { errorMessage } from '../../api/client';
 import * as profileApi from '../../api/profile';
+import { pushAvailable } from '../../notifications/push';
 import { splitFullName, toInternationalPhone, toLocalPhone } from '../../utils/validation';
 import ProfileScreen from './ProfileScreen';
 import EditProfileScreen from './EditProfileScreen';
@@ -20,6 +21,7 @@ export function profileFromUser(user: SessionUser | null): ProfileView {
     photoUri: user?.photo ?? null,
     notifyEmail: user?.notifyEmail !== false,
     notifyComments: user?.notifyComments !== false,
+    notifyPush: user?.notifyPush !== false,
   };
 }
 
@@ -52,6 +54,7 @@ export const ProfileContainer: React.FC<ProfileContainerProps> = (props) => {
     const notifyPatch: profileApi.ProfileUpdateInput = {};
     if (next.notifyEmail !== profile.notifyEmail) notifyPatch.notifyEmail = next.notifyEmail;
     if (next.notifyComments !== profile.notifyComments) notifyPatch.notifyComments = next.notifyComments;
+    if (next.notifyPush !== profile.notifyPush) notifyPatch.notifyPush = next.notifyPush;
     if (!photoChanged && Object.keys(notifyPatch).length === 0) return;
 
     setPending((p) => ({ ...p, ...(photoChanged ? { photoUri: next.photoUri ?? null } : {}), ...notifyPatch }));
@@ -75,6 +78,7 @@ export const ProfileContainer: React.FC<ProfileContainerProps> = (props) => {
       profile={profile}
       photoBusy={photoBusy}
       hasPassword={user?.hasPassword !== false}
+      pushSupported={pushAvailable}
       onProfileChange={(p) => void handleChange(p)}
     />
   );

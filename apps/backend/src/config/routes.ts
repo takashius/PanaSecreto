@@ -7,6 +7,7 @@ import statsRouter from '../components/stats/network';
 import aliasRouter from '../components/alias/network';
 import tipRouter from '../components/tip/network';
 import notificationRouter from '../components/notification/network';
+import pushRouter from '../components/push/network';
 import groupChatRouter, { chatListRouter } from '../components/chat/network';
 import { healthRouter } from '../routes/health.routes';
 import { inviteRouter } from '../routes/invite.routes';
@@ -35,6 +36,7 @@ export default function registerRoutes(app: Express) {
 
   // Notificaciones dentro de la app y lista de chats
   app.use('/api/notifications', notificationRouter);
+  app.use('/api/push', pushRouter);
   app.use('/api/chat', chatListRouter);
 
   // Módulo de Grupos de Amigo Secreto (sorteo, invitaciones, asignaciones)

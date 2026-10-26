@@ -24,6 +24,7 @@ const userSchema = new Schema<IUserDocument>(
     /** Preferencias de notificación */
     notifyEmail: { type: Boolean, default: true },
     notifyComments: { type: Boolean, default: true },
+    notifyPush: { type: Boolean, default: true },
     email: {
       type: String,
       trim: true,

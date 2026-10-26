@@ -16,6 +16,7 @@ import {
   Headset,
   FileText,
   LogOut,
+  BellRing,
 } from 'lucide-react-native';
 import { theme, profileStyles as styles } from '../../styles';
 import { BRAND_ISOTIPO } from '../../constants/brand';
@@ -35,6 +36,8 @@ interface ProfileScreenProps {
   photoBusy?: boolean;
   /** false = cuenta de Google sin contraseña propia ("Crear contraseña") */
   hasPassword?: boolean;
+  /** false en Expo Go Android: las push solo llegan en la app instalada */
+  pushSupported?: boolean;
   onEditProfile: () => void;
   onChangePassword: () => void;
   onLogout: () => void;
@@ -57,6 +60,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   onProfileChange,
   photoBusy = false,
   hasPassword = true,
+  pushSupported = true,
   onEditProfile,
   onChangePassword,
   onLogout,
@@ -178,7 +182,15 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
               onValueChange={(v) => onProfileChange({ ...profile, notifyComments: v })}
               divider
             />
-            {(!profile.notifyEmail || !profile.notifyComments) && (
+            <MenuRow
+              icon={BellRing}
+              title="Notificaciones push"
+              subtitle={pushSupported ? 'Avisos en tu teléfono al instante' : 'Llegan en la app instalada (no en Expo Go)'}
+              value={profile.notifyPush}
+              onValueChange={(v) => onProfileChange({ ...profile, notifyPush: v })}
+              divider
+            />
+            {(!profile.notifyEmail || !profile.notifyComments || !profile.notifyPush) && (
               <View style={styles.infoBox}>
                 <Info size={18} color={theme.colors.accentDark} strokeWidth={2.4} />
                 <Text style={styles.infoText}>Actívalos para que no te pierdas las pistas secretas ni los mensajes de tu grupo.</Text>

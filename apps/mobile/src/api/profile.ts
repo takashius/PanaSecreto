@@ -13,6 +13,7 @@ export interface ProfileUpdateInput {
   phone?: string | null;
   notifyEmail?: boolean;
   notifyComments?: boolean;
+  notifyPush?: boolean;
 }
 
 /**
@@ -28,6 +29,7 @@ export function toSessionPatch(u: ApiUser): Partial<SessionUser> {
     nickname: u.nickname || undefined,
     notifyEmail: u.notifyEmail !== false,
     notifyComments: u.notifyComments !== false,
+    notifyPush: u.notifyPush !== false,
     ...(u.hasPassword !== undefined ? { hasPassword: u.hasPassword !== false } : {}),
   };
 }

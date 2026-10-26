@@ -97,6 +97,8 @@
     "notifyEmailHelp": "Group, draw and reveal notices",
     "notifyComments": "Comment emails",
     "notifyCommentsHelp": "When someone comments or replies on their wishes",
+    "notifyPush": "Push notifications",
+    "notifyPushHelp": "Alerts on the phone (requires the installed app)",
     "on": "On",
     "off": "Off",
     "prefsReadOnly": "Only the user can change these preferences from the app."

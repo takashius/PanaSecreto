@@ -51,7 +51,7 @@ Lista viva de lo que falta después de maquetar la app móvil (22 de octubre de 
 - Pantallas: `general`, `grupos`, `grupo.resumen`, `sobre.sellado`, `sobre.lista`, `deseo.detalle`, `deseo.formulario`, `deseos`, `chat.lista`, `chat.sala`, `notificaciones`, `unirse`, `exclusiones`, `revelacion`.
 
 ### Queda para después
-- [ ] Notificaciones push (Expo) además de las de la app.
+- [x] Notificaciones push (Expo) además de las de la app (26/10/2026, ver `docs/NOTIFICACIONES.md`).
 - [ ] Reportar mensajes o comentarios y moderarlos desde el panel.
 
 ---
@@ -91,7 +91,8 @@ Lista viva de lo que falta después de maquetar la app móvil (22 de octubre de 
   - [x] Crear grupo, detalle del grupo (Resumen y Mi sobre), editar, exclusiones, sortear, deshacer, revelar, finalizar, quitar panas, salir, eliminar y El Gran Día (22/10/2026).
   - [x] Elegir alias (5 sugerencias, «Ver otras 5», escribir el propio), unirse con código, Deseos (mi lista y la de mi pana), agregar/editar deseo con foto, prioridad, eliminar y detalle del deseo con comentarios anónimos (22/10/2026).
   - [x] Perfil, tips en todas las pantallas y enlaces de invitación (26/10/2026).
-  - [ ] Chat del grupo (socket) y notificaciones.
+  - [x] Notificaciones: lista real, marcar leídas, borrar, destino al tocar, consulta cada minuto y push con Expo (26/10/2026).
+  - [ ] Push en el teléfono: crear las credenciales de FCM y hacer un build con EAS (pasos en `docs/NOTIFICACIONES.md`). En Expo Go Android no llegan.
+  - [ ] Chat del grupo (socket).
   - Reemplazar los datos de ejemplo (`src/mocks`) pantalla por pantalla.
   - Socket del chat.
-  - Consultas periódicas de notificaciones.

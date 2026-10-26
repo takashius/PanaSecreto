@@ -90,6 +90,17 @@ const config = {
     const base = (process.env.APP_LINK_BASE || 'entrepanas://').trim();
     return base.endsWith('/') ? base : `${base}/`;
   })(),
+  push: {
+    // 'expo' envía por el servicio de Expo; 'log' solo las guarda en memoria (tests)
+    transport: (process.env.PUSH_TRANSPORT || (nodeEnv === 'test' ? 'log' : 'expo')) as 'expo' | 'log',
+    /** Opcional: token de acceso de Expo si activas «push security» en tu proyecto de Expo */
+    accessToken: process.env.EXPO_ACCESS_TOKEN?.trim() || '',
+    sendUrl: process.env.EXPO_PUSH_URL || 'https://exp.host/--/api/v2/push/send',
+    /** Los recordatorios no se envían como push de noche (siguen en la campana) */
+    timezone: process.env.PUSH_TIMEZONE || 'America/Caracas',
+    quietStartHour: 21,
+    quietEndHour: 8,
+  },
   google: {
     /** Cliente OAuth de tipo "Aplicación web" (lo usa el flujo por navegador de la app) */
     webClientId: process.env.GOOGLE_WEB_CLIENT_ID?.trim() || '',

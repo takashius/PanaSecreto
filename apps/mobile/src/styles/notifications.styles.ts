@@ -153,6 +153,18 @@ export const notificationsStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  itemTitle: {
+    marginBottom: 2,
+    fontFamily: theme.typography.fontFamily.bodySemibold,
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.textSecondary,
+  },
+  itemTitleUnread: {
+    fontFamily: theme.typography.fontFamily.bodyBold,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.primary,
+  },
   itemText: {
     fontFamily: theme.typography.fontFamily.body,
     fontSize: theme.typography.fontSize.md,

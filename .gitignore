@@ -55,3 +55,6 @@ pnpm-debug.log*
 # Testing & Coverage
 coverage/
 .nyc_output/
+
+# Firebase: clave de cuenta de servicio (FCM V1). Se sube a Expo, nunca al repositorio
+*firebase-adminsdk*.json

@@ -35,13 +35,13 @@ import { EditGroupContainer, ExclusionsContainer, GroupDetailContainer, RevealCo
 import { MyWishesContainer, WishDetailContainer, WishFormContainer } from './src/screens/wishes/WishScreens';
 import { CHAT_UNREAD_KEY, fetchChatUnread, fetchNotificationsUnread, NOTIFICATIONS_UNREAD_KEY } from './src/api/badges';
 import LegalScreen from './src/screens/legal/LegalScreen';
-import NotificationsScreen from './src/screens/notifications/NotificationsScreen';
+import NotificationsContainer from './src/screens/notifications/NotificationsContainer';
 import JoinGroupScreen from './src/screens/group/JoinGroupScreen';
-import { MOCK_NOTIFICATIONS } from './src/mocks/notifications';
 import type { DashboardTab } from './src/components/common/FloatingTabBar';
 import type { AppNotification, ChatMessage, ChatRoomSummary } from './src/types/session';
 import { theme } from './src/styles/theme';
 import { joinCodeFromUrl } from './src/utils/deepLink';
+import { useNotificationSync } from './src/hooks/useNotificationSync';
 
 type Screen = 'login' | 'register' | 'recover' | 'dashboard' | 'createGroup' | 'groupDetail' | 'wishDetail' | 'myWishes' | 'wishForm' | 'chats' | 'chatRoom' | 'profile' | 'editProfile' | 'changePassword' | 'notifications' | 'joinGroup' | 'exclusions' | 'editGroup' | 'reveal' | 'legal';
 
@@ -69,7 +69,6 @@ function AppContent() {
   const [legalDoc, setLegalDoc] = useState<'terminos' | 'privacidad'>('terminos');
 
   // Notificaciones (no son en tiempo real)
-  const [notifications, setNotifications] = useState<AppNotification[]>(MOCK_NOTIFICATIONS);
   // Campana: no leídas reales (la lista de Notificaciones aún usa la maqueta)
   const notificationsUnreadQuery = useApiQuery(NOTIFICATIONS_UNREAD_KEY, fetchNotificationsUnread, { enabled: signedIn, staleMs: 60_000 });
   const hasNotifications = (notificationsUnreadQuery.data ?? 0) > 0;
@@ -110,17 +109,19 @@ function AppContent() {
   };
 
   /** Al tocar una notificación: se marca leída y se abre su destino */
-  const openNotification = (n: AppNotification) => {
-    setNotifications((prev) => prev.map((x) => (x.id === n.id ? { ...x, read: true } : x)));
+  const openNotification = (n: Pick<AppNotification, 'groupId' | 'target'>) => {
+    const groupId = n.groupId;
+    if (!groupId) return;
     const { screen, wishId } = n.target;
-    if (screen === 'myWish' && wishId) openWish(n.groupId, wishId, 'owner');
-    else if (screen === 'wish' && wishId) openWish(n.groupId, wishId, 'giver');
-    else if (screen === 'envelope') openGroup(n.groupId, 'sobre');
-    else if (screen === 'chat') openChatRoom(n.groupId);
+    if (screen === 'myWish' && wishId) openWish(groupId, wishId, 'owner');
+    else if (screen === 'wish' && wishId) openWish(groupId, wishId, 'giver');
+    else if (screen === 'envelope') openGroup(groupId, 'sobre');
+    // El chat real se conecta después: por ahora abre la pestaña Chat del grupo
+    else if (screen === 'chat') openGroup(groupId, 'chat');
     else if (screen === 'reveal') {
-      setGroupDetailId(n.groupId);
+      setGroupDetailId(groupId);
       navigateTo('reveal');
-    } else openGroup(n.groupId);
+    } else openGroup(groupId);
   };
 
   /** Barra inferior: las pestañas principales no se apilan en el historial */
@@ -173,6 +174,9 @@ function AppContent() {
     if (signedIn) setScreenHistory(pop);
     else setAuthHistory(pop);
   };
+
+  // Campana al día (consulta periódica) y notificaciones push (registro y toques)
+  useNotificationSync(signedIn, notificationsUnreadQuery.data, openNotification);
 
   // Configura la barra de navegación de Android una sola vez al montar la aplicación
   useEffect(() => {
@@ -372,14 +376,7 @@ function AppContent() {
   } else if (currentScreen === 'legal') {
     content = <LegalScreen document={legalDoc} onNavigateBack={goBack} />;
   } else if (currentScreen === 'notifications') {
-    content = (
-      <NotificationsScreen
-        notifications={notifications}
-        onOpen={openNotification}
-        onMarkAllRead={() => setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))}
-        onNavigateBack={goBack}
-      />
-    );
+    content = <NotificationsContainer onNavigate={openNotification} onNavigateBack={goBack} />;
   } else if (currentScreen === 'exclusions') {
     content = <ExclusionsContainer groupId={groupDetailId} onDone={goBack} onCancel={goBack} />;
   } else if (currentScreen === 'editGroup') {

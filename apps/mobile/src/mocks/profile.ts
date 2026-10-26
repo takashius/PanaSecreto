@@ -9,4 +9,5 @@ export const MOCK_PROFILE: ProfileView = {
   photoUri: null,
   notifyEmail: true,
   notifyComments: true,
+  notifyPush: true,
 };

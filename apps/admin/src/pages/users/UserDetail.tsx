@@ -149,6 +149,7 @@ export default function UserDetail() {
               [
                 ['notifyEmail', user.notifyEmail],
                 ['notifyComments', user.notifyComments],
+                ['notifyPush', user.notifyPush],
               ] as const
             ).map(([key, value]) => (
               <li key={key} className="flex items-start justify-between gap-3">

@@ -6,6 +6,7 @@ import * as tpl from './mailTemplates';
 import { Group } from '../components/group/model';
 import { Notification } from '../components/notification/model';
 import { User } from '../components/user/model';
+import { pushForNotifications, type PushSource } from './push';
 import type { NotificationKind, NotificationTarget } from '@panasecreto/shared';
 import '../components/user/model'; // registra User para populate
 
@@ -118,7 +119,10 @@ export interface InAppItem {
   dedupeKey?: string;
 }
 
-/** Inserta notificaciones ignorando duplicados por dedupeKey. Devuelve cuántas se crearon. */
+/**
+ * Inserta notificaciones ignorando duplicados por dedupeKey y envía la push de las nuevas.
+ * Devuelve cuántas se crearon. Un fallo de la push nunca afecta a la campana.
+ */
 export async function insertInApp(items: InAppItem[]): Promise<number> {
   if (items.length === 0) return 0;
   const docs = items.map((i) => ({
@@ -131,16 +135,20 @@ export async function insertInApp(items: InAppItem[]): Promise<number> {
     ...(i.wishId ? { wish: new Types.ObjectId(i.wishId) } : {}),
     ...(i.dedupeKey ? { dedupeKey: i.dedupeKey } : {}),
   }));
+  let inserted: PushSource[];
   try {
-    const inserted = await Notification.insertMany(docs, { ordered: false });
-    return inserted.length;
+    inserted = (await Notification.insertMany(docs, { ordered: false })) as unknown as PushSource[];
   } catch (error) {
     const e = error as { code?: number; insertedDocs?: unknown[]; writeErrors?: Array<{ code?: number; err?: { code?: number } }> };
     const onlyDuplicates =
       e.code === 11000 || (e.writeErrors?.length && e.writeErrors.every((w) => (w.code ?? w.err?.code) === 11000));
-    if (onlyDuplicates) return e.insertedDocs?.length ?? 0;
-    throw error;
+    if (!onlyDuplicates) throw error;
+    inserted = (e.insertedDocs ?? []) as PushSource[];
   }
+  if (inserted.length > 0) {
+    await pushForNotifications(inserted).catch((error) => console.error('[push] Falló el envío:', error));
+  }
+  return inserted.length;
 }
 
 /** En segundo plano (no retrasa la respuesta) */

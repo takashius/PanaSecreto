@@ -14,6 +14,7 @@ export interface SessionUser {
   gender?: 'M' | 'F' | 'N';
   notifyEmail?: boolean;
   notifyComments?: boolean;
+  notifyPush?: boolean;
   role?: string | string[];
   /** false si la cuenta se creó con Google y aún no tiene contraseña propia */
   hasPassword?: boolean;
@@ -223,6 +224,8 @@ export interface ProfileView {
   photoUri?: string | null;
   notifyEmail: boolean;
   notifyComments: boolean;
+  /** Push en el teléfono (necesita la app instalada; en Expo Go Android no llegan) */
+  notifyPush: boolean;
 }
 
 /** Tipo de notificación (define ícono y a dónde lleva al tocarla) */
@@ -231,10 +234,14 @@ export type NotificationKind = 'comment' | 'reply' | 'draw' | 'join' | 'reminder
 export interface AppNotification {
   id: string;
   kind: NotificationKind;
+  /** Título corto ("¡Ya se hizo el sorteo! ✉️") */
+  title: string;
   /** Texto principal; lo que va entre «» se resalta */
   text: string;
-  groupId: string;
-  groupName: string;
+  /** null en avisos que no son de un grupo */
+  groupId: string | null;
+  /** Nombre del grupo para mostrar (se completa con los grupos del usuario) */
+  groupName?: string;
   /** ISO 8601 */
   at: string;
   read: boolean;

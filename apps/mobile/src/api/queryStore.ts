@@ -50,6 +50,11 @@ export function setQueryData<T>(key: string, updater: (prev: T | undefined) => T
   setEntry(key, { data: updater(entries.get(key)?.data as T | undefined), updatedAt: Date.now() });
 }
 
+/** true si alguna pantalla ya pidió esta consulta (sirve para refrescar solo lo que se usa) */
+export function hasQuery(key: string): boolean {
+  return entries.has(key);
+}
+
 /** Marca consultas para recargarse la próxima vez que se usen (por prefijo de clave) */
 export function invalidateQueries(prefix: string): void {
   for (const key of entries.keys()) if (key.startsWith(prefix)) setEntry(key, { updatedAt: 0 });

@@ -16,6 +16,7 @@ export interface ManagedUser {
   gender?: 'M' | 'F' | 'N';
   notifyEmail?: boolean;
   notifyComments?: boolean;
+  notifyPush?: boolean;
 }
 
 export interface UserListResponse {

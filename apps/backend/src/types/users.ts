@@ -17,6 +17,8 @@ export interface IUser {
   gender?: 'M' | 'F' | 'N';
   notifyEmail?: boolean;
   notifyComments?: boolean;
+  /** false = no quiere notificaciones push en el teléfono */
+  notifyPush?: boolean;
   role: UserRole | UserRole[];
   password?: string;
   active: boolean;

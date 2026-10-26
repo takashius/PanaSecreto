@@ -16,6 +16,7 @@ import { sanitizeEmail } from '../../utils/sanitizeEmail';
 import { StoreResponse } from '../../types/general';
 import { compare } from 'bcryptjs';
 import { deleteImage } from '../../services/storage';
+import { PushToken } from '../push/model';
 import type { UploadedImage } from '../../types/general';
 import { sendMail } from '../../services/mail';
 import { recoveryCodeEmail } from '../../services/mailTemplates';
@@ -74,6 +75,7 @@ function sessionPayload(user: IUserDocument, token: string, extra: Record<string
     gender: user.gender,
     notifyEmail: user.notifyEmail !== false,
     notifyComments: user.notifyComments !== false,
+    notifyPush: user.notifyPush !== false,
     role: user.role,
     hasPassword: user.hasPassword !== false,
     googleLinked: Boolean(user.googleId),
@@ -184,6 +186,8 @@ export async function logout(userId: string, currentToken: string): Promise<Stor
 export async function logoutAll(userId: string): Promise<StoreResponse> {
   try {
     await User.updateOne({ _id: userId }, { $set: { tokens: [] } });
+    // Sin sesiones abiertas, ningún teléfono debe seguir recibiendo push de esta cuenta
+    await PushToken.deleteMany({ user: userId });
     return { status: 200, message: { ok: true, message: 'Todas las sesiones fueron cerradas.' } };
   } catch (error) {
     return { status: 500, message: 'Error al cerrar sesiones.', detail: error };
@@ -738,6 +742,7 @@ export interface ProfileUpdate {
   gender?: unknown;
   notifyEmail?: unknown;
   notifyComments?: unknown;
+  notifyPush?: unknown;
 }
 
 const optionalText = (value: unknown): string | undefined =>
@@ -764,7 +769,7 @@ export async function updateProfile(userId: string, data: ProfileUpdate): Promis
       }
       user.gender = data.gender === null ? undefined : (String(data.gender) as 'M' | 'F' | 'N');
     }
-    for (const key of ['notifyEmail', 'notifyComments'] as const) {
+    for (const key of ['notifyEmail', 'notifyComments', 'notifyPush'] as const) {
       if (data[key] === undefined) continue;
       if (typeof data[key] !== 'boolean') return { status: 400, message: `${key} debe ser true o false.` };
       user[key] = data[key] as boolean;

@@ -531,3 +531,18 @@ Reemplaza la paleta anterior (Morado Noche `#1E1338`, Amarillo Araguaney `#F7A80
 - **Enlaces de invitación:** `inviteLink` usa `<API_URL>/join/CODIGO` (o `EXPO_PUBLIC_INVITE_URL`). La app escucha `expo-linking` (al abrir y con la app abierta) y entiende `entrepanas://join/…`, `exp://…/--/join/…` y `https://…/join/…` (`utils/deepLink.ts`).
 - **Verificación:** `tsc` (app y backend) y ESLint sin errores; todas las pruebas del backend en verde; recorrido en el navegador: perfil de cuenta Google → apagar avisos → crear contraseña; editar perfil; enlace con y sin sesión; tips en Chats.
 
+### 2026-10-26 — Notificaciones en la app y push con Expo
+
+- **Backend:**
+  - Colección `PushToken` y `POST/DELETE /api/push/token`. Cada notificación nueva de la campana sale también como push por Expo (`services/push.ts`), con su destino en `data` y el número de no leídas como `badge`.
+  - Se respeta `notifyPush` (nuevo en el usuario), `notifyComments` para comentarios, respuestas y chat, y no se mandan recordatorios como push de 9 p. m. a 8 a. m.
+  - Los tokens que Expo reporta como no registrados se borran; «Cerrar todas las sesiones» quita los teléfonos de la cuenta.
+  - Panel: «Notificaciones push» en las preferencias del usuario. Pruebas en `test/push.test.ts`.
+- **App:**
+  - Pantalla Notificaciones con datos reales (`NotificationsContainer`): nombre del grupo, marcar todo leído, tocar = leída + destino, mantener presionada = borrar, deslizar para recargar, estados de carga, error y vacío. Se quitó `mocks/notifications.ts`.
+  - `useNotificationSync`: consulta cada minuto con la app abierta y al volver a ella; registra el teléfono para push; al tocar una push abre su destino (también con la app cerrada).
+  - `expo-notifications` y `expo-device` (canal «Avisos de EntrePanas», ícono `assets/notification-icon.png`). En Expo Go Android el módulo no se carga y todo sigue por consulta.
+  - Perfil: interruptor «Notificaciones push». Al cerrar sesión el teléfono deja de recibir push de la cuenta.
+  - `eas.json` con el perfil `preview` (APK) para probar las push.
+- **Verificación:** `tsc` (app, backend y panel) y ESLint sin errores; todas las pruebas del backend en verde (8 nuevas de push); recorrido en el navegador: lista, filtros, marcar todo leído, borrar, tocar → destino, interruptor de push.
+
