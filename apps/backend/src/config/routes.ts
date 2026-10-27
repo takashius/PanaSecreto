@@ -9,6 +9,7 @@ import tipRouter from '../components/tip/network';
 import notificationRouter from '../components/notification/network';
 import pushRouter from '../components/push/network';
 import groupChatRouter, { chatListRouter } from '../components/chat/network';
+import legalRouter from '../components/legal/network';
 import { healthRouter } from '../routes/health.routes';
 import { inviteRouter } from '../routes/invite.routes';
 
@@ -26,6 +27,10 @@ export default function registerRoutes(app: Express) {
   // Módulo de Configuración del Sistema
   app.use('/config', configRouter);
   app.use('/api/config', configRouter);
+
+  // Términos, privacidad y baja de servicio (público + admin)
+  app.use('/legal', legalRouter);
+  app.use('/api/legal', legalRouter);
 
   // Estadísticas para el dashboard administrativo
   app.use('/api/stats', statsRouter);

@@ -4,6 +4,7 @@ import { ROLES } from '../config/roles';
 import { SystemConfig, DEFAULT_CONFIG } from '../components/config/model';
 import { seedAliasSuggestions } from '../components/alias/store';
 import { seedTips } from '../components/tip/store';
+import { seedLegalDocuments } from '../components/legal/store';
 
 /** Catálogos editables desde el panel (alias y tips): se siembran solo si están vacíos */
 export async function seedCatalogs(): Promise<void> {
@@ -18,6 +19,11 @@ export async function seedCatalogs(): Promise<void> {
 
 export async function seedAppData(): Promise<void> {
   await seedCatalogs();
+  try {
+    await seedLegalDocuments();
+  } catch (error) {
+    console.warn('[Seed] Advertencia al sembrar documentos legales:', (error as Error).message);
+  }
   try {
     const adminEmail = config.userAdminEmail.trim().toLowerCase();
     const existing = await User.findOne({ email: adminEmail });

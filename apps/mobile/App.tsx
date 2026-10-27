@@ -32,6 +32,7 @@ import { EditGroupContainer, ExclusionsContainer, GroupDetailContainer, RevealCo
 import { MyWishesContainer, WishDetailContainer, WishFormContainer } from './src/screens/wishes/WishScreens';
 import { CHAT_UNREAD_KEY, fetchChatUnread, fetchNotificationsUnread, NOTIFICATIONS_UNREAD_KEY } from './src/api/badges';
 import LegalScreen from './src/screens/legal/LegalScreen';
+import LegalAcceptanceScreen from './src/screens/legal/LegalAcceptanceScreen';
 import NotificationsContainer from './src/screens/notifications/NotificationsContainer';
 import JoinGroupScreen from './src/screens/group/JoinGroupScreen';
 import type { DashboardTab } from './src/components/common/FloatingTabBar';
@@ -47,7 +48,7 @@ void SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function AppContent() {
   // Pila de navegación para soportar el botón de atrás nativo de Android
-  const { status, user, sessionExpired, signIn, signOut } = useAuth();
+  const { status, user, sessionExpired, signIn, signOut, updateUser } = useAuth();
   const signedIn = status === 'signedIn';
   // Dos pilas: la de la app (con sesión) y la de autenticación (sin sesión)
   const [screenHistory, setScreenHistory] = useState<Array<Screen>>(['dashboard']);
@@ -223,7 +224,15 @@ function AppContent() {
   }, [activeHistory, signedIn, linkJoinCode]);
 
   let content: React.ReactNode;
-  if (!signedIn && currentScreen === 'register') {
+  if (signedIn && user?.needsLegalAcceptance) {
+    content = (
+      <LegalAcceptanceScreen
+        onAccepted={(profile) => {
+          updateUser(profile);
+        }}
+      />
+    );
+  } else if (!signedIn && currentScreen === 'register') {
     content = (
       <RegisterScreen
         onNavigateToLogin={goBack}

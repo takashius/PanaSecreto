@@ -17,7 +17,12 @@ import AliasList from '@pages/aliases/AliasList';
 import TipList from '@pages/tips/TipList';
 import PushPage from '@pages/push/PushPage';
 import Configuration from './pages/settings/Configuration';
+import LegalDocuments from './pages/settings/LegalDocuments';
 import Profile from './pages/profile/Profile';
+import PublicLegalLayout from '@components/legal/PublicLegalLayout';
+import TermsPage from '@pages/legal/TermsPage';
+import PrivacyPage from '@pages/legal/PrivacyPage';
+import ServiceCancellationPage from '@pages/legal/ServiceCancellationPage';
 import { ROLES, type UserRole } from './constants/roles';
 
 type AppChildRoute = {
@@ -89,7 +94,23 @@ export const routes: AppRoute[] = [
         protected: true,
         allowedRoles: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
       },
+      {
+        path: '/settings/legal',
+        element: <LegalDocuments />,
+        protected: true,
+        allowedRoles: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
+      },
       { path: '/profile', element: <Profile />, protected: true },
+    ],
+  },
+  {
+    path: '/',
+    element: <PublicLegalLayout />,
+    errorElement: <Error404 />,
+    children: [
+      { path: '/terminos', element: <TermsPage />, protected: false },
+      { path: '/privacidad', element: <PrivacyPage />, protected: false },
+      { path: '/baja-servicio', element: <ServiceCancellationPage />, protected: false },
     ],
   },
   {

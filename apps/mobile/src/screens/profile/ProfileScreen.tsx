@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image, StatusBar, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Image, StatusBar, ActivityIndicator, Linking } from 'react-native';
 import { Alert } from '../../components/common/AppDialog';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -17,10 +17,12 @@ import {
   FileText,
   LogOut,
   BellRing,
+  UserX,
 } from 'lucide-react-native';
 import { theme, profileStyles as styles } from '../../styles';
 import { BRAND_ISOTIPO } from '../../constants/brand';
 import { APP_VERSION } from '../../constants/app';
+import { publicLegalUrl } from '../../constants/webUrl';
 import { ContactModal } from '../../components/profile/ContactModal';
 import { FloatingTabBar, type DashboardTab } from '../../components/common/FloatingTabBar';
 import { MenuRow } from '../../components/profile/MenuRow';
@@ -218,6 +220,13 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
               title="Política de privacidad"
               subtitle="Qué datos guardamos y cómo los cuidamos"
               onPress={() => onOpenLegal('privacidad')}
+              divider
+            />
+            <MenuRow
+              icon={UserX}
+              title="Baja de servicio"
+              subtitle="Solicitar eliminación de cuenta (web pública)"
+              onPress={() => void Linking.openURL(publicLegalUrl('baja-servicio'))}
               divider
             />
             <MenuRow

@@ -61,3 +61,14 @@ export const recoverySubmitRateLimiter = rateLimit({
     message: 'Demasiados intentos de verificación de código de recuperación.',
   },
 });
+
+export const legalCancellationRateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: limit(5),
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    code: 'RATE_LIMITED',
+    message: 'Demasiadas solicitudes de baja desde esta conexión. Intenta más tarde.',
+  },
+});

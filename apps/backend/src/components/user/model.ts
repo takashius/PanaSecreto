@@ -60,6 +60,12 @@ const userSchema = new Schema<IUserDocument>(
         date: { type: Date, default: Date.now },
       },
     ],
+    /** Versión de términos aceptada (0 = ninguna) */
+    termsAcceptedVersion: { type: Number, default: 0, min: 0 },
+    termsAcceptedAt: { type: Date },
+    /** Versión de política de privacidad aceptada */
+    privacyAcceptedVersion: { type: Number, default: 0, min: 0 },
+    privacyAcceptedAt: { type: Date },
   },
   {
     timestamps: true,

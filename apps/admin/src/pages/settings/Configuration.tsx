@@ -118,6 +118,14 @@ export default function Configuration() {
         loading={isLoading || updateMutation.isPending}
       />
 
+      <Card className="mb-6" size="small">
+        <Space direction="vertical" size={4}>
+          <Text strong>{t('menu.legal')}</Text>
+          <Text type="secondary">{t('legalEditor.pageDescription')}</Text>
+          <Link to="/settings/legal">{t('legalEditor.pageTitle')} →</Link>
+        </Space>
+      </Card>
+
       <Form
         form={form}
         layout="vertical"

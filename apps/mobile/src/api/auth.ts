@@ -8,6 +8,8 @@ export interface SessionPayload extends SessionUser {
   isNew?: boolean;
 }
 
+export { acceptLegal } from './legal';
+
 export interface RegisterInput {
   name: string;
   lastName?: string;

@@ -20,6 +20,13 @@ export interface SessionUser {
   hasPassword?: boolean;
   googleLinked?: boolean;
   forcePasswordChangeOnNextLogin?: boolean;
+  termsVersion?: number;
+  privacyVersion?: number;
+  termsAcceptedVersion?: number;
+  privacyAcceptedVersion?: number;
+  needsTermsAcceptance?: boolean;
+  needsPrivacyAcceptance?: boolean;
+  needsLegalAcceptance?: boolean;
 }
 
 export interface CreatedGroupDraft {

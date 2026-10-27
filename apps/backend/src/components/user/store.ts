@@ -23,6 +23,7 @@ import { recoveryCodeEmail } from '../../services/mailTemplates';
 import { notifyAccountCreated, notifyPasswordChanged, notifyWelcome } from '../../services/notifications';
 import type { GoogleProfile } from '../../services/google';
 import { AuthTicket } from './authTicket.model';
+import { legalFieldsForUser, stampLegalAcceptance } from '../legal/legalUser';
 
 const MAX_RECOVERY_ATTEMPTS = 5;
 const RECOVERY_CODE_MINUTES = 15;
@@ -63,7 +64,8 @@ function displayFullName(user: { name?: string; lastName?: string }): string {
 const PUBLIC_USER_FIELDS = '-password -tokens -__v -recoveryCode -recoveryCodeExpires -recoveryAttempts -googleId';
 
 /** Respuesta de sesión común a login, registro y Google */
-function sessionPayload(user: IUserDocument, token: string, extra: Record<string, unknown> = {}) {
+async function sessionPayload(user: IUserDocument, token: string, extra: Record<string, unknown> = {}) {
+  const legal = await legalFieldsForUser(user);
   return {
     _id: String(user._id),
     name: user.name,
@@ -81,6 +83,7 @@ function sessionPayload(user: IUserDocument, token: string, extra: Record<string
     googleLinked: Boolean(user.googleId),
     forcePasswordChangeOnNextLogin: user.forcePasswordChangeOnNextLogin,
     token,
+    ...legal,
     ...extra,
   };
 }
@@ -111,7 +114,7 @@ export async function login(
     }
 
     const token = await user.generateAuthToken();
-    return { status: 200, message: sessionPayload(user, token) };
+    return { status: 200, message: await sessionPayload(user, token) };
   } catch (error) {
     return {
       status: 400,
@@ -157,10 +160,11 @@ export async function register(data: {
       active: true,
     });
 
+    await stampLegalAcceptance(user);
     await user.save();
     notifyWelcome(recipientOf(user));
     const token = await user.generateAuthToken();
-    return { status: 201, message: sessionPayload(user, token) };
+    return { status: 201, message: await sessionPayload(user, token) };
   } catch (error) {
     const safe = describeSaveError(error, 'Error al registrar usuario.');
     return {
@@ -200,9 +204,30 @@ export async function getProfile(userId: string): Promise<StoreResponse> {
     if (!user) {
       return { status: 404, message: 'Usuario no encontrado.' };
     }
-    return { status: 200, message: user };
+    const legal = await legalFieldsForUser(user);
+    const doc = user.toObject();
+    return {
+      status: 200,
+      message: {
+        ...doc,
+        _id: String(doc._id),
+        ...legal,
+      },
+    };
   } catch (error) {
     return { status: 500, message: 'Error al consultar perfil.', detail: error };
+  }
+}
+
+export async function acceptUserLegal(userId: string): Promise<StoreResponse> {
+  try {
+    const user = await User.findById(userId);
+    if (!user) return { status: 404, message: 'Usuario no encontrado.' };
+    await stampLegalAcceptance(user);
+    await user.save();
+    return await getProfile(userId);
+  } catch (error) {
+    return { status: 500, message: 'Error al registrar la aceptación legal.', detail: error };
   }
 }
 
@@ -437,6 +462,7 @@ export async function loginWithGoogle(profile: GoogleProfile, client?: 'web' | '
         role: [ROLES.USER],
         active: true,
       });
+      await stampLegalAcceptance(user);
     }
     if (client === 'web' && !canAccessWeb(user.role)) {
       return {
@@ -450,7 +476,7 @@ export async function loginWithGoogle(profile: GoogleProfile, client?: 'web' | '
     // generateAuthToken guarda el documento (incluye el vínculo o la cuenta nueva)
     const token = await user.generateAuthToken();
     if (isNew) notifyWelcome(recipientOf(user));
-    return { status: isNew ? 201 : 200, message: sessionPayload(user, token, { isNew }) };
+    return { status: isNew ? 201 : 200, message: await sessionPayload(user, token, { isNew }) };
   } catch (error) {
     const safe = describeSaveError(error, 'Error al iniciar sesión con Google.');
     return { status: safe.status, message: safe.message, detail: error };
@@ -482,7 +508,7 @@ export async function exchangeAuthTicket(ticket: unknown): Promise<StoreResponse
     if (!found) return invalid;
     const user = await User.findOne({ _id: found.user, 'tokens.token': found.token });
     if (!user || user.active === false) return invalid;
-    return { status: 200, message: sessionPayload(user, found.token, { isNew: found.newAccount }) };
+    return { status: 200, message: await sessionPayload(user, found.token, { isNew: found.newAccount }) };
   } catch (error) {
     return { status: 500, message: 'Error al completar el inicio de sesión.', detail: error };
   }

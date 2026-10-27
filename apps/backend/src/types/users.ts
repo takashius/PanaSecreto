@@ -32,6 +32,10 @@ export interface IUser {
   googleId?: string;
   /** false si la cuenta se creó con Google y aún no tiene contraseña propia */
   hasPassword?: boolean;
+  termsAcceptedVersion?: number;
+  termsAcceptedAt?: Date;
+  privacyAcceptedVersion?: number;
+  privacyAcceptedAt?: Date;
 }
 
 export interface IUserDocument extends IUser, Document {

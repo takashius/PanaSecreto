@@ -174,6 +174,16 @@ router.get('/me', auth(), async (req: IGetUserAuthInfoRequest, res: Response) =>
   }
 });
 
+// Aceptar términos y privacidad vigentes (obligatorio tras cambios)
+router.post('/accept-legal', auth(), async (req: IGetUserAuthInfoRequest, res: Response) => {
+  try {
+    const result = await controller.acceptLegal(req.user!._id);
+    sendOrError(res, result, controllerError, req);
+  } catch (error) {
+    controllerError(error, req, res);
+  }
+});
+
 // Actualizar datos de perfil (nombre, apellido, teléfono, password)
 router.patch('/me', auth(), async (req: IGetUserAuthInfoRequest, res: Response) => {
   try {

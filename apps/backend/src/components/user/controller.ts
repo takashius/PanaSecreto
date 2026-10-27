@@ -42,6 +42,10 @@ export function getUserProfile(userId: string) {
   return store.getProfile(userId);
 }
 
+export function acceptLegal(userId: string) {
+  return store.acceptUserLegal(userId);
+}
+
 function invalidNewPassword(newPass: unknown) {
   return typeof newPass !== 'string' || newPass.length < 6;
 }
