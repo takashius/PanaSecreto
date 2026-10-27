@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { StatusBar, Platform, BackHandler, View, Image, ActivityIndicator } from 'react-native';
+import { StatusBar, Platform, BackHandler } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as NavigationBar from 'expo-navigation-bar';
 import * as Linking from 'expo-linking';
 import { useFonts } from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
 import { Fredoka_600SemiBold, Fredoka_700Bold } from '@expo-google-fonts/fredoka';
 import {
   Nunito_400Regular,
@@ -24,8 +25,6 @@ import { ProfileContainer, EditProfileContainer, ChangePasswordContainer } from 
 import { Alert, AppDialogHost } from './src/components/common/AppDialog';
 import { AuthProvider, useAuth } from './src/auth/AuthContext';
 import type { SessionPayload } from './src/api/auth';
-import { BRAND_LOGO } from './src/constants/brand';
-import { authStyles } from './src/styles';
 import { useApiQuery } from './src/api/queryStore';
 import { fetchQuery } from './src/api/queryStore';
 import { fetchMyGroups, MY_GROUPS_KEY } from './src/api/groups';
@@ -43,6 +42,8 @@ import { useNotificationSync } from './src/hooks/useNotificationSync';
 import { useChatSync } from './src/hooks/useChatSync';
 
 type Screen = 'login' | 'register' | 'recover' | 'dashboard' | 'createGroup' | 'groupDetail' | 'wishDetail' | 'myWishes' | 'wishForm' | 'chats' | 'chatRoom' | 'profile' | 'editProfile' | 'changePassword' | 'notifications' | 'joinGroup' | 'exclusions' | 'editGroup' | 'reveal' | 'legal';
+
+void SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function AppContent() {
   // Pila de navegación para soportar el botón de atrás nativo de Android
@@ -152,6 +153,12 @@ function AppContent() {
     Nunito_800ExtraBold,
     Nunito_900Black,
   });
+
+  useEffect(() => {
+    if (!(fontsLoaded || fontError)) return;
+    if (status === 'restoring') return;
+    void SplashScreen.hideAsync();
+  }, [fontsLoaded, fontError, status]);
 
   const navigateTo = (screen: Screen) => {
     const push = (prev: Screen[]) => [...prev, screen];
@@ -425,21 +432,9 @@ function AppContent() {
   }
 
   // Mientras cargan las fuentes se muestra el fondo de marca; si fallan, se sigue con las del sistema
-  if (!fontsLoaded && !fontError) {
-    return <SafeAreaProvider style={{ flex: 1, backgroundColor: theme.colors.surface }} />;
-  }
-
-  // Restaurando la sesión guardada (token en el almacenamiento seguro)
-  if (status === 'restoring') {
-    return (
-      <SafeAreaProvider style={{ flex: 1, backgroundColor: theme.colors.surface }}>
-        <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
-        <View style={authStyles.splash} accessibilityLabel="Cargando EntrePanas">
-          <Image source={BRAND_LOGO} style={authStyles.splashLogo} />
-          <ActivityIndicator color={theme.colors.primary} size="large" />
-        </View>
-      </SafeAreaProvider>
-    );
+  // Fuentes y sesión: se mantiene el splash nativo hasta que todo esté listo (evita flash gris o icono por defecto).
+  if ((!fontsLoaded && !fontError) || status === 'restoring') {
+    return null;
   }
 
   return (
