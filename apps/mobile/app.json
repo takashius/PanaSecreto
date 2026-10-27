@@ -25,7 +25,10 @@
       },
       "package": "com.erdesarrollo.entrepanas",
       "edgeToEdgeEnabled": true,
-      "softwareKeyboardLayoutMode": "resize"
+      "softwareKeyboardLayoutMode": "resize",
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "androidStatusBar": {
       "translucent": true,
@@ -69,6 +72,9 @@
     "extra": {
       "expo-navigation-bar": {
         "enforceContrast": false
+      },
+      "eas": {
+        "projectId": "243852c0-18bb-4a0a-835c-f2a6ba6f9d7c"
       }
     },
     "runtimeVersion": {
