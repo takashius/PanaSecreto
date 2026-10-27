@@ -57,9 +57,8 @@ export function useNotificationSync(signedIn: boolean, unread: number | undefine
             .catch(() => undefined)
             .finally(() => void refreshNotifications());
         }
-        if (data.groupId && data.target) {
-          openRef.current({ groupId: data.groupId, target: { screen: data.target, wishId: data.wishId ?? undefined } });
-        }
+        // Sin grupo (avisos generales del panel) se abre la lista de notificaciones
+        openRef.current({ groupId: data.groupId ?? null, target: { screen: data.target ?? 'group', wishId: data.wishId ?? undefined } });
       },
     });
 

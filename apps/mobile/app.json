@@ -24,6 +24,7 @@
         "backgroundColor": "#FEC414"
       },
       "package": "com.erdesarrollo.entrepanas",
+      "googleServicesFile": "./assets/google-services.json",
       "edgeToEdgeEnabled": true,
       "softwareKeyboardLayoutMode": "resize",
       "permissions": [

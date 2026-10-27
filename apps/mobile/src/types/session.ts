@@ -233,7 +233,8 @@ export interface ProfileView {
 }
 
 /** Tipo de notificación (define ícono y a dónde lleva al tocarla) */
-export type NotificationKind = 'comment' | 'reply' | 'draw' | 'join' | 'reminder' | 'reveal' | 'chat';
+/** 'announcement' = aviso enviado por la administración desde el panel */
+export type NotificationKind = 'comment' | 'reply' | 'draw' | 'join' | 'reminder' | 'reveal' | 'chat' | 'announcement';
 
 export interface AppNotification {
   id: string;

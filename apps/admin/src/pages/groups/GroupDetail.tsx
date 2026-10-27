@@ -1,6 +1,14 @@
 import { Alert, App, Avatar, Button, Card, Descriptions, Spin, Table, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { CheckCircleOutlined, ClockCircleOutlined, DeleteOutlined, EnvironmentOutlined, LockOutlined, UserOutlined } from '@ant-design/icons';
+import {
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  DeleteOutlined,
+  EnvironmentOutlined,
+  LockOutlined,
+  NotificationOutlined,
+  UserOutlined,
+} from '@ant-design/icons';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import PageHeader from '@components/PageHeader';
@@ -132,9 +140,14 @@ export default function GroupDetail() {
         onRefresh={() => void refetch()}
         loading={isFetching}
         extra={
-          <Button danger icon={<DeleteOutlined />} onClick={confirmDelete} loading={deleteMutation.isPending}>
-            {t('groupsManagement.deleteGroup')}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Link to={`/push?group=${group.id}`}>
+              <Button icon={<NotificationOutlined />}>{t('push.sendToGroup')}</Button>
+            </Link>
+            <Button danger icon={<DeleteOutlined />} onClick={confirmDelete} loading={deleteMutation.isPending}>
+              {t('groupsManagement.deleteGroup')}
+            </Button>
+          </div>
         }
       />
 

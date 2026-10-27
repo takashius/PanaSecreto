@@ -165,3 +165,38 @@ export async function pushForNotifications(sources: PushSource[], now: Date = ne
   const { sent } = await sendPushMessages(messages);
   return sent;
 }
+
+/**
+ * Push directa (sin guardarla en la campana) a una lista de usuarios: avisos del panel.
+ * Respeta cuenta activa y `notifyPush`. Devuelve cuántos teléfonos la recibieron.
+ */
+export async function pushToUsers(
+  userIds: Types.ObjectId[],
+  content: { title: string; body: string; data?: Record<string, string | null> }
+): Promise<{ devices: number; sent: number; removed: number }> {
+  if (userIds.length === 0) return { devices: 0, sent: 0, removed: 0 };
+  const allowed = await User.find({ _id: { $in: userIds }, active: { $ne: false }, notifyPush: { $ne: false } })
+    .select('_id')
+    .lean();
+  const ids = allowed.map((u) => u._id);
+  const [tokens, unread] = await Promise.all([
+    PushToken.find({ user: { $in: ids } }).select('user token').lean(),
+    Notification.aggregate<{ _id: Types.ObjectId; n: number }>([
+      { $match: { user: { $in: ids }, readAt: null } },
+      { $group: { _id: '$user', n: { $sum: 1 } } },
+    ]),
+  ]);
+  const badge = new Map(unread.map((u) => [String(u._id), u.n]));
+  const messages: ExpoPushMessage[] = tokens.map((t) => ({
+    to: t.token,
+    title: content.title,
+    body: content.body,
+    data: { kind: 'announcement', ...(content.data ?? {}) },
+    sound: 'default',
+    channelId: ANDROID_CHANNEL_ID,
+    priority: 'high',
+    badge: badge.get(String(t.user)) ?? 0,
+  }));
+  const { sent, removed } = await sendPushMessages(messages);
+  return { devices: messages.length, sent, removed };
+}

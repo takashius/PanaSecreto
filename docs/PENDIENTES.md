@@ -72,6 +72,7 @@ Lista viva de lo que falta después de maquetar la app móvil (22 de octubre de 
   - El «tipo» se resolvió con la pantalla `general`: un tip es general si tiene esa pantalla.
 - [x] **Grupos:** lugar del encuentro (con enlace al mapa) y nota en el detalle; columna «Alias» con elegido/pendiente (sin mostrar cuál, por anonimato) y apodo junto al nombre.
 - [x] **Usuarios:** apodo y género en el detalle, y tarjeta «Preferencias en la app» con los correos encendidos o apagados (solo lectura: las cambia la persona).
+- [x] **Notificaciones push (27/10/2026):** avisos a todos, a un grupo o a usuarios elegidos, con alcance, vista previa, opción de guardarlos en la campana e historial (ver `docs/NOTIFICACIONES.md`).
 - [ ] **Opcional:** moderación de comentarios y mensajes del chat reportados (falta también en el backend).
 
 ---

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Card, Descriptions, Tag, Button, Modal, Input, message, Spin, Switch } from 'antd';
-import { CheckCircleOutlined, KeyOutlined, StopOutlined } from '@ant-design/icons';
+import { CheckCircleOutlined, KeyOutlined, NotificationOutlined, StopOutlined } from '@ant-design/icons';
 import GenderTag from '@components/catalogs/GenderTag';
 import { useTranslation } from 'react-i18next';
 import { useUser, useSetUserPassword, useSetUserForcePasswordChange } from '@api/users';
@@ -73,12 +73,17 @@ export default function UserDetail() {
         description={`Detalle del perfil y opciones de cuenta (${user.email})`}
         onRefresh={() => void refetch()}
         extra={
-          <Button
-            icon={<KeyOutlined />}
-            onClick={() => setPasswordModal(true)}
-          >
-            {t('usersManagement.resetPassword')}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Link to={`/push?user=${user._id}`}>
+              <Button icon={<NotificationOutlined />}>{t('push.sendToUser')}</Button>
+            </Link>
+            <Button
+              icon={<KeyOutlined />}
+              onClick={() => setPasswordModal(true)}
+            >
+              {t('usersManagement.resetPassword')}
+            </Button>
+          </div>
         }
       />
 

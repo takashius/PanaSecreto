@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -7,10 +7,9 @@ import {
   ScrollView,
   Image,
   Linking,
-  KeyboardAvoidingView,
-  Platform,
   ActivityIndicator,
 } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { Alert } from '../../components/common/AppDialog';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -31,6 +30,7 @@ import { WISH_CATEGORIES } from '../../constants/wishCategories';
 import { CommentItem } from '../../components/wish/CommentItem';
 import type { WishComment, WishDetailView } from '../../types/session';
 import { TipCard } from '../../components/common/TipCard';
+import { useKeyboardLiftStyle } from '../../hooks/useKeyboardLiftStyle';
 
 const CURRENCY = { USD: '$', VES: 'Bs. ' } as const;
 const MAX_COMMENT = 500;
@@ -68,6 +68,8 @@ export const WishDetailScreen: React.FC<WishDetailScreenProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
+  const scrollToEnd = useCallback(() => scrollRef.current?.scrollToEnd({ animated: true }), []);
+  const keyboardLiftStyle = useKeyboardLiftStyle({ onKeyboardShow: scrollToEnd });
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
 
@@ -130,7 +132,7 @@ export const WishDetailScreen: React.FC<WishDetailScreenProps> = ({
         )}
       </View>
 
-      <KeyboardAvoidingView behavior="padding" enabled={Platform.OS === 'ios'} style={{ flex: 1 }}>
+      <Animated.View style={[{ flex: 1 }, keyboardLiftStyle]}>
         <ScrollView
           ref={scrollRef}
           contentContainerStyle={styles.scrollContent}
@@ -296,7 +298,7 @@ export const WishDetailScreen: React.FC<WishDetailScreenProps> = ({
           </View>
         </View>
         )}
-      </KeyboardAvoidingView>
+      </Animated.View>
     </SafeAreaView>
   );
 };

@@ -11,6 +11,7 @@ import {
   PartyPopper,
   MessagesSquare,
   BellRing,
+  Megaphone,
   type LucideIcon,
 } from 'lucide-react-native';
 import { theme, notificationsStyles as styles } from '../../styles';
@@ -29,6 +30,7 @@ const KIND: Record<NotificationKind, { icon: LucideIcon; color: string; bg: stri
   join: { icon: UserPlus, color: theme.colors.accentDark, bg: theme.colors.accentContainer, filter: 'grupos' },
   reminder: { icon: Clock, color: theme.colors.textSecondary, bg: theme.colors.surfaceContainer, filter: 'grupos' },
   reveal: { icon: PartyPopper, color: theme.colors.coral, bg: theme.colors.coralContainer, filter: 'grupos' },
+  announcement: { icon: Megaphone, color: theme.colors.white, bg: theme.colors.accentDark, filter: 'grupos' },
 };
 
 const DAY = 86_400_000;

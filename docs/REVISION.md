@@ -562,3 +562,10 @@ Reemplaza la paleta anterior (Morado Noche `#1E1338`, Amarillo Araguaney `#F7A80
 - **Dependencia:** `socket.io-client` en la app (hay que correr `pnpm install`).
 - **Verificación:** `tsc` y ESLint sin errores; recorrido en el navegador contra un servidor simulado con el mismo contrato REST y socket del backend: lista → mensaje en vivo de otro pana (no leído +1) → sala → enviar → pista recibida y enviada → antispam → anteriores → sin alias → archivado → pestaña Chat del grupo.
 
+### 2026-10-27 — Panel: avisos push a usuarios
+
+- **Backend:** `PushCampaign` (historial) y rutas de administración en `/api/push/admin` (estadísticas, alcance, enviar, historial). Se envía solo a cuentas activas con push encendidas y teléfono registrado. Con «también en la campana» se crea la notificación (tipo nuevo `announcement`) para todos los elegidos y la push lleva su id para marcarla leída. Pruebas en `test/push-admin.test.ts`.
+- **Panel:** página «Notificaciones push» con tarjetas de resumen, destinatarios (todos / grupo / usuarios con buscador), título y mensaje con contador, vista previa en un teléfono, alcance antes de enviar, confirmación e historial. Botones de acceso directo en el detalle de usuario y de grupo.
+- **App:** las notificaciones `announcement` tienen ícono propio; una push sin grupo abre Notificaciones.
+- **Verificación:** `tsc` (backend, panel y app) y ESLint sin errores; todas las pruebas del backend en verde (6 nuevas); recorrido en el navegador del panel compilado con respuestas simuladas (escritorio y celular).
+

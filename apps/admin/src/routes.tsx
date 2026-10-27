@@ -15,6 +15,7 @@ import GroupList from '@pages/groups/GroupList';
 import GroupDetail from '@pages/groups/GroupDetail';
 import AliasList from '@pages/aliases/AliasList';
 import TipList from '@pages/tips/TipList';
+import PushPage from '@pages/push/PushPage';
 import Configuration from './pages/settings/Configuration';
 import Profile from './pages/profile/Profile';
 import { ROLES, type UserRole } from './constants/roles';
@@ -73,6 +74,12 @@ export const routes: AppRoute[] = [
       {
         path: '/tips',
         element: <TipList />,
+        protected: true,
+        allowedRoles: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
+      },
+      {
+        path: '/push',
+        element: <PushPage />,
         protected: true,
         allowedRoles: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
       },

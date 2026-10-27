@@ -1,11 +1,13 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Image, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Image, ActivityIndicator } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, EyeOff, VenetianMask, Hand, SendHorizontal, Archive, X, WifiOff, UserRound } from 'lucide-react-native';
 import { theme, chatsStyles as styles } from '../../styles';
 import { BRAND_ISOTIPO } from '../../constants/brand';
 import { MessageBubble } from '../../components/chat/MessageBubble';
 import { daysUntil } from '../../utils/format';
+import { useKeyboardLiftStyle } from '../../hooks/useKeyboardLiftStyle';
 import type { ChatMessage, ChatRoomSummary } from '../../types/session';
 
 /** Igual que CHAT_MESSAGE_MAX_LENGTH del backend */
@@ -63,6 +65,8 @@ export const ChatRoomScreen: React.FC<ChatRoomScreenProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
+  const scrollToEnd = useCallback(() => scrollRef.current?.scrollToEnd({ animated: true }), []);
+  const keyboardLiftStyle = useKeyboardLiftStyle({ onKeyboardShow: scrollToEnd });
   const [draft, setDraft] = useState('');
   const [pistaMode, setPistaMode] = useState(false);
 
@@ -111,7 +115,7 @@ export const ChatRoomScreen: React.FC<ChatRoomScreenProps> = ({
         </View>
       </View>
 
-      <KeyboardAvoidingView behavior="padding" enabled={Platform.OS === 'ios'} style={{ flex: 1 }}>
+      <Animated.View style={[{ flex: 1 }, keyboardLiftStyle]}>
         <ScrollView
           ref={scrollRef}
           style={{ flex: 1 }}
@@ -266,7 +270,7 @@ export const ChatRoomScreen: React.FC<ChatRoomScreenProps> = ({
             </View>
           </>
         )}
-      </KeyboardAvoidingView>
+      </Animated.View>
     </SafeAreaView>
   );
 };

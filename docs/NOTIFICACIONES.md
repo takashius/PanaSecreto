@@ -31,6 +31,21 @@ Hay dos canales y siempre salen juntos:
 - `services/push.ts`: arma los mensajes (título, texto, `data` con `notificationId`, `kind`, `target`, `groupId`, `wishId`; `badge` = no leídas; canal Android `default`), los envía en bloques de 100 y borra los tokens que Expo marca como `DeviceNotRegistered`. Los teléfonos que no abren la app en 120 días se olvidan solos.
 - Variables (opcionales): `PUSH_TRANSPORT` (`expo` o `log`), `EXPO_ACCESS_TOKEN` (solo si activas «Enhanced push security» en expo.dev), `PUSH_TIMEZONE`.
 
+## Avisos desde el panel web (Notificaciones push)
+
+Menú **Notificaciones push** (solo administradores):
+
+- **Destinatarios:** todos, los miembros de un grupo o usuarios elegidos (buscador por nombre o correo, hasta 500). También se llega con los destinatarios ya puestos desde el detalle de un usuario («Enviar push») o de un grupo («Enviar push al grupo»).
+- **Alcance antes de enviar:** elegidos, sin la app instalada, con las push apagadas y cuántos lo recibirán (personas y teléfonos).
+- **Título** (80) y **mensaje** (240) con vista previa en un teléfono.
+- **«Guardar también en la campana de la app»:** queda en Notificaciones de todos los elegidos, aunque no tengan push.
+- Al tocar la push: si fue para un grupo abre el grupo; si no, abre Notificaciones.
+- **Historial** con fecha, destinatarios, entregadas y quién lo envió.
+
+Solo llega a cuentas activas con las push encendidas y al menos un teléfono registrado; no se aplican las horas de descanso.
+
+API (rol ADMIN o SUPER_ADMIN): `GET /api/push/admin/stats`, `GET /api/push/admin/audience?audience=all|group|users&groupId=&userIds=`, `POST /api/push/admin/send { audience, groupId?, userIds?, title, body, inApp? }`, `GET /api/push/admin/campaigns`.
+
 ## App
 
 - `hooks/useNotificationSync.ts`: con sesión, consulta la campana cada minuto con la app abierta y al volver a ella; registra el teléfono para push; al llegar una push recarga; al tocarla la marca leída y abre su destino (también si la app estaba cerrada).
@@ -42,10 +57,7 @@ Hay dos canales y siempre salen juntos:
 Expo envía a Android a través de Firebase Cloud Messaging (FCM), así que el build necesita credenciales de FCM:
 
 1. **Firebase:** en <https://console.firebase.google.com> crea un proyecto (puedes elegir el mismo proyecto de Google Cloud del inicio de sesión con Google) y agrega una app **Android** con el paquete `com.erdesarrollo.entrepanas`.
-2. Descarga `google-services.json`, guárdalo en `apps/mobile/` y agrega en `app.json`, dentro de `"android"`:
-   ```json
-   "googleServicesFile": "./google-services.json"
-   ```
+2. `google-services.json` está en `apps/mobile/assets/` y `app.json` ya lo usa (`"android.googleServicesFile": "./assets/google-services.json"`). Se puede subir al repositorio: solo trae identificadores públicos.
 3. **Clave de servidor (FCM V1):** Firebase → Configuración del proyecto → Cuentas de servicio → «Generar nueva clave privada». Súbela a Expo: en <https://expo.dev> → proyecto `panasecreto` → Credentials → Android → `com.erdesarrollo.entrepanas` → «FCM V1 service account key» (o con `eas credentials`). **No la subas al repositorio.**
 4. **Build:** `eas build -p android --profile preview` genera un APK instalable (perfil en `apps/mobile/eas.json`, apunta a la API de producción). Instálalo, inicia sesión y acepta el permiso de notificaciones.
 

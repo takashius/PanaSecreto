@@ -103,6 +103,8 @@ export const NotificationKindEnum = {
   JOIN: 'join',
   REMINDER: 'reminder',
   REVEAL: 'reveal',
+  /** Aviso enviado por la administración desde el panel */
+  ANNOUNCEMENT: 'announcement',
 } as const;
 
 export const NotificationKindSchema = z.enum([
@@ -113,6 +115,7 @@ export const NotificationKindSchema = z.enum([
   NotificationKindEnum.JOIN,
   NotificationKindEnum.REMINDER,
   NotificationKindEnum.REVEAL,
+  NotificationKindEnum.ANNOUNCEMENT,
 ]);
 
 export type NotificationKind = z.infer<typeof NotificationKindSchema>;

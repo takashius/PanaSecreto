@@ -101,7 +101,8 @@ function AppContent() {
   /** Al tocar una notificación: se marca leída y se abre su destino */
   const openNotification = (n: Pick<AppNotification, 'groupId' | 'target'>) => {
     const groupId = n.groupId;
-    if (!groupId) return;
+    // Solo llega sin grupo desde una push general del panel
+    if (!groupId) return navigateTo('notifications');
     const { screen, wishId } = n.target;
     if (screen === 'myWish' && wishId) openWish(groupId, wishId, 'owner');
     else if (screen === 'wish' && wishId) openWish(groupId, wishId, 'giver');

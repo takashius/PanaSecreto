@@ -123,8 +123,13 @@ export interface InAppItem {
  * Inserta notificaciones ignorando duplicados por dedupeKey y envía la push de las nuevas.
  * Devuelve cuántas se crearon. Un fallo de la push nunca afecta a la campana.
  */
-export async function insertInApp(items: InAppItem[]): Promise<number> {
-  if (items.length === 0) return 0;
+export async function insertInApp(items: InAppItem[], options: { push?: boolean } = {}): Promise<number> {
+  return (await insertInAppDocs(items, options)).length;
+}
+
+/** Igual que insertInApp, pero devuelve las notificaciones creadas (para enviarlas aparte) */
+export async function insertInAppDocs(items: InAppItem[], { push = true }: { push?: boolean } = {}): Promise<PushSource[]> {
+  if (items.length === 0) return [];
   const docs = items.map((i) => ({
     user: new Types.ObjectId(i.userId),
     kind: i.kind,
@@ -145,10 +150,10 @@ export async function insertInApp(items: InAppItem[]): Promise<number> {
     if (!onlyDuplicates) throw error;
     inserted = (e.insertedDocs ?? []) as PushSource[];
   }
-  if (inserted.length > 0) {
+  if (push && inserted.length > 0) {
     await pushForNotifications(inserted).catch((error) => console.error('[push] Falló el envío:', error));
   }
-  return inserted.length;
+  return inserted;
 }
 
 /** En segundo plano (no retrasa la respuesta) */
