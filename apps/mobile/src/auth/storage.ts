@@ -4,6 +4,7 @@ import type { SessionUser } from '../types/session';
 /** La sesión vive en el almacenamiento cifrado del teléfono (Keychain / Keystore) */
 const TOKEN_KEY = 'entrepanas.session.token';
 const USER_KEY = 'entrepanas.session.user';
+const REMEMBERED_EMAIL_KEY = 'entrepanas.auth.rememberedEmail';
 
 export interface StoredSession {
   token: string;
@@ -35,4 +36,20 @@ export async function clearSession(): Promise<void> {
     SecureStore.deleteItemAsync(TOKEN_KEY).catch(() => undefined),
     SecureStore.deleteItemAsync(USER_KEY).catch(() => undefined),
   ]);
+}
+
+export async function loadRememberedEmail(): Promise<string | null> {
+  try {
+    return await SecureStore.getItemAsync(REMEMBERED_EMAIL_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export async function saveRememberedEmail(email: string | null): Promise<void> {
+  if (email?.trim()) {
+    await SecureStore.setItemAsync(REMEMBERED_EMAIL_KEY, email.trim().toLowerCase());
+  } else {
+    await SecureStore.deleteItemAsync(REMEMBERED_EMAIL_KEY).catch(() => undefined);
+  }
 }

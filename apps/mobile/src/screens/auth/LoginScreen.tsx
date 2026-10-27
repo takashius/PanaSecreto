@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -12,12 +12,18 @@ import {
 } from 'react-native';
 import { Alert } from '../../components/common/AppDialog';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Mail, Lock, Eye, EyeOff, ShieldCheck } from 'lucide-react-native';
-import { GoogleIcon } from '../../components/common/GoogleIcon';
+import { Mail, Lock, Eye, EyeOff, ShieldCheck, Check, Fingerprint } from 'lucide-react-native';
 import * as authApi from '../../api/auth';
 import type { SessionPayload } from '../../api/auth';
 import { ApiError, errorMessage } from '../../api/client';
-import { signInWithGoogle } from '../../auth/google';
+import {
+  canUseBiometrics,
+  getEnrolledEmail,
+  offerBiometricAfterLogin,
+  promptBiometric,
+  readBiometricSecret,
+} from '../../auth/biometrics';
+import { loadRememberedEmail, saveRememberedEmail } from '../../auth/storage';
 import { isValidEmail } from '../../utils/validation';
 import {
   theme,
@@ -44,13 +50,47 @@ export default function LoginScreen({
 }: LoginScreenProps) {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberEmail, setRememberEmail] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [isFocusedIdentifier, setIsFocusedIdentifier] = useState(false);
   const [isFocusedPassword, setIsFocusedPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
-  const busy = loading || googleLoading;
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [enrolledEmail, setEnrolledEmail] = useState<string | null>(null);
+  const passwordRef = useRef<TextInput>(null);
+  const busy = loading;
   const [errors, setErrors] = useState<{ identifier?: string; password?: string }>({});
+
+  const emailNorm = identifier.trim().toLowerCase();
+  const showBiometric =
+    biometricAvailable && Boolean(enrolledEmail) && emailNorm.length > 0 && emailNorm === enrolledEmail;
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const [available, enrolled, saved] = await Promise.all([
+        canUseBiometrics(),
+        getEnrolledEmail(),
+        loadRememberedEmail(),
+      ]);
+      if (cancelled) return;
+      setBiometricAvailable(available);
+      setEnrolledEmail(enrolled);
+      if (saved) {
+        setIdentifier(saved);
+        setRememberEmail(true);
+        requestAnimationFrame(() => passwordRef.current?.focus());
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const finishLogin = async (session: SessionPayload, email: string, plainPassword: string) => {
+    await onLoginSuccess?.(session);
+    offerBiometricAfterLogin(email, plainPassword);
+  };
 
   const handleLogin = async () => {
     const newErrors: { identifier?: string; password?: string } = {};
@@ -73,8 +113,9 @@ export default function LoginScreen({
     setErrors({});
     setLoading(true);
     try {
+      await saveRememberedEmail(rememberEmail ? email : null);
       const session = await authApi.login(email, password);
-      await onLoginSuccess?.(session);
+      await finishLogin(session, email, password);
     } catch (error) {
       if (error instanceof ApiError && error.code === 'INVALID_CREDENTIALS') {
         setErrors({ password: 'Correo o contraseña incorrectos.' });
@@ -88,15 +129,30 @@ export default function LoginScreen({
     }
   };
 
-  const handleGoogle = async () => {
-    setGoogleLoading(true);
+  const handleBiometricLogin = async () => {
+    if (busy) return;
+    const confirmed = await promptBiometric('Entra a EntrePanas con huella o Face ID');
+    if (!confirmed) return;
+    const secret = await readBiometricSecret();
+    if (!secret) return;
+
+    setLoading(true);
     try {
-      const session = await signInWithGoogle();
-      if (session) await onLoginSuccess?.(session);
+      const session = await authApi.login(secret.email, secret.password);
+      setIdentifier(secret.email);
+      await saveRememberedEmail(rememberEmail ? secret.email : null);
+      await finishLogin(session, secret.email, secret.password);
     } catch (error) {
-      Alert.alert('Google', errorMessage(error));
+      if (error instanceof ApiError && error.code === 'INVALID_CREDENTIALS') {
+        Alert.alert(
+          'No pudimos entrar',
+          'Tu contraseña cambió o ya no es válida. Entra con tu correo y contraseña.'
+        );
+      } else {
+        Alert.alert('No pudimos iniciar sesión', errorMessage(error));
+      }
     } finally {
-      setGoogleLoading(false);
+      setLoading(false);
     }
   };
 
@@ -112,7 +168,6 @@ export default function LoginScreen({
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* 1. Header con el logo principal de EntrePanas y eslogan */}
           <View style={authStyles.headerSection}>
             <Image
               source={BRAND_LOGO}
@@ -125,14 +180,13 @@ export default function LoginScreen({
             </Text>
           </View>
 
-          {/* 2. Tarjeta Blanca del Formulario */}
           <View style={authStyles.card}>
             {notice ? (
               <View style={authStyles.noticeBanner} accessibilityRole="alert">
                 <Text style={authStyles.noticeText}>{notice}</Text>
               </View>
             ) : null}
-            {/* Campo: Correo o Usuario */}
+
             <View style={formStyles.formGroup}>
               <View style={formStyles.labelRow}>
                 <Text style={formStyles.label}>Correo electrónico</Text>
@@ -166,29 +220,18 @@ export default function LoginScreen({
                   autoCapitalize="none"
                   autoCorrect={false}
                   autoComplete="email"
-                  textContentType="emailAddress"
+                  textContentType="username"
                   returnKeyType="next"
                   editable={!busy}
+                  onSubmitEditing={() => passwordRef.current?.focus()}
                 />
               </View>
-              {errors.identifier && (
-                <Text style={formStyles.errorText}>{errors.identifier}</Text>
-              )}
+              {errors.identifier && <Text style={formStyles.errorText}>{errors.identifier}</Text>}
             </View>
 
-            {/* Campo: Contraseña */}
             <View style={formStyles.formGroup}>
               <View style={formStyles.labelRow}>
                 <Text style={formStyles.label}>Contraseña</Text>
-                <TouchableOpacity
-                  onPress={onNavigateToRecoverPassword}
-                  activeOpacity={0.7}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                >
-                  <Text style={formStyles.forgotPasswordLink}>
-                    ¿Olvidaste tu contraseña?
-                  </Text>
-                </TouchableOpacity>
               </View>
 
               <View
@@ -205,6 +248,7 @@ export default function LoginScreen({
                   style={formStyles.inputIcon}
                 />
                 <TextInput
+                  ref={passwordRef}
                   style={formStyles.inputField}
                   placeholder="••••••••••••"
                   placeholderTextColor={theme.colors.outline}
@@ -235,56 +279,61 @@ export default function LoginScreen({
                   )}
                 </TouchableOpacity>
               </View>
-              {errors.password && (
-                <Text style={formStyles.errorText}>{errors.password}</Text>
-              )}
+              {errors.password && <Text style={formStyles.errorText}>{errors.password}</Text>}
+
+              <View style={authStyles.loginOptionsRow}>
+                <TouchableOpacity
+                  style={authStyles.rememberRow}
+                  onPress={() => setRememberEmail((v) => !v)}
+                  activeOpacity={0.8}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: rememberEmail }}
+                >
+                  <View style={[formStyles.checkbox, rememberEmail && formStyles.checkboxActive]}>
+                    {rememberEmail && <Check size={14} color={theme.colors.onSecondaryContainer} />}
+                  </View>
+                  <Text style={authStyles.rememberLabel}>Recordar usuario</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={onNavigateToRecoverPassword}
+                  activeOpacity={0.7}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Text style={formStyles.forgotPasswordLink}>¿Olvidaste tu contraseña?</Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
-            {/* Botón Principal: Entrar al Intercambio */}
-            <TouchableOpacity
-              style={buttonStyles.btnPrimary}
-              onPress={() => void handleLogin()}
-              disabled={busy}
-              activeOpacity={0.85}
-            >
-              {loading ? (
-                <ActivityIndicator color={theme.colors.onSecondaryContainer} size="small" />
-              ) : (
-                <View style={commonStyles.rowCenter}>
-                  <Text style={buttonStyles.btnPrimaryText}>
-                    Entrar al Intercambio
-                  </Text>
-                  <Text style={buttonStyles.btnPrimaryEmoji}>🎁</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-
-            {/* Separador */}
-            <View style={commonStyles.dividerRow}>
-              <View style={commonStyles.dividerLine} />
-              <Text style={commonStyles.dividerText}>O ingresa con</Text>
-              <View style={commonStyles.dividerLine} />
-            </View>
-
-            {/* Botones de Inicio de Sesión Social */}
-            <View style={buttonStyles.socialButtonContainer}>
+            <View style={authStyles.loginActionsRow}>
               <TouchableOpacity
-                style={[buttonStyles.btnGoogle, busy && { opacity: 0.6 }]}
-                onPress={() => void handleGoogle()}
+                style={[buttonStyles.btnPrimary, authStyles.loginButtonFlex]}
+                onPress={() => void handleLogin()}
                 disabled={busy}
-                activeOpacity={0.8}
-                accessibilityRole="button"
-                accessibilityLabel="Continuar con Google"
+                activeOpacity={0.85}
               >
-                {googleLoading ? <ActivityIndicator color={theme.colors.primary} size="small" /> : <GoogleIcon size={20} />}
-                <Text style={buttonStyles.btnGoogleText}>
-                  {googleLoading ? 'Conectando con Google…' : 'Continuar con Google'}
-                </Text>
+                {loading ? (
+                  <ActivityIndicator color={theme.colors.onSecondaryContainer} size="small" />
+                ) : (
+                  <View style={commonStyles.rowCenter}>
+                    <Text style={buttonStyles.btnPrimaryText}>Entrar al Intercambio</Text>
+                    <Text style={buttonStyles.btnPrimaryEmoji}>🎁</Text>
+                  </View>
+                )}
               </TouchableOpacity>
+              {showBiometric ? (
+                <TouchableOpacity
+                  style={[authStyles.biometricButton, busy && authStyles.biometricButtonDisabled]}
+                  onPress={() => void handleBiometricLogin()}
+                  disabled={busy}
+                  accessibilityLabel="Entrar con huella o Face ID"
+                  activeOpacity={0.85}
+                >
+                  <Fingerprint size={26} color={theme.colors.white} strokeWidth={2.2} />
+                </TouchableOpacity>
+              ) : null}
             </View>
           </View>
 
-          {/* 3. Enlace de Registro */}
           <View style={buttonStyles.footerRow}>
             <Text style={buttonStyles.footerPrompt}>¿Aún no eres parte?</Text>
             <TouchableOpacity
@@ -296,12 +345,9 @@ export default function LoginScreen({
             </TouchableOpacity>
           </View>
 
-          {/* 4. Insignia de Confidencialidad y Anonimato */}
           <View style={commonStyles.badgeContainer}>
             <ShieldCheck size={16} color={theme.colors.secondaryDark} />
-            <Text style={commonStyles.badgeText}>
-              Anonimato 100% garantizado en cada sorteo
-            </Text>
+            <Text style={commonStyles.badgeText}>Anonimato 100% garantizado en cada sorteo</Text>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

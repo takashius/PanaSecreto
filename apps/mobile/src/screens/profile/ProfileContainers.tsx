@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Alert } from '../../components/common/AppDialog';
 import { useAuth } from '../../auth/AuthContext';
+import { refreshBiometricPassword } from '../../auth/biometrics';
 import { errorMessage } from '../../api/client';
 import * as profileApi from '../../api/profile';
 import { pushAvailable } from '../../notifications/push';
@@ -118,6 +119,7 @@ export const ChangePasswordContainer: React.FC<{ onDone: () => void; onCancel: (
 
   const handleSubmit = async (newPassword: string, currentPassword?: string) => {
     await profileApi.changePassword(newPassword, currentPassword);
+    if (user?.email) await refreshBiometricPassword(user.email, newPassword);
   };
 
   // La sesión se marca con contraseña al salir, para no redibujar el formulario mientras se ve el aviso

@@ -75,6 +75,12 @@
         }
       ],
       "expo-secure-store",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "EntrePanas usa Face ID para que entres más rápido con tu cuenta."
+        }
+      ],
       "expo-web-browser",
       [
         "expo-notifications",

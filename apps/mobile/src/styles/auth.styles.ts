@@ -65,6 +65,47 @@ export const authStyles = StyleSheet.create({
     lineHeight: 20,
   },
 
+  loginOptionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 4,
+    gap: 8,
+  },
+  rememberRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flexShrink: 1,
+  },
+  rememberLabel: {
+    fontFamily: theme.typography.fontFamily.body,
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.textSecondary,
+  },
+  loginActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 4,
+  },
+  loginButtonFlex: {
+    flex: 1,
+    marginTop: 0,
+  },
+  biometricButton: {
+    width: 52,
+    height: 52,
+    borderRadius: theme.radii.lg,
+    backgroundColor: theme.colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...theme.shadows.button,
+  },
+  biometricButtonDisabled: {
+    opacity: 0.45,
+  },
+
   // Tarjeta Blanca Principal del Formulario
   card: {
     backgroundColor: theme.colors.surfaceCard,
