@@ -50,6 +50,18 @@ export function setQueryData<T>(key: string, updater: (prev: T | undefined) => T
   setEntry(key, { data: updater(entries.get(key)?.data as T | undefined), updatedAt: Date.now() });
 }
 
+/** Como setQueryData, pero solo si ya hay datos guardados (no crea entradas vacías que frenen la carga) */
+export function updateQueryData<T>(key: string, updater: (prev: T) => T): void {
+  const current = entries.get(key)?.data as T | undefined;
+  if (current === undefined) return;
+  setEntry(key, { data: updater(current) });
+}
+
+/** Lo guardado para una consulta (sin suscribirse) */
+export function getQueryData<T>(key: string): T | undefined {
+  return entries.get(key)?.data as T | undefined;
+}
+
 /** true si alguna pantalla ya pidió esta consulta (sirve para refrescar solo lo que se usa) */
 export function hasQuery(key: string): boolean {
   return entries.has(key);

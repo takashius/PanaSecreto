@@ -645,6 +645,40 @@ export const chatsStyles = StyleSheet.create({
     color: theme.colors.textSecondary,
     textAlign: 'center',
   },
+  offlineBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 14,
+    backgroundColor: theme.colors.surfaceContainer,
+  },
+  offlineText: {
+    fontFamily: theme.typography.fontFamily.bodySemibold,
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.textSecondary,
+  },
+  olderButton: {
+    alignSelf: 'center',
+    minHeight: 32,
+    justifyContent: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: theme.colors.accentContainer,
+  },
+  olderText: {
+    fontFamily: theme.typography.fontFamily.bodyBold,
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.accentDark,
+  },
+  bubblePending: {
+    opacity: 0.6,
+  },
 });
 
 export default chatsStyles;

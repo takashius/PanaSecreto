@@ -58,7 +58,7 @@ export const ExclusionsScreen: React.FC<ExclusionsScreenProps> = ({ group, onSav
       Alert.alert('El sorteo no cuadra', 'Con estas reglas no hay forma de repartir los sobres. Quita alguna exclusión antes de guardar.');
       return;
     }
-    // Al conectar la API: PUT /api/group/:id/exclusions
+    // El contenedor guarda las exclusiones de cada miembro en la API
     onSave(rules);
   };
 

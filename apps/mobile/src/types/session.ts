@@ -1,6 +1,6 @@
 /**
- * Tipos de sesión y borradores usados por las pantallas maquetadas.
- * Se reemplazarán por los tipos de @panasecreto/shared al conectar la app con la API.
+ * Tipos de vista de la app: lo que muestran las pantallas, ya adaptado desde la API
+ * (los adaptadores viven en src/api y src/adapters).
  */
 export interface SessionUser {
   _id: string;
@@ -195,6 +195,8 @@ export interface ChatMessage {
   mine: boolean;
   /** 'pista' = indirecta para quien me regala (se resalta) */
   kind?: 'mensaje' | 'pista';
+  /** Solo mensajes propios mientras el servidor confirma */
+  pending?: boolean;
 }
 
 /** Resumen de la sala de chat de un grupo (un solo chat por grupo, sin chats individuales) */
@@ -203,14 +205,16 @@ export interface ChatRoomSummary {
   emoji: string;
   name: string;
   status: GroupStatus;
-  /** Mi alias en este grupo, p. ej. "Pana Llanero" */
-  myAlias: string;
+  /** Mi alias en este grupo, p. ej. "Pana Llanero" (null si aún no lo elijo) */
+  myAlias: string | null;
   myAvatar: string;
   membersCount: number;
   /** ISO del intercambio, para "Faltan N días" */
   exchangeAt: string;
   unread: number;
-  messages: ChatMessage[];
+  /** Después de la revelación el chat queda de solo lectura */
+  readOnly: boolean;
+  lastMessage: ChatMessage | null;
 }
 
 /** Datos del perfil propio que muestra y edita la app */

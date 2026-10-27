@@ -85,14 +85,14 @@ Lista viva de lo que falta después de maquetar la app móvil (22 de octubre de 
 - [x] **Perfil (26/10/2026):** editar nombre, apodo y teléfono; subir o quitar la foto (`DELETE /api/user/photo`, nuevo); interruptores de avisos; cambiar contraseña, o crearla si la cuenta es de Google. La foto también se puede elegir al registrarse.
 - [x] **Enlaces de invitación (26/10/2026):** el enlace que se comparte es `<API_PUBLIC_URL>/join/PANA-XXXX-XX`; esa página abre la app con `APP_LINK_BASE` (`entrepanas://` o, con Expo Go, `exp://IP:8081/--/`). La app abre «Unirse» con el código ya buscado; sin sesión, pide entrar primero.
   - [ ] Con la app instalada (build propio): enlaces https verificados (App Links / Universal Links) para abrir sin pasar por la página.
-- [ ] **Conectar con la API:**
+- [x] **Conectar con la API** (toda la app usa datos reales desde el 26/10/2026):
   - [x] Cliente HTTP (`src/api/client.ts`), sesión guardada en el teléfono y manejo de errores.
   - [x] Inicio (Mis Grupos): grupos reales, campana y chats con no leídos reales, tips de la pantalla `grupos` (22/10/2026).
   - [x] Crear grupo, detalle del grupo (Resumen y Mi sobre), editar, exclusiones, sortear, deshacer, revelar, finalizar, quitar panas, salir, eliminar y El Gran Día (22/10/2026).
   - [x] Elegir alias (5 sugerencias, «Ver otras 5», escribir el propio), unirse con código, Deseos (mi lista y la de mi pana), agregar/editar deseo con foto, prioridad, eliminar y detalle del deseo con comentarios anónimos (22/10/2026).
   - [x] Perfil, tips en todas las pantallas y enlaces de invitación (26/10/2026).
   - [x] Notificaciones: lista real, marcar leídas, borrar, destino al tocar, consulta cada minuto y push con Expo (26/10/2026).
-  - [ ] Push en el teléfono: crear las credenciales de FCM y hacer un build con EAS (pasos en `docs/NOTIFICACIONES.md`). En Expo Go Android no llegan.
-  - [ ] Chat del grupo (socket).
-  - Reemplazar los datos de ejemplo (`src/mocks`) pantalla por pantalla.
-  - Socket del chat.
+  - [x] Chat del grupo en tiempo real (Socket.io): lista, sala, pistas, solo lectura, antispam y vista previa en el detalle (26/10/2026).
+  - [x] Limpieza: sin datos de ejemplo (`src/mocks` eliminado) ni avisos de «Próximamente» (26/10/2026).
+- [ ] **Push en el teléfono:** crear las credenciales de FCM y hacer un build con EAS (pasos en `docs/NOTIFICACIONES.md`). En Expo Go Android no llegan.
+- [ ] **Pruebas de punta a punta** en el teléfono con la API de producción (flujo completo: registro → grupo → invitación → alias → deseos → sorteo → sobre → comentarios → chat → revelación).

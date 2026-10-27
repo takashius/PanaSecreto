@@ -68,7 +68,7 @@ export const EditGroupScreen: React.FC<EditGroupScreenProps> = ({ group, onSave,
     setSubmitted(true);
     if (hasErrors) return;
     const labels = exchangeLabels(iso);
-    // Al conectar la API: PATCH /api/group/:id (el backend valida con membersVersion)
+    // El contenedor envía PATCH /api/group/:id solo con lo que cambió
     onSave({
       ...group,
       emoji,

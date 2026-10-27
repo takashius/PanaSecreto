@@ -23,6 +23,9 @@ export const NETWORK_ERROR_MESSAGE = 'No pudimos conectar con EntrePanas. Revisa
 let authToken: string | null = null;
 let onUnauthorized: (() => void) | null = null;
 
+/** Token de la sesión actual (lo usa la conexión en tiempo real) */
+export const getAuthToken = (): string | null => authToken;
+
 export function setAuthToken(token: string | null): void {
   authToken = token;
 }

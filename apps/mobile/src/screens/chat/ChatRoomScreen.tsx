@@ -1,13 +1,14 @@
-import React, { useRef, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Image, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Image, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, EyeOff, VenetianMask, Hand, SendHorizontal, Archive, X } from 'lucide-react-native';
+import { ArrowLeft, EyeOff, VenetianMask, Hand, SendHorizontal, Archive, X, WifiOff, UserRound } from 'lucide-react-native';
 import { theme, chatsStyles as styles } from '../../styles';
 import { BRAND_ISOTIPO } from '../../constants/brand';
 import { MessageBubble } from '../../components/chat/MessageBubble';
 import { daysUntil } from '../../utils/format';
 import type { ChatMessage, ChatRoomSummary } from '../../types/session';
 
+/** Igual que CHAT_MESSAGE_MAX_LENGTH del backend */
 const MAX_MESSAGE = 500;
 const QUICK_EMOJIS = [
   { emoji: '🫓', label: 'Arepa' },
@@ -18,43 +19,75 @@ const QUICK_EMOJIS = [
   { emoji: '🎁', label: 'Regalo' },
 ];
 
-/** Mensaje propio creado localmente (mientras no hay sockets) */
-function localMessage(room: ChatRoomSummary, text: string, kind: ChatMessage['kind']): ChatMessage {
-  const now = new Date();
-  return { id: `local-${now.getTime()}`, alias: room.myAlias, avatar: room.myAvatar, text, at: now.toISOString(), mine: true, kind };
-}
+export type ClueAvailability = 'enabled' | 'notYet' | 'disabled';
 
 interface ChatRoomScreenProps {
-  room: ChatRoomSummary;
+  room: Pick<ChatRoomSummary, 'groupId' | 'name' | 'emoji' | 'membersCount' | 'exchangeAt' | 'myAlias'>;
+  messages: ChatMessage[];
+  /** Primera carga del historial */
+  loading?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
+  hasMore?: boolean;
+  loadingOlder?: boolean;
+  onLoadOlder?: () => void;
+  /** Después de la revelación: solo lectura */
+  readOnly: boolean;
+  /** Pistas: activas (grupo sorteado y con pistas), aún no (antes del sorteo) o apagadas en el grupo */
+  clues: ClueAvailability;
+  /** false mientras se reconecta el tiempo real */
+  online?: boolean;
+  /** Envía el mensaje; devuelve false si no salió (el texto vuelve al cuadro) */
+  onSend: (text: string, kind: 'mensaje' | 'pista') => Promise<boolean>;
+  /** Sin alias no se puede escribir */
+  onChooseAlias?: () => void;
   onNavigateBack: () => void;
-  /** Conserva los mensajes nuevos al volver (maqueta) */
-  onMessagesChange?: (groupId: string, messages: ChatMessage[]) => void;
 }
 
 /** Sala del chat grupal anónimo: todos escriben con su alias; las pistas se resaltan */
-export const ChatRoomScreen: React.FC<ChatRoomScreenProps> = ({ room, onNavigateBack, onMessagesChange }) => {
+export const ChatRoomScreen: React.FC<ChatRoomScreenProps> = ({
+  room,
+  messages,
+  loading = false,
+  error = null,
+  onRetry,
+  hasMore = false,
+  loadingOlder = false,
+  onLoadOlder,
+  readOnly,
+  clues,
+  online = true,
+  onSend,
+  onChooseAlias,
+  onNavigateBack,
+}) => {
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
-  const [messages, setMessages] = useState<ChatMessage[]>(room.messages);
   const [draft, setDraft] = useState('');
   const [pistaMode, setPistaMode] = useState(false);
 
-  const archived = room.status === 'REVEALED' || room.status === 'COMPLETED';
   const days = daysUntil(room.exchangeAt);
-  const lastMineId = [...messages].reverse().find((m) => m.mine)?.id;
+  const lastMineId = [...messages].reverse().find((m) => m.mine && !m.pending)?.id;
   const canSend = draft.trim().length > 0;
+  const lastId = messages[messages.length - 1]?.id ?? null;
 
-  const send = () => {
+  const send = async () => {
     const text = draft.trim();
     if (!text) return;
-    // Al conectar la app: socket.emit('chat:message', { groupId, text, kind }) y el servidor reparte a la sala
-    const next = [...messages, localMessage(room, text, pistaMode ? 'pista' : 'mensaje')];
-    setMessages(next);
+    const kind = pistaMode && clues === 'enabled' ? 'pista' : 'mensaje';
     setDraft('');
     setPistaMode(false);
-    onMessagesChange?.(room.groupId, next);
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 50);
+    const ok = await onSend(text, kind);
+    if (!ok) setDraft((d) => d || text);
   };
+
+  // Baja al final al abrir y cuando llega un mensaje nuevo (cargar anteriores no cambia el último)
+  useEffect(() => {
+    if (!lastId) return;
+    const t = setTimeout(() => scrollRef.current?.scrollToEnd({ animated: false }), 60);
+    return () => clearTimeout(t);
+  }, [lastId]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -72,7 +105,7 @@ export const ChatRoomScreen: React.FC<ChatRoomScreenProps> = ({ room, onNavigate
           <View style={styles.roomSubtitle}>
             <EyeOff size={13} color={theme.colors.textMuted} />
             <Text style={styles.roomSubtitleText} numberOfLines={1}>
-              Tú eres {room.myAlias} · {room.membersCount} panas
+              {room.myAlias ? `Tú eres ${room.myAlias}` : 'Aún sin alias'} · {room.membersCount} panas
             </Text>
           </View>
         </View>
@@ -81,10 +114,17 @@ export const ChatRoomScreen: React.FC<ChatRoomScreenProps> = ({ room, onNavigate
       <KeyboardAvoidingView behavior="padding" enabled={Platform.OS === 'ios'} style={{ flex: 1 }}>
         <ScrollView
           ref={scrollRef}
+          style={{ flex: 1 }}
           contentContainerStyle={styles.messages}
           keyboardShouldPersistTaps="handled"
-          onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: false })}
         >
+          {!online && (
+            <View style={styles.offlineBanner}>
+              <WifiOff size={15} color={theme.colors.textSecondary} />
+              <Text style={styles.offlineText}>Reconectando… los mensajes se envían igual.</Text>
+            </View>
+          )}
+
           <View style={styles.protectBanner}>
             <View style={styles.protectIcon}>
               <VenetianMask size={20} color={theme.colors.primary} strokeWidth={2.2} />
@@ -95,7 +135,17 @@ export const ChatRoomScreen: React.FC<ChatRoomScreenProps> = ({ room, onNavigate
             </View>
           </View>
 
-          {!archived && (
+          {hasMore && (
+            <TouchableOpacity style={styles.olderButton} onPress={onLoadOlder} disabled={loadingOlder} activeOpacity={0.8}>
+              {loadingOlder ? (
+                <ActivityIndicator size="small" color={theme.colors.primary} />
+              ) : (
+                <Text style={styles.olderText}>Ver mensajes anteriores</Text>
+              )}
+            </TouchableOpacity>
+          )}
+
+          {!readOnly && (
             <View style={styles.daySeparator}>
               <Text style={styles.daySeparatorText}>
                 {days > 0 ? `Faltan ${days} ${days === 1 ? 'día' : 'días'} para el destape 🎁` : '¡Hoy es el destape! 🎉'}
@@ -103,12 +153,31 @@ export const ChatRoomScreen: React.FC<ChatRoomScreenProps> = ({ room, onNavigate
             </View>
           )}
 
-          {messages.length === 0 ? (
+          {loading ? (
+            <View style={styles.emptyRoom}>
+              <ActivityIndicator color={theme.colors.primary} />
+            </View>
+          ) : error && messages.length === 0 ? (
+            <View style={styles.emptyRoom}>
+              <Image source={BRAND_ISOTIPO} style={styles.emptyRoomMascot} />
+              <Text style={styles.emptyRoomTitle}>No pudimos cargar el chat</Text>
+              <Text style={styles.emptyRoomText}>{error}</Text>
+              {onRetry && (
+                <TouchableOpacity onPress={onRetry} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                  <Text style={styles.olderText}>Reintentar</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          ) : messages.length === 0 ? (
             <View style={styles.emptyRoom}>
               <Image source={BRAND_ISOTIPO} style={styles.emptyRoomMascot} />
               <Text style={styles.emptyRoomTitle}>¡Rompe el hielo!</Text>
               <Text style={styles.emptyRoomText}>
-                Saluda al grupo o lanza una pista para quien te regala. Todos te verán como {room.myAlias}.
+                {readOnly
+                  ? 'Este chat cerró sin mensajes.'
+                  : room.myAlias
+                    ? `Saluda al grupo o lanza una pista para quien te regala. Todos te verán como ${room.myAlias}.`
+                    : 'Elige tu alias y saluda al grupo. Nadie sabrá que eres tú.'}
               </Text>
             </View>
           ) : (
@@ -116,20 +185,36 @@ export const ChatRoomScreen: React.FC<ChatRoomScreenProps> = ({ room, onNavigate
           )}
         </ScrollView>
 
-        {archived ? (
+        {readOnly ? (
           <View style={[styles.archivedBar, { paddingBottom: Math.max(insets.bottom, 14) }]}>
             <Archive size={18} color={theme.colors.textSecondary} />
             <Text style={styles.archivedText}>Chat archivado: el intercambio ya se reveló. Solo lectura.</Text>
           </View>
+        ) : !room.myAlias ? (
+          <View style={[styles.archivedBar, { paddingBottom: Math.max(insets.bottom, 14) }]}>
+            <UserRound size={18} color={theme.colors.textSecondary} />
+            <Text style={styles.archivedText}>Elige tu alias para escribir en el chat.</Text>
+            {onChooseAlias && (
+              <TouchableOpacity style={styles.pistaButton} onPress={onChooseAlias} activeOpacity={0.85}>
+                <Text style={styles.pistaButtonText}>Elegir alias</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         ) : (
           <>
+            {clues !== 'disabled' && (
             <View style={styles.pistaCard}>
               <View style={styles.pistaIcon}>
                 <Hand size={18} color={theme.colors.primary} strokeWidth={2.4} />
               </View>
               <Text style={styles.pistaText}>
-                {pistaMode ? 'Tu próximo mensaje saldrá como pista ✨' : '¿Quieres lanzar una indirecta a quien te regala?'}
+                {clues === 'notYet'
+                  ? 'Las pistas se activan después del sorteo 🎲'
+                  : pistaMode
+                    ? 'Tu próximo mensaje saldrá como pista ✨'
+                    : '¿Quieres lanzar una indirecta a quien te regala?'}
               </Text>
+              {clues === 'enabled' && (
               <TouchableOpacity
                 style={[styles.pistaButton, pistaMode && styles.pistaButtonActive]}
                 onPress={() => setPistaMode((v) => !v)}
@@ -141,7 +226,9 @@ export const ChatRoomScreen: React.FC<ChatRoomScreenProps> = ({ room, onNavigate
                   <Text style={styles.pistaButtonText}>Tirar pista</Text>
                 )}
               </TouchableOpacity>
+              )}
             </View>
+            )}
 
             <View style={[styles.composer, { paddingBottom: Math.max(insets.bottom, 10) }]}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.quickRow}>
@@ -169,7 +256,7 @@ export const ChatRoomScreen: React.FC<ChatRoomScreenProps> = ({ room, onNavigate
                 />
                 <TouchableOpacity
                   style={[styles.sendButton, !canSend && styles.sendButtonDisabled]}
-                  onPress={send}
+                  onPress={() => void send()}
                   disabled={!canSend}
                   accessibilityLabel="Enviar mensaje"
                 >

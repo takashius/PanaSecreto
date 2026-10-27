@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, ScrollView, Image } from 'react-native';
+import { View, Text, TextInput, ScrollView, Image, RefreshControl, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MessagesSquare, VenetianMask, Lock, Search, CircleCheck, Lightbulb } from 'lucide-react-native';
 import { theme, chatsStyles as styles } from '../../styles';
@@ -12,6 +12,11 @@ import { TipCard } from '../../components/common/TipCard';
 
 interface ChatsScreenProps {
   rooms: ChatRoomSummary[];
+  loading?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
+  refreshing?: boolean;
+  onRefresh?: () => void;
   onOpenRoom: (groupId: string) => void;
   onNavigateTab: (tab: DashboardTab) => void;
   onProfilePress: () => void;
@@ -22,6 +27,11 @@ interface ChatsScreenProps {
 /** Pestaña "Chats": una sala anónima por grupo (no hay chats individuales) */
 export const ChatsScreen: React.FC<ChatsScreenProps> = ({
   rooms,
+  loading = false,
+  error = null,
+  onRetry,
+  refreshing = false,
+  onRefresh,
   onOpenRoom,
   onNavigateTab,
   onProfilePress,
@@ -31,14 +41,14 @@ export const ChatsScreen: React.FC<ChatsScreenProps> = ({
   const insets = useSafeAreaInsets();
   const [query, setQuery] = useState('');
 
-  const isActive = (r: ChatRoomSummary) => r.status === 'WAITING' || r.status === 'LOCKED';
-  const lastAt = (r: ChatRoomSummary) => r.messages[r.messages.length - 1]?.at ?? '';
+  const isActive = (r: ChatRoomSummary) => !r.readOnly;
+  const lastAt = (r: ChatRoomSummary) => r.lastMessage?.at ?? '';
   // Activos primero (por último mensaje); archivados al final
   const sorted = [...rooms].sort((a, b) =>
     isActive(a) !== isActive(b) ? (isActive(a) ? -1 : 1) : lastAt(b).localeCompare(lastAt(a))
   );
   const q = query.trim().toLowerCase();
-  const visible = q ? sorted.filter((r) => r.name.toLowerCase().includes(q) || r.myAlias.toLowerCase().includes(q)) : sorted;
+  const visible = q ? sorted.filter((r) => r.name.toLowerCase().includes(q) || (r.myAlias ?? '').toLowerCase().includes(q)) : sorted;
   const activeCount = rooms.filter(isActive).length;
   const totalUnread = rooms.reduce((n, r) => n + r.unread, 0);
 
@@ -56,6 +66,7 @@ export const ChatsScreen: React.FC<ChatsScreenProps> = ({
         contentContainerStyle={[styles.scrollContent, { paddingBottom: Math.max(insets.bottom, 16) + 96 }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
+        refreshControl={onRefresh ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} /> : undefined}
       >
         <View style={styles.titleRow}>
           <Text style={styles.title}>Chats</Text>
@@ -106,10 +117,27 @@ export const ChatsScreen: React.FC<ChatsScreenProps> = ({
           )}
         </View>
 
-        {visible.map((r) => (
-          <ChatRow key={r.groupId} room={r} onPress={(room) => onOpenRoom(room.groupId)} />
-        ))}
-        {visible.length === 0 && <Text style={styles.emptySearch}>No encontramos grupos con «{query}».</Text>}
+        {loading ? (
+          <ActivityIndicator color={theme.colors.primary} style={{ marginVertical: 24 }} />
+        ) : error && rooms.length === 0 ? (
+          <View style={{ alignItems: 'center', gap: 8, marginVertical: 16 }}>
+            <Text style={styles.emptySearch}>{error}</Text>
+            {onRetry && (
+              <TouchableOpacity onPress={onRetry} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Text style={styles.olderText}>Reintentar</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        ) : rooms.length === 0 ? (
+          <Text style={styles.emptySearch}>Aún no estás en ningún grupo. Cuando te unas a uno, aquí aparece su chat.</Text>
+        ) : (
+          <>
+            {visible.map((r) => (
+              <ChatRow key={r.groupId} room={r} onPress={(room) => onOpenRoom(room.groupId)} />
+            ))}
+            {visible.length === 0 && <Text style={styles.emptySearch}>No encontramos grupos con «{query}».</Text>}
+          </>
+        )}
 
         <View style={styles.howCard}>
           <View style={styles.howIcon}>

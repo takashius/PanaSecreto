@@ -660,26 +660,6 @@ export const groupDetailStyles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
   },
-
-  // Pestañas aún no maquetadas
-  placeholderCard: {
-    ...card,
-    alignItems: 'center',
-    gap: 10,
-    padding: 24,
-  },
-  placeholderImage: {
-    width: 72,
-    height: 72,
-    borderRadius: 20,
-  },
-  placeholderTitle: {
-    fontFamily: theme.typography.fontFamily.heading,
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.primary,
-    textAlign: 'center',
-  },
 });
 
 export default groupDetailStyles;

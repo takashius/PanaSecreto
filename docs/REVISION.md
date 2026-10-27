@@ -546,3 +546,19 @@ Reemplaza la paleta anterior (Morado Noche `#1E1338`, Amarillo Araguaney `#F7A80
   - `eas.json` con el perfil `preview` (APK) para probar las push.
 - **Verificación:** `tsc` (app, backend y panel) y ESLint sin errores; todas las pruebas del backend en verde (8 nuevas de push); recorrido en el navegador: lista, filtros, marcar todo leído, borrar, tocar → destino, interruptor de push.
 
+### 2026-10-26 — Chat del grupo en tiempo real y limpieza final
+
+- **Conexión** (`api/socket.ts`): una sola conexión Socket.io (solo WebSocket) con el JWT de la sesión; se abre al entrar y se cierra al salir. Al reconectarse vuelve a entrar a las salas. Si la sesión se revocó, deja de reintentar.
+- **Sincronización** (`hooks/useChatSync.ts`): entra a las salas de todos mis grupos; cada mensaje nuevo actualiza la sala, la lista (último mensaje, orden) y los no leídos de la barra inferior. Si la sala está abierta, se marca leída al instante. Al volver a la app la lista se recarga.
+- **Pantallas** (`screens/chat/ChatScreens.tsx`):
+  - Lista de chats real con carga, error, vacío y deslizar para recargar.
+  - Sala: últimos 50 mensajes y «Ver mensajes anteriores»; envío por socket con confirmación (y por REST si no hay conexión en vivo); el mensaje sale al instante como «Enviando…».
+  - Pistas solo si el grupo las tiene activas y ya hubo sorteo (antes: «Las pistas se activan después del sorteo»).
+  - Sin alias: «Elige tu alias para escribir» (abre el grupo con la elección). Después de la revelación: solo lectura.
+  - Errores del servidor con su mensaje: antispam, chat cerrado, falta alias, pistas apagadas o sin sorteo; el texto vuelve al cuadro.
+  - Aviso «Reconectando…» mientras se recupera el tiempo real.
+  - Pestaña Chat del detalle del grupo con los últimos 3 mensajes reales y los no leídos. Las notificaciones y push de pistas abren la sala.
+- **Limpieza:** se borró `src/mocks` (chats, grupos, deseos, perfil), los avisos «Próximamente» del detalle del grupo, estilos sin uso y comentarios de la maqueta.
+- **Dependencia:** `socket.io-client` en la app (hay que correr `pnpm install`).
+- **Verificación:** `tsc` y ESLint sin errores; recorrido en el navegador contra un servidor simulado con el mismo contrato REST y socket del backend: lista → mensaje en vivo de otro pana (no leído +1) → sala → enviar → pista recibida y enviada → antispam → anteriores → sin alias → archivado → pestaña Chat del grupo.
+

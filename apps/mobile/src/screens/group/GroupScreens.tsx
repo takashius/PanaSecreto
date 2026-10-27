@@ -13,7 +13,8 @@ import { fetchGroupBundle, groupKey, type ApiGroup } from '../../api/groupDetail
 import { toGroupDetailView } from '../../adapters/groupView';
 import type { DashboardTab } from '../../components/common/FloatingTabBar';
 import type { GroupDetailTab } from '../../components/groupDetail/GroupDetailTabs';
-import type { ChatRoomSummary, GroupDetailView, GroupExclusionPreview, WishPreview } from '../../types/session';
+import type { GroupDetailView, GroupExclusionPreview, WishPreview } from '../../types/session';
+import { useChatPreview } from '../chat/ChatScreens';
 import GroupDetailScreen from './GroupDetailScreen';
 import EditGroupScreen from './EditGroupScreen';
 import ExclusionsScreen from './ExclusionsScreen';
@@ -22,7 +23,7 @@ import { AliasPickerModal } from '../../components/alias/AliasPickerModal';
 
 /**
  * Contenedores de las pantallas del grupo conectadas a la API.
- * Cargan el grupo (con sobre, deseos del pana y revelación), lo adaptan a la vista de la maqueta
+ * Cargan el grupo (con sobre, deseos del pana y revelación), lo adaptan a los tipos de vista
  * y ejecutan las acciones (sortear, quitar panas, editar, exclusiones…).
  */
 
@@ -132,7 +133,6 @@ interface DetailProps {
   onManageExclusions: () => void;
   onOpenReveal: () => void;
   onOpenWish?: (wish: WishPreview) => void;
-  chatRoom?: ChatRoomSummary | null;
   onOpenChat?: () => void;
   chatUnread?: number;
   /** Abre la elección del alias apenas carga (al crear o unirse a un grupo) */
@@ -141,6 +141,7 @@ interface DetailProps {
 
 export function GroupDetailContainer({ groupId, onGroupGone, promptAlias = false, ...nav }: DetailProps) {
   const detail = useGroupDetail(groupId);
+  const chatPreview = useChatPreview(groupId);
   const { busy, run } = useAction();
   const [pulling, setPulling] = useState(false);
   const [aliasOpen, setAliasOpen] = useState(false);
@@ -191,6 +192,7 @@ export function GroupDetailContainer({ groupId, onGroupGone, promptAlias = false
         key={groupId}
         {...nav}
         group={detail.view}
+        chatPreview={chatPreview}
         refreshing={pulling}
         onRefresh={() => {
           setPulling(true);

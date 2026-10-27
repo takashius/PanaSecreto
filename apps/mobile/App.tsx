@@ -19,9 +19,7 @@ import RecoverPasswordScreen from './src/screens/auth/RecoverPasswordScreen';
 import DashboardScreen from './src/screens/dashboard/DashboardScreen';
 import CreateGroupScreen from './src/screens/group/CreateGroupScreen';
 import type { GroupDetailTab } from './src/components/groupDetail/GroupDetailTabs';
-import ChatsScreen from './src/screens/chat/ChatsScreen';
-import ChatRoomScreen from './src/screens/chat/ChatRoomScreen';
-import { MOCK_CHATS } from './src/mocks/chats';
+import { ChatsContainer, ChatRoomContainer } from './src/screens/chat/ChatScreens';
 import { ProfileContainer, EditProfileContainer, ChangePasswordContainer } from './src/screens/profile/ProfileContainers';
 import { Alert, AppDialogHost } from './src/components/common/AppDialog';
 import { AuthProvider, useAuth } from './src/auth/AuthContext';
@@ -38,10 +36,11 @@ import LegalScreen from './src/screens/legal/LegalScreen';
 import NotificationsContainer from './src/screens/notifications/NotificationsContainer';
 import JoinGroupScreen from './src/screens/group/JoinGroupScreen';
 import type { DashboardTab } from './src/components/common/FloatingTabBar';
-import type { AppNotification, ChatMessage, ChatRoomSummary } from './src/types/session';
+import type { AppNotification } from './src/types/session';
 import { theme } from './src/styles/theme';
 import { joinCodeFromUrl } from './src/utils/deepLink';
 import { useNotificationSync } from './src/hooks/useNotificationSync';
+import { useChatSync } from './src/hooks/useChatSync';
 
 type Screen = 'login' | 'register' | 'recover' | 'dashboard' | 'createGroup' | 'groupDetail' | 'wishDetail' | 'myWishes' | 'wishForm' | 'chats' | 'chatRoom' | 'profile' | 'editProfile' | 'changePassword' | 'notifications' | 'joinGroup' | 'exclusions' | 'editGroup' | 'reveal' | 'legal';
 
@@ -62,33 +61,24 @@ function AppContent() {
   const [wishForm, setWishForm] = useState<{ groupId: string; wishId: string | null } | null>(null);
   // Mis grupos (para las estadísticas del perfil)
   const myGroupsQuery = useApiQuery(MY_GROUPS_KEY, fetchMyGroups, { enabled: signedIn, staleMs: 60_000 });
-  // Perfil (maqueta): se completa con los datos de la sesión cuando existen
-  // Perfil: datos de la sesión + cambios locales de la maqueta (hasta conectar la edición de perfil)
   /** Código que llegó por un enlace de invitación: abre "Unirse" apenas haya sesión */
   const [linkJoinCode, setLinkJoinCode] = useState<string | null>(null);
   const [legalDoc, setLegalDoc] = useState<'terminos' | 'privacidad'>('terminos');
 
-  // Notificaciones (no son en tiempo real)
-  // Campana: no leídas reales (la lista de Notificaciones aún usa la maqueta)
+  // Campana: no leídas (se refrescan cada minuto y con cada push)
   const notificationsUnreadQuery = useApiQuery(NOTIFICATIONS_UNREAD_KEY, fetchNotificationsUnread, { enabled: signedIn, staleMs: 60_000 });
   const hasNotifications = (notificationsUnreadQuery.data ?? 0) > 0;
 
-  // Chats: una sala por grupo
-  const [chats, setChats] = useState<ChatRoomSummary[]>(MOCK_CHATS);
+  // Chats: una sala por grupo (en tiempo real por socket)
   const [chatRoomId, setChatRoomId] = useState<string | null>(null);
   // No leídos reales del chat (los comparte la barra inferior de todas las pestañas)
   const chatUnreadQuery = useApiQuery(CHAT_UNREAD_KEY, fetchChatUnread, { enabled: signedIn, staleMs: 60_000 });
   const chatUnread = chatUnreadQuery.data ?? 0;
 
   const openChatRoom = (groupId: string) => {
-    // Al entrar se marcan como leídos
-    setChats((prev) => prev.map((c) => (c.groupId === groupId ? { ...c, unread: 0 } : c)));
     setChatRoomId(groupId);
     navigateTo('chatRoom');
   };
-
-  const updateChatMessages = (groupId: string, messages: ChatMessage[]) =>
-    setChats((prev) => prev.map((c) => (c.groupId === groupId ? { ...c, messages } : c)));
 
   const openWishForm = (groupId: string, wishId: string | null) => {
     setMyListGroupId(groupId);
@@ -116,8 +106,7 @@ function AppContent() {
     if (screen === 'myWish' && wishId) openWish(groupId, wishId, 'owner');
     else if (screen === 'wish' && wishId) openWish(groupId, wishId, 'giver');
     else if (screen === 'envelope') openGroup(groupId, 'sobre');
-    // El chat real se conecta después: por ahora abre la pestaña Chat del grupo
-    else if (screen === 'chat') openGroup(groupId, 'chat');
+    else if (screen === 'chat') openChatRoom(groupId);
     else if (screen === 'reveal') {
       setGroupDetailId(groupId);
       navigateTo('reveal');
@@ -174,6 +163,9 @@ function AppContent() {
     if (signedIn) setScreenHistory(pop);
     else setAuthHistory(pop);
   };
+
+  // Chat en tiempo real: socket, salas de mis grupos y no leídos al día
+  useChatSync(signedIn, currentScreen === 'chatRoom' ? chatRoomId : null);
 
   // Campana al día (consulta periódica) y notificaciones push (registro y toques)
   useNotificationSync(signedIn, notificationsUnreadQuery.data, openNotification);
@@ -303,12 +295,7 @@ function AppContent() {
         onNavigateBack={goBack}
         onTabChange={setGroupDetailTab}
         onNavigateTab={handleNavigateTab}
-        chatRoom={chats.find((c) => c.groupId === groupDetailId) ?? null}
-        onOpenChat={() =>
-          chats.some((c) => c.groupId === groupDetailId)
-            ? openChatRoom(groupDetailId)
-            : Alert.alert('Chat del grupo', 'El chat se conecta con la API en uno de los próximos pasos.')
-        }
+        onOpenChat={() => openChatRoom(groupDetailId)}
         onEditGroup={() => navigateTo('editGroup')}
         onManageExclusions={() => navigateTo('exclusions')}
         onGroupGone={() => setScreenHistory(['dashboard'])}
@@ -339,13 +326,13 @@ function AppContent() {
         onCancel={goBack}
       />
     );
-  } else if (currentScreen === 'chatRoom' && chats.some((c) => c.groupId === chatRoomId)) {
+  } else if (currentScreen === 'chatRoom' && chatRoomId) {
     content = (
-      <ChatRoomScreen
-        key={chatRoomId as string}
-        room={chats.find((c) => c.groupId === chatRoomId) as ChatRoomSummary}
+      <ChatRoomContainer
+        key={chatRoomId}
+        groupId={chatRoomId}
         onNavigateBack={goBack}
-        onMessagesChange={updateChatMessages}
+        onChooseAlias={() => openGroup(chatRoomId, 'resumen', true)}
       />
     );
   } else if (currentScreen === 'profile') {
@@ -394,13 +381,12 @@ function AppContent() {
         groupId={groupDetailId}
         onNavigateBack={goBack}
         onOpenWishlist={() => openGroup(groupDetailId, 'sobre')}
-        onOpenChat={() => (chats.some((c) => c.groupId === groupDetailId) ? openChatRoom(groupDetailId) : openGroup(groupDetailId, 'chat'))}
+        onOpenChat={() => openChatRoom(groupDetailId)}
       />
     );
   } else if (currentScreen === 'chats') {
     content = (
-      <ChatsScreen
-        rooms={chats}
+      <ChatsContainer
         onOpenRoom={openChatRoom}
         onOpenNotifications={() => navigateTo('notifications')}
         hasNotifications={hasNotifications}

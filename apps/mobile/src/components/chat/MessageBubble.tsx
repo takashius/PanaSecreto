@@ -21,9 +21,11 @@ export const MessageBubble: React.FC<Props> = ({ message, showDelivered }) => {
       <View style={styles.mineRow}>
         <View style={styles.bubbleMeta}>
           <Text style={styles.bubbleTime}>{hour(message.at)}</Text>
-          <Text style={[styles.bubbleAlias, styles.bubbleAliasMine]}>Tú ({message.alias})</Text>
+          <Text style={[styles.bubbleAlias, styles.bubbleAliasMine]}>
+            {message.pending ? 'Enviando…' : `Tú (${message.alias})`}
+          </Text>
         </View>
-        <View style={[styles.bubbleMine, pista && styles.bubbleMinePista]}>
+        <View style={[styles.bubbleMine, pista && styles.bubbleMinePista, message.pending && styles.bubblePending]}>
           {pista && (
             <View style={styles.pistaLabel}>
               <Lightbulb size={13} color={theme.colors.secondary} />

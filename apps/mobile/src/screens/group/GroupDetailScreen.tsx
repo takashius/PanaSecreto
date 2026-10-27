@@ -14,9 +14,9 @@ import { MembersCard } from '../../components/groupDetail/MembersCard';
 import { ExclusionsCard } from '../../components/groupDetail/ExclusionsCard';
 import { DrawSection } from '../../components/groupDetail/DrawSection';
 import { EnvelopeTab } from '../../components/envelope/EnvelopeTab';
-import { ChatTabPreview } from '../../components/chat/ChatTabPreview';
+import { ChatTabPreview, type ChatPreviewData } from '../../components/chat/ChatTabPreview';
 import { AliasCard } from '../../components/alias/AliasCard';
-import type { ChatRoomSummary, GroupDetailView, GroupMemberPreview, WishPreview } from '../../types/session';
+import type { GroupDetailView, GroupMemberPreview, WishPreview } from '../../types/session';
 
 interface GroupDetailScreenProps {
   onNavigateBack: () => void;
@@ -40,7 +40,8 @@ interface GroupDetailScreenProps {
   onChooseAlias?: () => void;
   onOpenWish?: (wish: WishPreview) => void;
   /** Sala de chat del grupo (para la vista previa de la pestaña Chat) */
-  chatRoom?: ChatRoomSummary | null;
+  /** Últimos mensajes y no leídos de la sala del grupo */
+  chatPreview?: ChatPreviewData | null;
   onOpenChat?: () => void;
   /** Organización: editar grupo, exclusiones y eliminar */
   onEditGroup?: () => void;
@@ -52,9 +53,8 @@ interface GroupDetailScreenProps {
   chatUnread?: number;
 }
 
-const soon = (title: string) => Alert.alert(title, 'Esta pantalla se maqueta en el próximo paso.');
 
-/** Detalle del grupo: Resumen, Mi sobre y Chat (próximo paso) */
+/** Detalle del grupo: Resumen, Mi sobre y Chat */
 export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
   onNavigateBack,
   onNavigateTab,
@@ -71,7 +71,7 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
   onOpenEnvelope,
   onChooseAlias,
   onOpenWish,
-  chatRoom,
+  chatPreview,
   onOpenChat,
   onEditGroup,
   onManageExclusions,
@@ -94,8 +94,8 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
   const handleMore = () => {
     if (group.isOrganizer) {
       Alert.alert(group.name, undefined, [
-        { text: 'Editar grupo', onPress: () => (onEditGroup ? onEditGroup() : soon('Editar grupo')) },
-        ...(isWaiting ? [{ text: 'Gestionar exclusiones', onPress: () => (onManageExclusions ? onManageExclusions() : soon('Exclusiones')) }] : []),
+        { text: 'Editar grupo', onPress: () => onEditGroup?.() },
+        ...(isWaiting ? [{ text: 'Gestionar exclusiones', onPress: () => onManageExclusions?.() }] : []),
         ...(group.status === 'LOCKED'
           ? [
               {
@@ -134,7 +134,7 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
           onPress: () =>
             Alert.alert('¿Eliminar el grupo?', `Se borrará «${group.name}» con sus sobres, deseos y chat. No se puede deshacer.`, [
               { text: 'Cancelar', style: 'cancel' },
-              { text: 'Eliminar', style: 'destructive', onPress: () => (onDeleteGroup ? onDeleteGroup() : soon('Eliminar grupo')) },
+              { text: 'Eliminar', style: 'destructive', onPress: () => onDeleteGroup?.() },
             ]),
         },
         { text: 'Cancelar', style: 'cancel' as const },
@@ -148,7 +148,7 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
               onPress: () =>
                 Alert.alert('¿Salir del grupo?', `Dejarás «${group.name}» y se borrará tu lista de deseos de este grupo.`, [
                   { text: 'Cancelar', style: 'cancel' },
-                  { text: 'Salir', style: 'destructive', onPress: () => (onLeaveGroup ? onLeaveGroup() : soon('Salir del grupo')) },
+                  { text: 'Salir', style: 'destructive', onPress: () => onLeaveGroup?.() },
                 ]),
             }]
           : []),
@@ -185,8 +185,7 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
 
   const handleBottomTab = (next: DashboardTab) => {
     if (next === 'grupos') onNavigateBack();
-    else if (onNavigateTab) onNavigateTab(next);
-    else soon(next === 'chats' ? 'Chats' : next === 'deseos' ? 'Deseos' : 'Perfil');
+    else onNavigateTab?.(next);
   };
 
   return (
@@ -215,7 +214,7 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
           active={tab}
           onChange={setTab}
           envelopeLocked={isWaiting}
-          unreadChat={chatRoom ? chatRoom.unread : group.unreadChat}
+          unreadChat={chatPreview ? chatPreview.unread : group.unreadChat}
         />
 
         {tab === 'resumen' && (
@@ -226,7 +225,7 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
               location={group.location}
               note={group.note}
               canEdit={group.isOrganizer}
-              onEdit={() => (onEditGroup ? onEditGroup() : soon('Editar lugar del encuentro'))}
+              onEdit={() => onEditGroup?.()}
             />
             {isWaiting && (
               <InviteCard
@@ -248,7 +247,7 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
                 )
               }
             />
-            {canManage && <ExclusionsCard exclusions={group.exclusions} onManage={() => (onManageExclusions ? onManageExclusions() : soon('Exclusiones'))} />}
+            {canManage && <ExclusionsCard exclusions={group.exclusions} onManage={() => onManageExclusions?.()} />}
             <DrawSection
               status={group.status}
               isOrganizer={group.isOrganizer}
@@ -266,12 +265,12 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
             opened={!!group.envelopeOpened}
             onOpen={() => onOpenEnvelope?.()}
             onOpenReveal={onOpenReveal}
-            onOpenWish={(wish: WishPreview) => (onOpenWish ? onOpenWish(wish) : soon(`Detalle del deseo · ${wish.title}`))}
+            onOpenWish={(wish: WishPreview) => onOpenWish?.(wish)}
           />
         )}
 
         {tab === 'chat' && (
-          <ChatTabPreview room={chatRoom} onOpen={() => (onOpenChat ? onOpenChat() : soon('Chat del grupo'))} />
+          <ChatTabPreview preview={chatPreview} onOpen={() => onOpenChat?.()} />
         )}
       </ScrollView>
 

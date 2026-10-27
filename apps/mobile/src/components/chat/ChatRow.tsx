@@ -12,8 +12,8 @@ interface Props {
 
 /** Fila de la lista de Chats: grupo, último mensaje (firmado con alias) y mi alias en ese grupo */
 export const ChatRow: React.FC<Props> = ({ room, onPress }) => {
-  const last = room.messages[room.messages.length - 1];
-  const archived = room.status === 'REVEALED' || room.status === 'COMPLETED';
+  const last = room.lastMessage;
+  const archived = room.readOnly;
 
   let preview: React.ReactNode;
   if (archived) {
@@ -72,7 +72,7 @@ export const ChatRow: React.FC<Props> = ({ room, onPress }) => {
             <View style={styles.aliasChip}>
               <EyeOff size={14} color={theme.colors.primary} strokeWidth={2.2} />
               <Text style={styles.aliasChipText}>
-                Tú: <Text style={styles.aliasChipStrong}>{room.myAlias}</Text>
+                Tú: <Text style={styles.aliasChipStrong}>{room.myAlias ?? 'sin alias'}</Text>
               </Text>
             </View>
           )}
