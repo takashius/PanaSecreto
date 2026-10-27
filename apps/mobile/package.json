@@ -8,7 +8,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "eas:update": "eas update",
+    "eas:update": "pnpm --dir ../.. build:packages && eas update",
+    "eas-build-post-install": "cd ../.. && pnpm build:packages",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf .expo node_modules"
   },

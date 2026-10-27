@@ -11,14 +11,16 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://entrepanas-api.erdesarrollo.com.ve"
+        "EXPO_PUBLIC_API_URL": "https://entrepanas-api.erdesarrollo.com.ve",
+        "EXPO_USE_METRO_WORKSPACE_ROOT": "1"
       }
     },
     "production": {
       "channel": "production",
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://entrepanas-api.erdesarrollo.com.ve"
+        "EXPO_PUBLIC_API_URL": "https://entrepanas-api.erdesarrollo.com.ve",
+        "EXPO_USE_METRO_WORKSPACE_ROOT": "1"
       }
     }
   }
