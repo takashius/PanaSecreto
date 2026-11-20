@@ -24,6 +24,7 @@ COPY packages/ui-tokens/package.json packages/ui-tokens/
 COPY apps/backend/package.json apps/backend/
 COPY apps/admin/package.json apps/admin/
 COPY apps/mobile/package.json apps/mobile/
+COPY apps/web/package.json apps/web/
 
 # Instalar dependencias del workspace de manera determinista y no interactiva
 RUN pnpm install --frozen-lockfile --trust-lockfile

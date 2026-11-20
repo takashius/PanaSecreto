@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="es-VE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EntrePanas: el amigo secreto entre panas</title>
+  <meta name="description" content="Organiza tu amigo secreto con tus panas: sorteo justo, sobre secreto, lista de deseos y chat anónimo. Descarga la app en Google Play.">
+  <link rel="canonical" href="%SITE_URL%/">
+  <meta name="theme-color" content="#F8F7F2">
+  <meta name="entrepanas:api" content="%API_URL%">
+
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="es_VE">
+  <meta property="og:site_name" content="EntrePanas">
+  <meta property="og:title" content="EntrePanas: el amigo secreto entre panas">
+  <meta property="og:description" content="Sorteo justo, sobre secreto, lista de deseos y chat anónimo. Organiza tu amigo secreto con tus panas.">
+  <meta property="og:url" content="%SITE_URL%/">
+  <meta property="og:image" content="%SITE_URL%/img/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="El guacamayo de EntrePanas con su sobre y el nombre EntrePanas.">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+
+  <link rel="preload" as="font" type="font/woff2" href="/fonts/fredoka-latin-wght-normal.woff2" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="/fonts/nunito-latin-wght-normal.woff2" crossorigin>
+  <link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#contenido">Saltar al contenido</a>
+
+  <header class="nav">
+    <div class="container nav__row">
+      <a class="nav__brand" href="/" aria-label="EntrePanas, inicio">
+        <img src="/img/logo-horizontal-320.webp" srcset="/img/logo-horizontal-320.webp 1x, /img/logo-horizontal-640.webp 2x" width="320" height="86" alt="EntrePanas">
+      </a>
+      <nav class="nav__links" aria-label="Principal">
+        <a class="nav__code" href="#codigo">Tengo un código</a>
+        <a class="btn btn--primary btn--sm" href="%PLAY_URL%" rel="noopener">Descargar</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="contenido">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="container hero__grid">
+        <div class="hero__copy">
+          <h1 id="hero-title" class="hero__title">¡Ya te tocó un pana!</h1>
+          <p class="hero__lead">Organiza tu amigo secreto con tus panas, sin papelitos ni enredos.</p>
+          <div class="actions">
+            <a class="btn btn--primary" href="%PLAY_URL%" rel="noopener">Descargar en Google Play</a>
+            <a class="btn btn--ghost" href="#codigo">Tengo un código</a>
+          </div>
+          <p class="hero__note">Próximamente en iPhone.</p>
+        </div>
+
+        <div class="hero__stage">
+          <div class="sobre">
+            <div class="sobre__figure">
+              <img class="sobre__parrot" src="/img/mascota-1280.webp" srcset="/img/mascota-640.webp 640w, /img/mascota-1280.webp 1280w" sizes="(max-width: 60rem) 90vw, 620px" width="1280" height="1035" fetchpriority="high" alt="El guacamayo de EntrePanas, con gorra tricolor y lentes oscuros, sostiene un sobre amarillo.">
+              <button class="sobre__open" type="button" data-sobre-open hidden>Abre el sobre</button>
+              <div class="reveal" data-sobre-reveal hidden>
+                <p class="reveal__label">Le regalas a</p>
+                <p class="reveal__alias" data-sobre-alias role="status" aria-live="polite"></p>
+                <button class="reveal__again" type="button" data-sobre-again>Otro pana</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="band band--navy como" id="como" aria-labelledby="como-title">
+      <div class="container como__grid">
+        <h2 id="como-title" class="como__title">Del código al destape</h2>
+        <ol class="steps">
+          <li class="step">
+            <span class="slip" aria-hidden="true">1</span>
+            <h3 class="step__title">Crea el grupo</h3>
+            <p>Fecha, lugar y presupuesto en dólares o bolívares.</p>
+          </li>
+          <li class="step">
+            <span class="slip" aria-hidden="true">2</span>
+            <h3 class="step__title">Pasa el código</h3>
+            <p>Compártelo por WhatsApp o correo y tus panas se unen.</p>
+          </li>
+          <li class="step">
+            <span class="slip" aria-hidden="true">3</span>
+            <h3 class="step__title">Haz el sorteo</h3>
+            <p>Mínimo tres panas. Nadie se regala a sí mismo.</p>
+          </li>
+          <li class="step">
+            <span class="slip" aria-hidden="true">4</span>
+            <h3 class="step__title">Abre tu sobre</h3>
+            <p>Descubre a quién le regalas y qué le gusta.</p>
+          </li>
+          <li class="step">
+            <span class="slip" aria-hidden="true">5</span>
+            <h3 class="step__title">Destapen todo</h3>
+            <p>Quien organiza revela quién era quién y cierran el intercambio.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="secreto" id="secreto" aria-labelledby="secreto-title">
+      <div class="container secreto__grid">
+        <div class="secreto__copy">
+          <h2 id="secreto-title" class="section-title">Nadie sabe quién es quién</h2>
+          <ul class="facts">
+            <li>
+              <h3 class="facts__title">Alias de pana</h3>
+              <p>Cada quien elige un alias con sabor venezolano.</p>
+            </li>
+            <li>
+              <h3 class="facts__title">Pistas en el chat</h3>
+              <p>Suelta pistas sin dar la cara, si el grupo las permite.</p>
+            </li>
+            <li>
+              <h3 class="facts__title">Comentarios anónimos</h3>
+              <p>Pregunta tallas y colores en cada deseo sin revelarte.</p>
+            </li>
+            <li>
+              <h3 class="facts__title">Cero espías</h3>
+              <p>Ni quien organiza ve las asignaciones antes del destape.</p>
+            </li>
+          </ul>
+        </div>
+
+        <figure class="chat" aria-label="Ejemplo del chat de un grupo">
+          <figcaption class="chat__head">Panas de la Oficina</figcaption>
+          <div class="chat__body">
+            <div class="msg">
+              <p class="msg__who">Gocho Sigiloso <span class="msg__tag">Pista</span></p>
+              <p class="msg__text">Lo mío es el café recién colado.</p>
+            </div>
+            <div class="msg msg--alt">
+              <p class="msg__who">Pana Tequeñero</p>
+              <p class="msg__text">¡Ya sé quién es! Bueno, creo.</p>
+            </div>
+            <div class="msg">
+              <p class="msg__who">Mono Ninja <span class="msg__tag">Pista</span></p>
+              <p class="msg__text">Mi regalo viene con lazo y todo.</p>
+            </div>
+          </div>
+          <p class="chat__foot">Aquí solo se ven alias.</p>
+        </figure>
+      </div>
+    </section>
+
+    <section class="band band--tint deseos" id="deseos" aria-labelledby="deseos-title">
+      <div class="container deseos__grid">
+        <article class="wish" aria-label="Ejemplo de un deseo">
+          <div class="wish__top">
+            <span class="wish__chip">Ropa</span>
+            <span class="wish__star">Prioridad alta</span>
+          </div>
+          <h3 class="wish__title">Camiseta oficial de la Vinotinto 2026</h3>
+          <p class="wish__desc">Talla M, preferiblemente vinotinto con cuello blanco. Nada de colores flúor, pana.</p>
+          <p class="wish__price num">$40</p>
+          <div class="wish__thread">
+            <p class="wish__ask"><span>Pana Incógnito #04</span> ¿Talla M de hombre o de dama?</p>
+            <p class="wish__reply"><span>Tú</span> De hombre, gracias.</p>
+          </div>
+        </article>
+
+        <div class="deseos__copy">
+          <h2 id="deseos-title" class="section-title">Pide lo que quieres, sin pena</h2>
+          <ul class="facts">
+            <li>
+              <h3 class="facts__title">Hasta 20 deseos</h3>
+              <p>Con foto, precio y tienda, para que acierten.</p>
+            </li>
+            <li>
+              <h3 class="facts__title">Dólares o bolívares</h3>
+              <p>El presupuesto del grupo se ve en la moneda que elijan.</p>
+            </li>
+            <li>
+              <h3 class="facts__title">Prioridad alta</h3>
+              <p>Marca con estrella lo que más quieres.</p>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="organiza" id="organiza" aria-labelledby="organiza-title">
+      <div class="container">
+        <h2 id="organiza-title" class="section-title">Tú organizas, el sorteo cuadra</h2>
+        <div class="tiles">
+          <article class="tile tile--yellow">
+            <h3 class="tile__title">Exclusiones</h3>
+            <p>Parejas y hermanitos no se regalan entre sí.</p>
+          </article>
+          <article class="tile tile--sky">
+            <h3 class="tile__title">Sorteo justo</h3>
+            <p>Todas las combinaciones válidas tienen la misma chance, y la app avisa si no puede cuadrar.</p>
+          </article>
+          <article class="tile tile--coral">
+            <h3 class="tile__title">Invitación fácil</h3>
+            <p>El código PANA-XXXX-XX viaja por WhatsApp, enlace o correo.</p>
+          </article>
+          <article class="tile tile--navy">
+            <p class="tile__figure num">3 a 50</p>
+            <p>panas por grupo, con fecha de intercambio y recordatorios.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="band band--navy codigo" id="codigo" aria-labelledby="codigo-title">
+      <div class="container codigo__grid">
+        <div class="codigo__copy">
+          <h2 id="codigo-title" class="codigo__title">¿Ya tienes tu código?</h2>
+          <p class="codigo__lead">Pégalo aquí y te llevamos a la app.</p>
+          <form class="join" id="join-form" novalidate>
+            <label class="join__label" for="code">Código del grupo</label>
+            <div class="join__row">
+              <input class="join__input" id="code" name="code" type="text" inputmode="text" autocapitalize="characters" autocomplete="off" spellcheck="false" maxlength="14" placeholder="PANA-XXXX-XX" aria-describedby="code-help code-error">
+              <button class="btn btn--primary" type="submit">Abrir en la app</button>
+            </div>
+            <p class="join__help" id="code-help">Se abre la app directo en Unirse.</p>
+            <p class="join__error" id="code-error" role="alert" hidden></p>
+          </form>
+          <noscript><p class="join__help">Para unirte, abre la app y escribe el código en Unirse.</p></noscript>
+          <div class="actions codigo__actions">
+            <a class="btn btn--ghost-light" href="%PLAY_URL%" rel="noopener">Descargar en Google Play</a>
+            <p class="codigo__note">Próximamente en iPhone.</p>
+          </div>
+        </div>
+        <div class="codigo__art">
+          <img src="/img/logo-principal-azul-640.webp" srcset="/img/logo-principal-azul-640.webp 640w, /img/logo-principal-azul-1280.webp 1280w" sizes="(max-width: 60rem) 80vw, 520px" width="1280" height="1187" loading="lazy" alt="EntrePanas: el guacamayo con su sobre sobre el nombre de la app.">
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="container foot__row">
+      <a class="foot__brand" href="/" aria-label="EntrePanas, inicio">
+        <img src="/img/logo-horizontal-azul-320.webp" width="200" height="54" loading="lazy" alt="EntrePanas">
+      </a>
+      <nav class="foot__links" aria-label="Legal">
+        <a href="%ADMIN_URL%/terminos" rel="noopener">Términos</a>
+        <a href="%ADMIN_URL%/privacidad" rel="noopener">Privacidad</a>
+        <a href="%ADMIN_URL%/baja-servicio" rel="noopener">Baja de servicio</a>
+      </nav>
+      <p class="foot__made">© 2026 EntrePanas. Hecho por ErDesarrollo.</p>
+    </div>
+  </footer>
+
+  <script src="/js/aliases.js" defer></script>
+  <script src="/js/site.js" defer></script>
+</body>
+</html>
