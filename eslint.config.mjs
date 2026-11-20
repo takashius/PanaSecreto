@@ -91,5 +91,14 @@ export default tseslint.config(
       // RN carga imágenes con require('…png')
       '@typescript-eslint/no-require-imports': 'off',
     },
-  }
+  },
+  // Landing estática: JS de navegador (src) y scripts de Node (scripts)
+  {
+    files: ['apps/web/src/**/*.js'],
+    languageOptions: { sourceType: 'script', globals: { ...globals.browser } },
+  },
+  {
+    files: ['apps/web/scripts/**/*.mjs'],
+    languageOptions: { globals: { ...globals.node } },
+  },
 );
